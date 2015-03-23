@@ -3,15 +3,24 @@
  */
 package NonLinearImageFilter;
 
+import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.color.ColorSpace;
+import java.awt.Transparency;
+import java.awt.image.DataBuffer;
+import java.awt.image.ComponentColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.geom.AffineTransform;
+import java.awt.Dimension;
 import java.awt.image.BufferedImageOp;
 import java.util.Vector;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.ImageIcon;
 
 /**
  *
@@ -23,14 +32,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     /**
      * Creates new form NonLinearImageFilter
      */
-    
-    private int xsize=200;
-    private int ysize=200;
+    private int xsize = 200;
+    private int ysize = 200;
     private Vector<Image> imageList;
-    
-    
-    
+    private ColorModel grayColorModel;
+
     public NonLinearImageFilter() {
+        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        int[] nBits = {8};
+        grayColorModel = new ComponentColorModel(cs, nBits, false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
         initComponents();
     }
 
@@ -247,7 +257,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControlsLayout.setVerticalGroup(
             jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelControlsLayout.createSequentialGroup()
-                .addComponent(jScrollBarImages, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
+                .addComponent(jScrollBarImages, javax.swing.GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -292,9 +302,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     .addComponent(jPanelParam, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelAction, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelSpace, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
                 .addComponent(jPanelResults, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(21, 21, 21))
+                .addContainerGap())
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -318,9 +328,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 519, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 546, Short.MAX_VALUE)
         );
 
         pack();
@@ -336,18 +344,29 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-        Image inImage=this.createImage(new MemoryImageSource(xsize, ysize,
-        null, generatePixelData(xsize, ysize, 0.5, (byte)10), 0, xsize));   
-        imageList=new Vector<Image> ();
+        byte [] pixels=generatePixelData(xsize, ysize, 0.5, 10);
+        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
+        imageList = new Vector<>();
         imageList.add(inImage);
-        class ImagePanel extends JPanel {
+        
+        class ImagePanel extends JComponent {
+            private Image image;
+            public ImagePanel (Image image, int width, int height) {
+                super();
+                this.setPreferredSize(new Dimension(width, height));
+                this.image=image;
+            }
             @Override
-            public void paint (Graphics g) {
-                g.drawImage(inImage, 0, 0, this);
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.drawImage(image, 0, 0, null);
             }
         }
-        JPanel imagePanel=new ImagePanel ();
+        
+        JComponent imagePanel = new ImagePanel(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
         jPanelImages.add(imagePanel);
+        jPanelImages.setLayout(new BorderLayout(10, 10));
+        jPanelImages.add(imagePanel, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }//GEN-LAST:event_jButtonImageActionPerformed
@@ -410,16 +429,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
     }
-    
-    private byte [] generatePixelData (int xsize, int ysize, double squareScale, byte noise) {
-        byte [] pixels=new byte [xsize*ysize];
-        for (int i=0; i<xsize; i++) {
-            for (int k=0; k<xsize; k++) {
-                if (Math.abs(i-xsize/2)<squareScale*xsize/2&&
-                        (Math.abs(k-ysize/2)<squareScale*ysize/2)) {
-                    pixels[i*ysize+k]=(byte)127;
-                    pixels[i*ysize+k]+=(byte)Math.random()*noise;
+
+    private byte[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
+        byte[] pixels = new byte[xsize * ysize];
+        for (int i = 0; i < xsize; i++) {
+            for (int k = 0; k < xsize; k++) {
+                if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
+                    pixels[i * xsize + k] = (byte) 127;
                 }
+                pixels[i * xsize + k] += (byte) Math.random() * noise;
             }
         }
         return pixels;
