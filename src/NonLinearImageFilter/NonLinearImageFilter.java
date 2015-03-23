@@ -1,19 +1,35 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Non-linear image filtering
  */
 package NonLinearImageFilter;
 
+import java.awt.Image;
+import java.awt.Graphics;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.BufferedImage;
+import java.awt.image.MemoryImageSource;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImageOp;
+import java.util.Vector;
+import javax.swing.JPanel;
+
 /**
  *
- * @author вапрол
+ * @author Ruslan Feshchenko
+ * @version 0.1
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
     /**
      * Creates new form NonLinearImageFilter
      */
+    
+    private int xsize=200;
+    private int ysize=200;
+    private Vector<Image> imageList;
+    
+    
+    
     public NonLinearImageFilter() {
         initComponents();
     }
@@ -320,6 +336,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
+        Image inImage=this.createImage(new MemoryImageSource(xsize, ysize,
+        null, generatePixelData(xsize, ysize, 0.5, (byte)10), 0, xsize));   
+        imageList=new Vector<Image> ();
+        imageList.add(inImage);
+        class ImagePanel extends JPanel {
+            @Override
+            public void paint (Graphics g) {
+                g.drawImage(inImage, 0, 0, this);
+            }
+        }
+        JPanel imagePanel=new ImagePanel ();
+        jPanelImages.add(imagePanel);
+        jPanelImages.revalidate();
+        jPanelImages.repaint();
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
@@ -379,6 +409,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 new NonLinearImageFilter().setVisible(true);
             }
         });
+    }
+    
+    private byte [] generatePixelData (int xsize, int ysize, double squareScale, byte noise) {
+        byte [] pixels=new byte [xsize*ysize];
+        for (int i=0; i<xsize; i++) {
+            for (int k=0; k<xsize; k++) {
+                if (Math.abs(i-xsize/2)<squareScale*xsize/2&&
+                        (Math.abs(k-ysize/2)<squareScale*ysize/2)) {
+                    pixels[i*ysize+k]=(byte)127;
+                    pixels[i*ysize+k]+=(byte)Math.random()*noise;
+                }
+            }
+        }
+        return pixels;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
