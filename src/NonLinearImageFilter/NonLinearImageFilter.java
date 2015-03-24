@@ -353,14 +353,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, 
                ysize, grayColorModel, generatePixelData(xsize, ysize, 
                        relativeSquareSize, noiseLevel), 0, xsize));
-        //BufferedImage bImage=new BufferedImage(xsize, ysize, BufferedImage.TYPE_BYTE_GRAY);
-        /*WritableRaster raster=new WritableRaster();
-        BufferedImage bImage=new BufferedImage(grayColorModel, raster, false, null);*/
-        
         imageList = new Vector<>();
         imageList.add(inImage);
         
-        JComponent Component = new ImageComponent((BufferedImage)inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
+        JComponent Component = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
         jPanelImages.add(Component);
         jPanelImages.setLayout(new BorderLayout(10, 10));
         jPanelImages.add(Component, BorderLayout.CENTER);

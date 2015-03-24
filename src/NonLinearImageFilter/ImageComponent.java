@@ -4,6 +4,7 @@
 package NonLinearImageFilter;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -20,7 +21,7 @@ import javax.swing.JComponent;
  */
 public class ImageComponent extends JComponent {
 
-    private final BufferedImage image;
+    private final Image image;
 
     /**
      * Constructor
@@ -28,7 +29,7 @@ public class ImageComponent extends JComponent {
      * @param width
      * @param height
      */
-    public ImageComponent(BufferedImage image, int width, int height) {
+    public ImageComponent(Image image, int width, int height) {
         super();
         this.setPreferredSize(new Dimension(width, height));
         this.image = image;
@@ -37,18 +38,26 @@ public class ImageComponent extends JComponent {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        double xscale=1.0*image.getWidth(null)/getWidth(),
-                yscale=1.0*image.getHeight(null)/getHeight();
+        /*
+        * Scaling image before drawing to the size of container
+        */
+        double xscale=1.0*getWidth()/image.getWidth(null),
+               yscale=1.0*getHeight()/image.getHeight(null);
         AffineTransform at=AffineTransform.getScaleInstance(xscale, yscale);
         BufferedImageOp imgop=new AffineTransformOp (at, AffineTransformOp.TYPE_BICUBIC);
-        ((Graphics2D)g).drawImage(image, imgop, 0, 0);
+        BufferedImage bimg=new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
+        bimg.getGraphics().drawImage(image, 0, 0, null);
+        /*
+        * Draw image
+        */
+        ((Graphics2D)g).drawImage(bimg, imgop, 0, 0);
     }
 
     /**
      * Returning associated image
      * @return
      */
-    public BufferedImage getImage() {
+    public Image getImage() {
         return image;
     }
 }
