@@ -349,21 +349,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         imageList = new Vector<>();
         imageList.add(inImage);
         
-        class ImagePanel extends JComponent {
-            private Image image;
-            public ImagePanel (Image image, int width, int height) {
-                super();
-                this.setPreferredSize(new Dimension(width, height));
-                this.image=image;
-            }
-            @Override
-            public void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.drawImage(image, 0, 0, null);
-            }
-        }
-        
-        JComponent imagePanel = new ImagePanel(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
+        JComponent imagePanel = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
         jPanelImages.add(imagePanel);
         jPanelImages.setLayout(new BorderLayout(10, 10));
         jPanelImages.add(imagePanel, BorderLayout.CENTER);
