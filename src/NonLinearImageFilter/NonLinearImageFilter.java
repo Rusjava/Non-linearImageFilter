@@ -43,7 +43,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     public NonLinearImageFilter() {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        int[] nBits = {32};
+        int[] nBits = {31};
         grayColorModel = new ComponentColorModel(cs, nBits, false, true,
                 Transparency.OPAQUE, DataBuffer.TYPE_INT);
         initComponents();
@@ -137,7 +137,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             jPanelParamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelParamLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelParamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanelParamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanelParamLayout.createSequentialGroup()
                         .addGroup(jPanelParamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jLabelNonlinear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -149,7 +149,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     .addGroup(jPanelParamLayout.createSequentialGroup()
                         .addComponent(jLabelNSteps, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(jTextFieldNSteps)))
+                        .addComponent(jTextFieldNSteps, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(27, Short.MAX_VALUE))
         );
         jPanelParamLayout.setVerticalGroup(
@@ -428,7 +428,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private int[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
         int[] pixels = new int[xsize * ysize];
-        int level = (int) Math.pow(2, 31) - 1;
+        int level = -(int) (Math.pow(2, 30) - 1);
+        System.out.println(level);
         for (int i = 0; i < xsize; i++) {
             for (int k = 0; k < xsize; k++) {
                 if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
@@ -436,7 +437,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 } else {
                     pixels[i * xsize + k] = level;
                 }
-                pixels[i * xsize + k] += (int) (Math.random() * noise);
+                //pixels[i * xsize + k] += (int) (Math.random() * noise);
             }
         }
         return pixels;
