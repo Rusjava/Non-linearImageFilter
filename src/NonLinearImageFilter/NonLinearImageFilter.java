@@ -6,17 +6,17 @@ package NonLinearImageFilter;
 import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.Graphics;
+import java.awt.Dimension;
+import java.awt.Transparency;
+import java.awt.color.ColorSpace;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.awt.color.ColorSpace;
-import java.awt.Transparency;
 import java.awt.image.DataBuffer;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.MemoryImageSource;
-import java.awt.geom.AffineTransform;
-import java.awt.Dimension;
 import java.awt.image.BufferedImageOp;
+import java.awt.geom.AffineTransform;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -34,13 +34,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private int xsize = 200;
     private int ysize = 200;
+    private int noiseLevel=20;
     private Vector<Image> imageList;
     private ColorModel grayColorModel;
 
     public NonLinearImageFilter() {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         int[] nBits = {8};
-        grayColorModel = new ComponentColorModel(cs, nBits, false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+        grayColorModel = new ComponentColorModel(cs, nBits, false, true, 
+                Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
         initComponents();
     }
 
@@ -344,15 +346,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-        byte [] pixels=generatePixelData(xsize, ysize, 0.5, 10);
-        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
+        double scale=0.5;
+        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, 
+                ysize, grayColorModel, generatePixelData(xsize, ysize, scale, noiseLevel), 0, xsize));
         imageList = new Vector<>();
         imageList.add(inImage);
         
-        JComponent imagePanel = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
-        jPanelImages.add(imagePanel);
+        JComponent Component = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
+        jPanelImages.add(Component);
         jPanelImages.setLayout(new BorderLayout(10, 10));
-        jPanelImages.add(imagePanel, BorderLayout.CENTER);
+        jPanelImages.add(Component, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }//GEN-LAST:event_jButtonImageActionPerformed
@@ -415,15 +418,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
     }
-
+    
+    /*
+    * The method generates pixel arrays for test images
+    */
     private byte[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
         byte[] pixels = new byte[xsize * ysize];
         for (int i = 0; i < xsize; i++) {
             for (int k = 0; k < xsize; k++) {
                 if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
+                    pixels[i * xsize + k] = 0;
+                } else {
                     pixels[i * xsize + k] = (byte) 127;
                 }
-                pixels[i * xsize + k] += (byte) Math.random() * noise;
+                pixels[i * xsize + k] += (byte) (Math.random() * noise);
             }
         }
         return pixels;
