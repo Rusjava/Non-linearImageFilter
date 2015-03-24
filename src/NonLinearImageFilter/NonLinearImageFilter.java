@@ -10,6 +10,7 @@ import java.awt.Dimension;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.FilteredImageSource;
+import java.awt.image.WritableRaster;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -17,6 +18,7 @@ import java.awt.image.ComponentColorModel;
 import java.awt.image.MemoryImageSource;
 import java.awt.image.BufferedImageOp;
 import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -35,6 +37,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int xsize = 200;
     private int ysize = 200;
     private int noiseLevel=20;
+    private double relativeSquareSize=0.5;
     private Vector<Image> imageList;
     private ColorModel grayColorModel;
 
@@ -346,13 +349,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-        double scale=0.5;
+        
         Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, 
-                ysize, grayColorModel, generatePixelData(xsize, ysize, scale, noiseLevel), 0, xsize));
+               ysize, grayColorModel, generatePixelData(xsize, ysize, 
+                       relativeSquareSize, noiseLevel), 0, xsize));
+        //BufferedImage bImage=new BufferedImage(xsize, ysize, BufferedImage.TYPE_BYTE_GRAY);
+        /*WritableRaster raster=new WritableRaster();
+        BufferedImage bImage=new BufferedImage(grayColorModel, raster, false, null);*/
+        
         imageList = new Vector<>();
         imageList.add(inImage);
         
-        JComponent Component = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
+        JComponent Component = new ImageComponent((BufferedImage)inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
         jPanelImages.add(Component);
         jPanelImages.setLayout(new BorderLayout(10, 10));
         jPanelImages.add(Component, BorderLayout.CENTER);
