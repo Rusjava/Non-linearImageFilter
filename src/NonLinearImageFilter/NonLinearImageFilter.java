@@ -36,16 +36,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private int xsize = 200;
     private int ysize = 200;
-    private int noiseLevel=20;
-    private double relativeSquareSize=0.5;
+    private int noiseLevel = (int) Math.pow(2, 28);
+    private double relativeSquareSize = 0.5;
     private Vector<Image> imageList;
     private ColorModel grayColorModel;
 
     public NonLinearImageFilter() {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        int[] nBits = {8};
-        grayColorModel = new ComponentColorModel(cs, nBits, false, true, 
-                Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+        int[] nBits = {32};
+        grayColorModel = new ComponentColorModel(cs, nBits, false, true,
+                Transparency.OPAQUE, DataBuffer.TYPE_INT);
         initComponents();
     }
 
@@ -349,13 +349,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-        
-        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize, 
-               ysize, grayColorModel, generatePixelData(xsize, ysize, 
-                       relativeSquareSize, noiseLevel), 0, xsize));
+
+        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize,
+                ysize, grayColorModel, generatePixelData(xsize, ysize,
+                        relativeSquareSize, noiseLevel), 0, xsize));
         imageList = new Vector<>();
         imageList.add(inImage);
-        
+
         JComponent Component = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
         jPanelImages.add(Component);
         jPanelImages.setLayout(new BorderLayout(10, 10));
@@ -422,20 +422,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
     }
-    
+
     /*
-    * The method generates pixel arrays for test images
-    */
-    private byte[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
-        byte[] pixels = new byte[xsize * ysize];
+     * The method generates pixel arrays for test images
+     */
+    private int[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
+        int[] pixels = new int[xsize * ysize];
+        int level = (int) Math.pow(2, 31) - 1;
         for (int i = 0; i < xsize; i++) {
             for (int k = 0; k < xsize; k++) {
                 if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
                     pixels[i * xsize + k] = 0;
                 } else {
-                    pixels[i * xsize + k] = (byte) 127;
+                    pixels[i * xsize + k] = level;
                 }
-                pixels[i * xsize + k] += (byte) (Math.random() * noise);
+                pixels[i * xsize + k] += (int) (Math.random() * noise);
             }
         }
         return pixels;
