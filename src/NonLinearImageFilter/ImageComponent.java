@@ -37,8 +37,8 @@ public class ImageComponent extends JComponent {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        double xscale=1.0*image.getWidth(null)/getPreferredSize().getWidth(),
-                yscale=1.0*image.getHeight(null)/getPreferredSize().getHeight();
+        double xscale=1.0*image.getWidth(null)/getWidth(),
+                yscale=1.0*image.getHeight(null)/getHeight();
         AffineTransform at=AffineTransform.getScaleInstance(xscale, yscale);
         BufferedImageOp imgop=new AffineTransformOp (at, AffineTransformOp.TYPE_BICUBIC);
         ((Graphics2D)g).drawImage(image, imgop, 0, 0);
