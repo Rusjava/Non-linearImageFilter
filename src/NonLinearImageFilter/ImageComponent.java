@@ -50,7 +50,6 @@ public class ImageComponent extends JComponent {
         /*
         * Scaling image before drawing to the size of container
         */
-        setPreferredSize(new Dimension(this.getParent().getWidth(), this.getParent().getHeight()));
         double xscale=1.0*getWidth()/image.getWidth(null),
                yscale=1.0*getHeight()/image.getHeight(null);
         AffineTransform at=AffineTransform.getScaleInstance(xscale, yscale);

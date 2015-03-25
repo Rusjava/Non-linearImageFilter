@@ -347,12 +347,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-        JComponent Component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
+        JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
         imageList = new Vector<>();
-        imageList.add(Component);
- 
+        imageList.add(component);
+        component.setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
         jPanelImages.setLayout(new BorderLayout(10, 10));
-        jPanelImages.add(Component, BorderLayout.CENTER);
+        jPanelImages.add(component, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }//GEN-LAST:event_jButtonImageActionPerformed
