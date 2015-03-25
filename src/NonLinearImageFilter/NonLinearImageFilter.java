@@ -36,16 +36,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private int xsize = 200;
     private int ysize = 200;
-    private int noiseLevel = (int) Math.pow(2, 28);
+    private int noiseLevel = (int) Math.pow(2, 29);
+    private int signalLevel = (int) Math.pow(2, 30);
     private double relativeSquareSize = 0.5;
-    private Vector<Image> imageList;
+    private Vector<JComponent> imageList;
     private ColorModel grayColorModel;
 
     public NonLinearImageFilter() {
-        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        int[] nBits = {31};
-        grayColorModel = new ComponentColorModel(cs, nBits, false, true,
-                Transparency.OPAQUE, DataBuffer.TYPE_INT);
+        
         initComponents();
     }
 
@@ -349,15 +347,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
-
-        Image inImage = jPanelImages.createImage(new MemoryImageSource(xsize,
-                ysize, grayColorModel, generatePixelData(xsize, ysize,
-                        relativeSquareSize, noiseLevel), 0, xsize));
+        JComponent Component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
         imageList = new Vector<>();
-        imageList.add(inImage);
-
-        JComponent Component = new ImageComponent(inImage, jPanelImages.getWidth(), jPanelImages.getHeight());
-        jPanelImages.add(Component);
+        imageList.add(Component);
+ 
         jPanelImages.setLayout(new BorderLayout(10, 10));
         jPanelImages.add(Component, BorderLayout.CENTER);
         jPanelImages.revalidate();
@@ -423,25 +416,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
     }
 
-    /*
-     * The method generates pixel arrays for test images
-     */
-    private int[] generatePixelData(int xsize, int ysize, double squareScale, int noise) {
-        int[] pixels = new int[xsize * ysize];
-        int level = -(int) (Math.pow(2, 30) - 1);
-        System.out.println(level);
-        for (int i = 0; i < xsize; i++) {
-            for (int k = 0; k < xsize; k++) {
-                if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
-                    pixels[i * xsize + k] = 0;
-                } else {
-                    pixels[i * xsize + k] = level;
-                }
-                //pixels[i * xsize + k] += (int) (Math.random() * noise);
-            }
-        }
-        return pixels;
-    }
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
