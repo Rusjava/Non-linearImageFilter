@@ -40,10 +40,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int signalLevel = (int) Math.pow(2, 30);
     private double relativeSquareSize = 0.5;
     private Vector<JComponent> imageList;
-    private ColorModel grayColorModel;
+    private int nSteps=100;
 
     public NonLinearImageFilter() {
-        
         initComponents();
     }
 
@@ -343,15 +342,25 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
+        for (int i=0; i<nSteps; i++) {
+            JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize*(100-i)/100, 
+                    noiseLevel, signalLevel);   
+            imageList.add(component);
+        }
+        imageList.get(imageList.size()-1).setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
+        jPanelImages.remove(jPanelImages.getComponent(0));
+        jPanelImages.add(imageList.get(imageList.size()-1), BorderLayout.CENTER);
+        jPanelImages.revalidate();
+        jPanelImages.repaint();
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
         JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
         imageList = new Vector<>();
+        jPanelImages.setLayout(new BorderLayout(10, 10));
         imageList.add(component);
         component.setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
-        jPanelImages.setLayout(new BorderLayout(10, 10));
         jPanelImages.add(component, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
