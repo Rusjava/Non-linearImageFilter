@@ -19,7 +19,7 @@ import java.awt.image.MemoryImageSource;
 import java.awt.image.BufferedImageOp;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
@@ -39,10 +39,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int noiseLevel = (int) Math.pow(2, 29);
     private int signalLevel = (int) Math.pow(2, 30);
     private double relativeSquareSize = 0.5;
-    private Vector<JComponent> imageList;
+    private ArrayList<JComponent> imageList;
     private int nSteps=100;
 
     public NonLinearImageFilter() {
+        imageList = new ArrayList<>();
         initComponents();
     }
 
@@ -357,7 +358,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
         JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
-        imageList = new Vector<>();
+        
         jPanelImages.setLayout(new BorderLayout(10, 10));
         imageList.add(component);
         component.setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
