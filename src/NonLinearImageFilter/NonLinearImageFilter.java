@@ -75,7 +75,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelResults = new javax.swing.JPanel();
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
-        jScrollBarImages = new javax.swing.JScrollBar();
+        jSliderImages = new javax.swing.JSlider();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuOptions = new javax.swing.JMenu();
@@ -235,18 +235,22 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages.setLayout(jPanelImagesLayout);
         jPanelImagesLayout.setHorizontalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 566, Short.MAX_VALUE)
+            .addGap(0, 594, Short.MAX_VALUE)
         );
         jPanelImagesLayout.setVerticalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 369, Short.MAX_VALUE)
         );
 
         jPanelControls.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Controls", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
 
-        jScrollBarImages.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
-            public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-                jScrollBarImagesAdjustmentValueChanged(evt);
+        jSliderImages.setOrientation(javax.swing.JSlider.VERTICAL);
+        jSliderImages.setMaximumSize(new java.awt.Dimension(100, 32767));
+        jSliderImages.setMinimumSize(new java.awt.Dimension(30, 36));
+        jSliderImages.setPreferredSize(new java.awt.Dimension(30, 200));
+        jSliderImages.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jSliderImagesStateChanged(evt);
             }
         });
 
@@ -255,15 +259,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControlsLayout.setHorizontalGroup(
             jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelControlsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollBarImages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(73, Short.MAX_VALUE))
+                .addGap(19, 19, 19)
+                .addComponent(jSliderImages, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(19, Short.MAX_VALUE))
         );
         jPanelControlsLayout.setVerticalGroup(
             jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelControlsLayout.createSequentialGroup()
-                .addComponent(jScrollBarImages, javax.swing.GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(jSliderImages, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelResultsLayout = new javax.swing.GroupLayout(jPanelResults);
@@ -272,9 +274,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             jPanelResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelResultsLayout.createSequentialGroup()
                 .addComponent(jPanelImages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelControls, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 18, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanelControls, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanelResultsLayout.setVerticalGroup(
             jPanelResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -391,15 +393,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldNStepsFocusLost
 
-    private void jScrollBarImagesAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_jScrollBarImagesAdjustmentValueChanged
+    private void jSliderImagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSliderImagesStateChanged
         // TODO add your handling code here:
         JSlider source = (JSlider) evt.getSource();
         if (!source.getValueIsAdjusting()) {
-            int step = (int) (source.getValue()*nSteps/100.0);
-            imageList.get(step).setPreferredSize(new Dimension(jPanelImages.getWidth(),
+            int step = (int) (source.getValue()*imageList.size()/100.001);
+            JComponent currentComponent=imageList.get(step);
+            currentComponent.setPreferredSize(new Dimension(jPanelImages.getWidth(),
                                     jPanelImages.getHeight()));
+            jPanelImages.remove(jPanelImages.getComponent(0));
+            jPanelImages.add(currentComponent, BorderLayout.CENTER);
+            jPanelImages.revalidate();
+            jPanelImages.repaint();
         }
-    }//GEN-LAST:event_jScrollBarImagesAdjustmentValueChanged
+    }//GEN-LAST:event_jSliderImagesStateChanged
 
     /**
      * @param args the command line arguments
@@ -455,8 +462,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelResults;
     private javax.swing.JPanel jPanelSpace;
     private javax.swing.JProgressBar jProgressBar;
-    private javax.swing.JScrollBar jScrollBarImages;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSlider jSliderImages;
     private javax.swing.JTextField jTextFieldDiffCoef;
     private javax.swing.JTextField jTextFieldNSteps;
     private javax.swing.JTextField jTextFieldNonlinear;

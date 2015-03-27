@@ -104,7 +104,6 @@ public class ImageComponent extends JComponent {
      */
     private int[] generatePixelData(int xsize, int ysize, double squareScale, int noise, int signal) {
         int[] pixels = new int[xsize * ysize];
-        System.out.println(noise);
         for (int i = 0; i < xsize; i++) {
             for (int k = 0; k < xsize; k++) {
                 if ((Math.abs(i - xsize / 2 + 1) < squareScale * ysize / 2) && (Math.abs(k - ysize / 2 + 1) < squareScale * xsize / 2)) {
