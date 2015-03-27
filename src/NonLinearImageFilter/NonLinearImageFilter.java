@@ -24,6 +24,8 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
 import javax.swing.JSlider;
+import java.util.HashMap;
+import TextUtilities.MyTextUtilities;
 
 /**
  *
@@ -43,9 +45,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<JComponent> imageList;
     private int nSteps = 100;
     private int sliderposition = 50;
+    private double diffCoef = 0.001;
+    private HashMap defaults;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
+        defaults = new HashMap();
         initComponents();
     }
 
@@ -343,6 +348,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefActionPerformed
         // TODO add your handling code here:
+        diffCoef = MyTextUtilities.TestValueWithMemory(0, 1, jTextFieldDiffCoef,
+                "0.001", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
