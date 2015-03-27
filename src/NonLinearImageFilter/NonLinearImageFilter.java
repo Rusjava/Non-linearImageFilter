@@ -42,7 +42,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private double relativeSquareSize = 0.5;
     private ArrayList<JComponent> imageList;
     private int nSteps = 100;
-    private int sliderposition;
+    private int sliderposition = 50;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -352,25 +352,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     noiseLevel, signalLevel);
             imageList.add(component);
         }
-        imageList.get(imageList.size() - 1).
-                setPreferredSize(new Dimension(jPanelImages.getWidth(),
-                                jPanelImages.getHeight()));
-        jPanelImages.remove(jPanelImages.getComponent(0));
-        jPanelImages.add(imageList.get(imageList.size() - 1), BorderLayout.CENTER);
-        jPanelImages.revalidate();
-        jPanelImages.repaint();
+        updateImagePanel();
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
+        imageList = new ArrayList<>();
         JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
-
-        jPanelImages.setLayout(new BorderLayout(10, 10));
         imageList.add(component);
-        component.setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
-        jPanelImages.add(component, BorderLayout.CENTER);
-        jPanelImages.revalidate();
-        jPanelImages.repaint();
+        jPanelImages.setLayout(new BorderLayout(10, 10));
+        updateImagePanel();
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
@@ -397,14 +388,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
         JSlider source = (JSlider) evt.getSource();
         if (!source.getValueIsAdjusting()) {
-            int step = (int) (source.getValue()*imageList.size()/100.001);
-            JComponent currentComponent=imageList.get(step);
-            currentComponent.setPreferredSize(new Dimension(jPanelImages.getWidth(),
-                                    jPanelImages.getHeight()));
-            jPanelImages.remove(jPanelImages.getComponent(0));
-            jPanelImages.add(currentComponent, BorderLayout.CENTER);
-            jPanelImages.revalidate();
-            jPanelImages.repaint();
+            sliderposition = source.getValue();
+            updateImagePanel();
         }
     }//GEN-LAST:event_jSliderImagesStateChanged
 
@@ -443,6 +428,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
     }
 
+    private void updateImagePanel() {
+        int step = (int) (sliderposition * imageList.size() / 100.001);
+        JComponent currentComponent = imageList.get(step);
+        currentComponent.setPreferredSize(new Dimension(jPanelImages.getWidth(),
+                jPanelImages.getHeight()));
+        if (imageList.size() > 1) {
+            jPanelImages.remove(jPanelImages.getComponent(0));
+        }
+        jPanelImages.add(currentComponent, BorderLayout.CENTER);
+        jPanelImages.revalidate();
+        jPanelImages.repaint();
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
