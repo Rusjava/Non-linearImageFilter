@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
+import javax.swing.JSlider;
 
 /**
  *
@@ -40,7 +41,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int signalLevel = (int) Math.pow(2, 30);
     private double relativeSquareSize = 0.5;
     private ArrayList<JComponent> imageList;
-    private int nSteps=100;
+    private int nSteps = 100;
+    private int sliderposition;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -343,14 +345,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
-        for (int i=0; i<nSteps; i++) {
-            JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize*(100-i)/100, 
-                    noiseLevel, signalLevel);   
+        for (int i = 0; i < nSteps; i++) {
+            JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize * (100 - i) / 100,
+                    noiseLevel, signalLevel);
             imageList.add(component);
         }
-        imageList.get(imageList.size()-1).setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
+        imageList.get(imageList.size() - 1).
+                setPreferredSize(new Dimension(jPanelImages.getWidth(),
+                                jPanelImages.getHeight()));
         jPanelImages.remove(jPanelImages.getComponent(0));
-        jPanelImages.add(imageList.get(imageList.size()-1), BorderLayout.CENTER);
+        jPanelImages.add(imageList.get(imageList.size() - 1), BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }//GEN-LAST:event_jButtonStartActionPerformed
@@ -358,7 +362,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
         JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
-        
+
         jPanelImages.setLayout(new BorderLayout(10, 10));
         imageList.add(component);
         component.setPreferredSize(new Dimension(jPanelImages.getWidth(), jPanelImages.getHeight()));;
@@ -389,6 +393,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jScrollBarImagesAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_jScrollBarImagesAdjustmentValueChanged
         // TODO add your handling code here:
+        JSlider source = (JSlider) evt.getSource();
+        if (!source.getValueIsAdjusting()) {
+            int step = (int) (source.getValue()*nSteps/100.0);
+            imageList.get(step).setPreferredSize(new Dimension(jPanelImages.getWidth(),
+                                    jPanelImages.getHeight()));
+        }
     }//GEN-LAST:event_jScrollBarImagesAdjustmentValueChanged
 
     /**
@@ -426,7 +436,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
     }
 
-    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
