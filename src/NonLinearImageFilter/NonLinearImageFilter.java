@@ -407,7 +407,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         imageList = new ArrayList<>();
         JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
-        //jPanelImages.setLayout(new BorderLayout(0, 0));
         updateImagePanel(0);
     }//GEN-LAST:event_jButtonImageActionPerformed
 
