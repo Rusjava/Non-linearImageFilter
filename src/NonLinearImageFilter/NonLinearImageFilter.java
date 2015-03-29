@@ -361,13 +361,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
             @Override
             protected Void doInBackground() throws Exception {
-                ImageParam imageParamClone=null;
-                try {
-                    imageParamClone = (ImageParam) imageParam.clone();
-                } catch (CloneNotSupportedException ex) {
-                    Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
-                    return null;
-                }
+                ImageParam imageParamClone = (ImageParam) imageParam.clone();
                 for (int i = 0; i < nSteps; i++) {
                     imageParamClone.squareScale = squareScaleZero * (nSteps - i) / nSteps;
                     imageList.add(new ImageComponent(imageParamClone));
@@ -383,10 +377,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 } catch (InterruptedException | CancellationException e) {
                     return;
                 } catch (ExecutionException e) {
+                    if (e.getCause() instanceof CloneNotSupportedException) {
+                        Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
+                    }
                     if (e.getCause() instanceof Exception) {
                         JOptionPane.showMessageDialog(null, "Error!", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
-                    }
+                    } 
                 }
                 updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
             }
