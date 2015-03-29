@@ -407,7 +407,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         imageList = new ArrayList<>();
         JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
-        jPanelImages.setLayout(new BorderLayout(0, 0));
+        //jPanelImages.setLayout(new BorderLayout(0, 0));
         updateImagePanel(0);
     }//GEN-LAST:event_jButtonImageActionPerformed
 
@@ -493,6 +493,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             component.setPreferredSize(jPanelImages.getComponent(0).getPreferredSize());
             jPanelImages.removeAll();
         }
+        jPanelImages.setLayout(new BorderLayout(0, 0));
         jPanelImages.add(component, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
