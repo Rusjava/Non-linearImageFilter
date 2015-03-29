@@ -35,9 +35,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int nSteps = 100;
     private int sliderposition = 50;
     private double diffCoef = 0.001;
-    private double nonLinearCoef=0.1;
+    private double nonLinearCoef = 0.1;
     private HashMap defaults;
-    private double squareScaleZero=0.5;
+    private double squareScaleZero = 0.5;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -225,8 +225,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jPanelResults.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -353,19 +353,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
-        int oldSliderposition=sliderposition;
-        sliderposition=100;
+        int oldSliderposition = sliderposition;
+        sliderposition = 100;
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
-        new SwingWorker<Void, Void> () {
+        
+        new SwingWorker<Void, Void>() {
+            
             @Override
             protected Void doInBackground() throws Exception {
                 for (int i = 0; i < nSteps; i++) {
-                    imageParam.squareScale = squareScaleZero*(nSteps-i)/nSteps;
+                    imageParam.squareScale = squareScaleZero * (nSteps - i) / nSteps;
                     imageList.add(new ImageComponent(imageParam));
+                    setStatusBar((int) (100.0 * i / nSteps));
                 }
                 return null;
-            }          
+            }
+
             @Override
             protected void done() {
                 try {
@@ -374,23 +378,29 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     return;
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof Exception) {
-                        JOptionPane.showMessageDialog(null, "Error!", "Error",
-                                        JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Error!", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                } 
-                sliderposition=oldSliderposition;
-                updateImagePanel();    
                 }
-                 
-                /**
-                * Updating progress bar
-                 * @param status 
-                */
-                public void setStatusBar(final int status) {
-                    SwingUtilities.invokeLater(()->jProgressBar.setValue(status));
+                sliderposition = oldSliderposition;
+                updateImagePanel();
             }
-        }.execute();      
+
+            /**
+             * Updating progress bar and displaying the last image
+             *
+             * @param status
+             */
+            public void setStatusBar(final int status) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateImagePanel();
+                        jProgressBar.setValue(status);
+                    }
+                });
+            }
+        }.execute();
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
