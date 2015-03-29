@@ -4,28 +4,21 @@
 package NonLinearImageFilter;
 
 import java.awt.BorderLayout;
-import java.awt.Image;
-import java.awt.Graphics;
-import java.awt.Dimension;
-import java.awt.Transparency;
-import java.awt.color.ColorSpace;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.WritableRaster;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.MemoryImageSource;
-import java.awt.image.BufferedImageOp;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.util.ArrayList;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.ImageIcon;
-import javax.swing.JSlider;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.JComponent;
+import javax.swing.JSlider;
+import javax.swing.SwingWorker;
+
 import TextUtilities.MyTextUtilities;
+import java.io.IOException;
+import java.util.IllegalFormatException;
+import java.util.concurrent.CancellationException;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -37,21 +30,24 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     /**
      * Creates new form NonLinearImageFilter
      */
-    private int xsize = 200;
-    private int ysize = 200;
-    private int noiseLevel = (int) Math.pow(2, 29);
-    private int signalLevel = (int) Math.pow(2, 30);
-    private double relativeSquareSize = 0.5;
+    private ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private int nSteps = 100;
     private int sliderposition = 50;
     private double diffCoef = 0.001;
     private double nonLinearCoef=0.1;
     private HashMap defaults;
+    private double squareScaleZero=0.5;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
         defaults = new HashMap();
+        imageParam = new ImageParam();
+        imageParam.xsize = 200;
+        imageParam.ysize = 200;
+        imageParam.noise = (int) Math.pow(2, 29);
+        imageParam.signal = (int) Math.pow(2, 30);
+        imageParam.squareScale = squareScaleZero;
         initComponents();
     }
 
@@ -227,10 +223,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         );
         jPanelSpaceLayout.setVerticalGroup(
             jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelSpaceLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanelSpaceLayout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(jProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanelResults.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -357,18 +353,50 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
-        for (int i = 0; i < nSteps; i++) {
-            JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize * (100 - i) / 100,
-                    noiseLevel, signalLevel);
-            imageList.add(component);
-        }
-        updateImagePanel();
+        int oldSliderposition=sliderposition;
+        sliderposition=100;
+        jProgressBar.setValue(0);
+        jProgressBar.setStringPainted(true);
+        new SwingWorker<Void, Void> () {
+            @Override
+            protected Void doInBackground() throws Exception {
+                for (int i = 0; i < nSteps; i++) {
+                    imageParam.squareScale = squareScaleZero*(nSteps-i)/nSteps;
+                    imageList.add(new ImageComponent(imageParam));
+                }
+                return null;
+            }          
+            @Override
+            protected void done() {
+                try {
+                    get();
+                } catch (InterruptedException | CancellationException e) {
+                    return;
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof Exception) {
+                        JOptionPane.showMessageDialog(null, "Error!", "Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } 
+                sliderposition=oldSliderposition;
+                updateImagePanel();    
+                }
+                 
+                /**
+                * Updating progress bar
+                 * @param status 
+                */
+                public void setStatusBar(final int status) {
+                    SwingUtilities.invokeLater(()->jProgressBar.setValue(status));
+            }
+        }.execute();      
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
         imageList = new ArrayList<>();
-        JComponent component = new ImageComponent(xsize, ysize, relativeSquareSize, noiseLevel, signalLevel);
+        JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
         jPanelImages.setLayout(new BorderLayout(0, 0));
         updateImagePanel();
@@ -452,8 +480,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         int step = (int) (sliderposition * imageList.size() / 100.001);
         JComponent currentComponent = imageList.get(step);
         if (jPanelImages.getComponentCount() == 0) {
-            currentComponent.setPreferredSize(new Dimension(jPanelImages.getWidth(),
-                    jPanelImages.getHeight()));
+            currentComponent.setPreferredSize(jPanelImages.getSize());
         } else {
             currentComponent.setPreferredSize(jPanelImages.getComponent(0).getPreferredSize());
         }

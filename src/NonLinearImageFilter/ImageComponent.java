@@ -37,12 +37,12 @@ public class ImageComponent extends JComponent {
      * @param noise
      * @param signal
      */
-    public ImageComponent(int xsize, int ysize, double squareScale, int noise, int signal) {
+    public ImageComponent(ImageParam imageParam) {
         super();
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-        int[] pixels = generatePixelData(xsize, ysize, squareScale, noise, signal);
-        Image img = this.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
+        int[] pixels = generatePixelData(imageParam.xsize, imageParam.ysize, imageParam.squareScale, imageParam.noise, imageParam.signal);
+        Image img = this.createImage(new MemoryImageSource(imageParam.xsize, imageParam.ysize, grayColorModel, pixels, 0, imageParam.xsize));
         this.image = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
         this.image.getGraphics().drawImage(img, 0, 0, null);
     }
