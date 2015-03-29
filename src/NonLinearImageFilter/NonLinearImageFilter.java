@@ -17,6 +17,8 @@ import TextUtilities.MyTextUtilities;
 import java.io.IOException;
 import java.util.IllegalFormatException;
 import java.util.concurrent.CancellationException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -353,19 +355,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
-        int oldSliderposition = sliderposition;
-        sliderposition = 100;
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
-        
         new SwingWorker<Void, Void>() {
-            
+
             @Override
             protected Void doInBackground() throws Exception {
+                ImageParam imageParamClone=null;
+                try {
+                    imageParamClone = (ImageParam) imageParam.clone();
+                } catch (CloneNotSupportedException ex) {
+                    Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+                    return null;
+                }
                 for (int i = 0; i < nSteps; i++) {
-                    imageParam.squareScale = squareScaleZero * (nSteps - i) / nSteps;
-                    imageList.add(new ImageComponent(imageParam));
-                    setStatusBar((int) (100.0 * i / nSteps));
+                    imageParamClone.squareScale = squareScaleZero * (nSteps - i) / nSteps;
+                    imageList.add(new ImageComponent(imageParamClone));
+                    setStatusBar((int) (100.0 * i / (nSteps - 1)));
                 }
                 return null;
             }
@@ -382,8 +388,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         return;
                     }
                 }
-                sliderposition = oldSliderposition;
-                updateImagePanel();
+                updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
             }
 
             /**
@@ -392,12 +397,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
              * @param status
              */
             public void setStatusBar(final int status) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateImagePanel();
-                        jProgressBar.setValue(status);
-                    }
+                SwingUtilities.invokeLater(() -> {
+                    updateImagePanel(imageList.size() - 1);
+                    jProgressBar.setValue(status);
                 });
             }
         }.execute();
@@ -409,7 +411,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
         jPanelImages.setLayout(new BorderLayout(0, 0));
-        updateImagePanel();
+        updateImagePanel(0);
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
@@ -447,7 +449,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JSlider source = (JSlider) evt.getSource();
         if (!source.getValueIsAdjusting()) {
             sliderposition = source.getValue();
-            updateImagePanel();
+            updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
         }
     }//GEN-LAST:event_jSliderImagesStateChanged
 
@@ -486,17 +488,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
     }
 
-    private void updateImagePanel() {
-        int step = (int) (sliderposition * imageList.size() / 100.001);
-        JComponent currentComponent = imageList.get(step);
+    private void updateImagePanel(int index) {
+        JComponent component = imageList.get(index);
         if (jPanelImages.getComponentCount() == 0) {
-            currentComponent.setPreferredSize(jPanelImages.getSize());
+            component.setPreferredSize(jPanelImages.getSize());
         } else {
-            currentComponent.setPreferredSize(jPanelImages.getComponent(0).getPreferredSize());
+            component.setPreferredSize(jPanelImages.getComponent(0).getPreferredSize());
+            jPanelImages.removeAll();
         }
-
-        jPanelImages.removeAll();
-        jPanelImages.add(currentComponent, BorderLayout.CENTER);
+        jPanelImages.add(component, BorderLayout.CENTER);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }
