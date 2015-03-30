@@ -38,8 +38,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int sliderposition = 50;
     private double diffCoef = 0.001;
     private double nonLinearCoef = 0.1;
-    private HashMap defaults;
+    private final HashMap defaults;
     private double squareScaleZero = 0.5;
+    private boolean working = false;
+    private SwingWorker<Void, Void> worker;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -51,6 +53,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         imageParam.signal = (int) Math.pow(2, 30);
         imageParam.squareScale = squareScaleZero;
         initComponents();
+        jButtonStart.setEnabled(false);
     }
 
     /**
@@ -355,14 +358,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
+        if (working == true) {
+            worker.cancel(false);
+            return;
+        }
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
-        new SwingWorker<Void, Void>() {
+        working = true;
+        jButtonStart.setText("Stop");
+        worker = new SwingWorker<Void, Void>() {
 
             @Override
             protected Void doInBackground() throws Exception {
                 ImageParam imageParamClone = (ImageParam) imageParam.clone();
                 for (int i = 0; i < nSteps; i++) {
+                    if (isCancelled()) {
+                        return null;
+                    }
                     imageParamClone.squareScale = squareScaleZero * (nSteps - i) / nSteps;
                     imageList.add(new ImageComponent(imageParamClone));
                     setStatusBar((int) (100.0 * i / (nSteps - 1)));
@@ -375,7 +387,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 try {
                     get();
                 } catch (InterruptedException | CancellationException e) {
-                    return;
+                    
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof CloneNotSupportedException) {
                         Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
@@ -383,9 +395,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (e.getCause() instanceof Exception) {
                         JOptionPane.showMessageDialog(null, "Error!", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
-                    } 
+                    }
                 }
                 updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
+                working = false;
+                jButtonStart.setText("Start");
             }
 
             /**
@@ -399,7 +413,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     jProgressBar.setValue(status);
                 });
             }
-        }.execute();
+        };
+        worker.execute();
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
@@ -408,6 +423,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
         updateImagePanel(0);
+        jButtonStart.setEnabled(true);
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
