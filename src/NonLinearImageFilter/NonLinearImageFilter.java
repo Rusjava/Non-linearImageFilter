@@ -6,21 +6,20 @@ package NonLinearImageFilter;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.SwingWorker;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import TextUtilities.MyTextUtilities;
 import java.io.IOException;
-import java.util.IllegalFormatException;
-import java.util.concurrent.CancellationException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 /**
  *
@@ -42,6 +41,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private double squareScaleZero = 0.5;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
+    private double [][] currentData;
+    private ArrayList<Arrays> dataList;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -420,8 +421,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
         imageList = new ArrayList<>();
+        dataList = new ArrayList<>();
         JComponent component = new ImageComponent(imageParam);
         imageList.add(component);
+        
+        //dataList.add(new Arrays(((ImageComponent)component).getPixels()));
         updateImagePanel(0);
         jButtonStart.setEnabled(true);
     }//GEN-LAST:event_jButtonImageActionPerformed
