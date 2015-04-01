@@ -27,6 +27,7 @@ import javax.swing.JComponent;
 public class ImageComponent extends JComponent {
 
     private final Image image;
+    private final int[] pixels;
 
     /**
      * Constructor generating sample image
@@ -37,22 +38,22 @@ public class ImageComponent extends JComponent {
         super();
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-        int[] pixels = generatePixelData(imageParam.xsize, imageParam.ysize, imageParam.squareScale, imageParam.noise, imageParam.signal);
+        pixels = generatePixelData(imageParam.xsize, imageParam.ysize, imageParam.squareScale, imageParam.noise, imageParam.signal);
         Image img = this.createImage(new MemoryImageSource(imageParam.xsize, imageParam.ysize, grayColorModel, pixels, 0, imageParam.xsize));
         this.image = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
         this.image.getGraphics().drawImage(img, 0, 0, null);
     }
-    
+
     /**
      * Constructor generating image from real data
      *
      * @param pixelData real pixel data
      */
-    public ImageComponent(double [][] pixelData) {
+    public ImageComponent(double[][] pixelData) {
         super();
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-        int[] pixels = generatePixelData(pixelData);
+        pixels = generatePixelData(pixelData);
         Image img = this.createImage(new MemoryImageSource(pixelData[0].length,
                 pixelData.length, grayColorModel, pixels, 0, pixelData[0].length));
         this.image = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
@@ -66,8 +67,16 @@ public class ImageComponent extends JComponent {
      */
     public ImageComponent(Image img) {
         super();
-        this.image = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
+        int xsize = img.getWidth(null);
+        int ysize = img.getHeight(null);
+        this.image = new BufferedImage(xsize, ysize, BufferedImage.TYPE_BYTE_GRAY);
         this.image.getGraphics().drawImage(img, 0, 0, null);
+        pixels = new int[ysize * xsize];
+        for (int i = 0; i < ysize; i++) {
+            for (int k = 0; k < xsize; k++) {
+                pixels[i * xsize + k] = ((BufferedImage) image).getData().getDataBuffer().getElem(i * xsize + k);
+            }
+        }
     }
 
     @Override
@@ -105,7 +114,7 @@ public class ImageComponent extends JComponent {
         double[][] pixels = new double[ysize][xsize];
         for (int i = 0; i < ysize; i++) {
             for (int k = 0; k < xsize; k++) {
-                pixels[i][k] = ((BufferedImage) image).getData().getDataBuffer().getElemDouble(i * xsize + k);
+                pixels[i][k] = this.pixels[i * xsize + k];
             }
         }
 

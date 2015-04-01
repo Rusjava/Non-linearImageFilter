@@ -42,7 +42,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private double [][] currentData;
-    private ArrayList<Arrays> dataList;
+    private ArrayList<double [][]> dataList;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -423,9 +423,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         imageList = new ArrayList<>();
         dataList = new ArrayList<>();
         JComponent component = new ImageComponent(imageParam);
-        imageList.add(component);
-        
-        //dataList.add(new Arrays(((ImageComponent)component).getPixels()));
+        imageList.add(component); 
+        dataList.add(((ImageComponent)component).getPixels());
         updateImagePanel(0);
         jButtonStart.setEnabled(true);
     }//GEN-LAST:event_jButtonImageActionPerformed
