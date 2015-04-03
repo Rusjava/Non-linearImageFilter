@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JComponent;
 
@@ -67,7 +68,7 @@ public class ImageComponent extends JComponent {
     /**
      * Constructor importing existing image
      *
-     * @param img
+     * @param image
      */
     public ImageComponent(BufferedImage image) {
         super();
@@ -75,9 +76,11 @@ public class ImageComponent extends JComponent {
         int ysize = image.getHeight(null);
         this.image=image;
         pixels = new int[ysize * xsize];
+        byte [] pixelsByte = ((DataBufferByte)image.getData().getDataBuffer()).getData();
         for (int i = 0; i < ysize; i++) {
             for (int k = 0; k < xsize; k++) {
-                pixels[i * xsize + k] = (image).getData().getDataBuffer().getElem(i * xsize + k);
+                pixels[i * xsize + k] = pixelsByte[i * xsize + k];
+                System.out.println(i * xsize + k);
             }
         }
     }

@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -487,7 +488,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             if (ans == JFileChooser.APPROVE_OPTION) {
                 File file = fo.getSelectedFile();
                 try {
-                    component = new ImageComponent(ImageIO.read(file));
+                    BufferedImage image=ImageIO.read(file);
+                    component = new ImageComponent(image);
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null,
                             "<html>Error while reading the image file</html>", "IO Error!", JOptionPane.ERROR_MESSAGE);
