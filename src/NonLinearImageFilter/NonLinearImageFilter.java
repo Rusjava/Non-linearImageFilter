@@ -13,13 +13,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
 
 import javax.swing.JComponent;
+import javax.swing.ButtonGroup;
+import javax.swing.JRadioButton;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingWorker;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
 import java.io.IOException;
+import java.io.File;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -41,8 +47,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private double squareScaleZero = 0.5;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
-    private double [][] currentData;
-    private ArrayList<double [][]> dataList;
+    private double[][] currentData;
+    private ArrayList<double[][]> dataList;
 
     public NonLinearImageFilter() {
         imageList = new ArrayList<>();
@@ -87,7 +93,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuOptions = new javax.swing.JMenu();
-        jMenuItemImage = new javax.swing.JMenuItem();
+        jMenuItemImageOptions = new javax.swing.JMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -334,13 +340,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuOptions.setText("Options");
 
-        jMenuItemImage.setText("Image options...");
-        jMenuItemImage.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemImageOptions.setText("Image options...");
+        jMenuItemImageOptions.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemImageActionPerformed(evt);
+                jMenuItemImageOptionsActionPerformed(evt);
             }
         });
-        jMenuOptions.add(jMenuItemImage);
+        jMenuOptions.add(jMenuItemImageOptions);
 
         jMenuBar.add(jMenuOptions);
 
@@ -417,7 +423,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 try {
                     get();
                 } catch (InterruptedException | CancellationException e) {
-                    
+
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof CloneNotSupportedException) {
                         Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
@@ -449,11 +455,54 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // TODO add your handling code here:
+        boolean fromFile = false;
+        JComponent component = null;
+        /*
+         * create a button group to chose the source of initial image
+         */
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButton button1=new JRadioButton("Generate");
+        button1.setSelected(true);
+        JRadioButton button2=new JRadioButton("From file");
+        buttonGroup.add(button1);
+        buttonGroup.add(button2);
+        JPanel panel=new JPanel();
+        panel.add(button1);
+        panel.add(button2);
+        /*
+         * Display option window
+         */
+        Object[] message = {panel};
+        int option = JOptionPane.showConfirmDialog(null, message, "Choose image source", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            fromFile=button2.isSelected();
+        } else {
+            return;
+        }
+        
+        if (fromFile) {
+            JFileChooser fo = new JFileChooser();
+            fo.setDialogTitle("Choose image to load");
+            int ans = fo.showOpenDialog(this);
+            if (ans == JFileChooser.APPROVE_OPTION) {
+                File file = fo.getSelectedFile();
+                try {
+                    component = new ImageComponent(ImageIO.read(file));
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null,
+                            "<html>Error while reading the image file</html>", "IO Error!", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } else {
+                return;
+            }
+        } else {
+            component = new ImageComponent(imageParam);
+        }
         imageList = new ArrayList<>();
         dataList = new ArrayList<>();
-        JComponent component = new ImageComponent(imageParam);
-        imageList.add(component); 
-        dataList.add(((ImageComponent)component).getPixels());
+        imageList.add(component);
+        dataList.add(((ImageComponent) component).getPixels());
         updateImagePanel(0);
         jButtonStart.setEnabled(true);
     }//GEN-LAST:event_jButtonImageActionPerformed
@@ -499,7 +548,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(null, 
+        JOptionPane.showMessageDialog(null,
                 "<html>Non-linear image filter. <br>Version: 0.1 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
                 "About NonLinear image filter", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
@@ -508,9 +557,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItemHelpActionPerformed
 
-    private void jMenuItemImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageActionPerformed
+    private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItemImageActionPerformed
+    }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     /**
      * @param args the command line arguments
@@ -572,7 +621,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenu jMenuHelp;
     private javax.swing.JMenuItem jMenuItemAbout;
     private javax.swing.JMenuItem jMenuItemHelp;
-    private javax.swing.JMenuItem jMenuItemImage;
+    private javax.swing.JMenuItem jMenuItemImageOptions;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;

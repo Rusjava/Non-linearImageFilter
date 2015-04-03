@@ -14,12 +14,12 @@
             <Property name="text" type="java.lang.String" value="Options"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemImage">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemImageOptions">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Image options..."/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemImageActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemImageOptionsActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
