@@ -27,6 +27,7 @@ import TextUtilities.MyTextUtilities;
 import java.io.IOException;
 import java.io.File;
 import javax.swing.JFileChooser;
+import javax.swing.JTextField;
 
 /**
  *
@@ -38,7 +39,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     /**
      * Creates new form NonLinearImageFilter
      */
-    private ImageParam imageParam;
+    private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private int nSteps = 100;
     private int sliderposition = 50;
@@ -50,16 +51,22 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private double[][] currentData;
     private ArrayList<double[][]> dataList;
+    private JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
 
     public NonLinearImageFilter() {
-        imageList = new ArrayList<>();
-        defaults = new HashMap();
-        imageParam = new ImageParam();
-        imageParam.xsize = 200;
-        imageParam.ysize = 200;
+        this.imageList = new ArrayList<>();
+        this.defaults = new HashMap();
+        this.imageParam = new ImageParam();
+        this.xsizeField = new JTextField("300");
+        this.ysizeField = new JTextField("200");
+        this.noiseField = new JTextField("29");
+        this.signalField = new JTextField("30");
+        this.scaleField = new JTextField("0.5");
+        imageParam.xsize = 300;
+        imageParam.ysize = 300;
         imageParam.noise = (int) Math.pow(2, 29);
         imageParam.signal = (int) Math.pow(2, 30);
-        imageParam.squareScale = squareScaleZero;
+        imageParam.scale = squareScaleZero;
         initComponents();
         jButtonStart.setEnabled(false);
     }
@@ -412,7 +419,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    imageParamClone.squareScale = squareScaleZero * (nSteps - i) / nSteps;
+                    imageParamClone.scale = squareScaleZero * (nSteps - i) / nSteps;
                     imageList.add(new ImageComponent(imageParamClone));
                     setStatusBar((int) (100.0 * i / (nSteps - 1)));
                 }
@@ -455,19 +462,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
-        // TODO add your handling code here:
-        boolean fromFile = false;
+        // TODO add your handling code here
         JComponent component = null;
         /*
          * create a button group to chose the source of initial image
          */
         ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButton button1=new JRadioButton("Generate");
+        JRadioButton button1 = new JRadioButton("Generate");
         button1.setSelected(true);
-        JRadioButton button2=new JRadioButton("From file");
+        JRadioButton button2 = new JRadioButton("From file");
         buttonGroup.add(button1);
         buttonGroup.add(button2);
-        JPanel panel=new JPanel();
+        JPanel panel = new JPanel();
         panel.add(button1);
         panel.add(button2);
         /*
@@ -476,37 +482,42 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         Object[] message = {panel};
         int option = JOptionPane.showConfirmDialog(null, message, "Choose image source", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            fromFile=button2.isSelected();
-        } else {
-            return;
-        }
-        
-        if (fromFile) {
-            JFileChooser fo = new JFileChooser();
-            fo.setDialogTitle("Choose image to load");
-            int ans = fo.showOpenDialog(this);
-            if (ans == JFileChooser.APPROVE_OPTION) {
-                File file = fo.getSelectedFile();
-                try {
-                    BufferedImage image=ImageIO.read(file);
-                    component = new ImageComponent(image);
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null,
-                            "<html>Error while reading the image file</html>", "IO Error!", JOptionPane.ERROR_MESSAGE);
+            /*
+             * if OK, proceed to generate/load image
+             */
+            if (button2.isSelected()) {
+                /*
+                 * if the second choice, load image from file
+                 */
+                JFileChooser fo = new JFileChooser();
+                fo.setDialogTitle("Choose image to load");
+                int ans = fo.showOpenDialog(this);
+                if (ans == JFileChooser.APPROVE_OPTION) {
+                    File file = fo.getSelectedFile();
+                    try {
+                        BufferedImage image = ImageIO.read(file);
+                        component = new ImageComponent(image);
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null,
+                                "<html>Error while reading the image file</html>", "IO Error!", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } else {
                     return;
                 }
             } else {
-                return;
+                /*
+                 * if the first choice, generate image
+                 */
+                component = new ImageComponent(imageParam);
             }
-        } else {
-            component = new ImageComponent(imageParam);
+            imageList = new ArrayList<>();
+            dataList = new ArrayList<>();
+            imageList.add(component);
+            dataList.add(((ImageComponent) component).getPixels());
+            updateImagePanel(0);
+            jButtonStart.setEnabled(true);
         }
-        imageList = new ArrayList<>();
-        dataList = new ArrayList<>();
-        imageList.add(component);
-        dataList.add(((ImageComponent) component).getPixels());
-        updateImagePanel(0);
-        jButtonStart.setEnabled(true);
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
@@ -561,6 +572,27 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
         // TODO add your handling code here:
+        Object[] message = {
+            "Image width, px:", xsizeField,
+            "Image height, px:", ysizeField,
+            "Log of noise amplitude:", noiseField,
+            "Log of signal amplitude:", signalField,
+            "Scale:", scaleField
+        };
+        int option = JOptionPane.showConfirmDialog(null, message, "Image generation parameters",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            imageParam.xsize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
+                    1000, xsizeField, "300", defaults));
+            imageParam.ysize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
+                    1000, ysizeField, "200", defaults));
+            imageParam.noise = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
+                    30, noiseField, "29", defaults)));
+            imageParam.signal = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
+                    31, signalField, "30", defaults)));
+            imageParam.scale = MyTextUtilities.TestValueWithMemory(0,
+                    1, scaleField, "0.5", defaults);
+        }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     /**

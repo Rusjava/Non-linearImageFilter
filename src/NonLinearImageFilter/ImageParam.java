@@ -31,7 +31,7 @@ public class ImageParam implements Cloneable {
     /**
      * the default relative size of the square
      */
-    public double squareScale;
+    public double scale;
 
     /**
      * signal level in pixels

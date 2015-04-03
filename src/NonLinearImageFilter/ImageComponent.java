@@ -136,10 +136,10 @@ public class ImageComponent extends JComponent {
         int[] pixelsArray = new int[param.xsize * param.ysize];
         for (int i = 0; i < param.ysize; i++) {
             int offset = i * param.xsize;
-            boolean testi=(Math.abs(i - param.xsize / 2 + 1) < param.squareScale * param.ysize / 2);
+            boolean testi=(Math.abs(i - param.xsize / 2 + 1) < param.scale * param.ysize / 2);
             for (int k = 0; k < param.xsize; k++) {
                 if (testi && (Math.abs(k - param.ysize / 2 + 1)
-                        < param.squareScale * param.xsize / 2)) {
+                        < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
                 } else {
                     pixelsArray[offset + k] = param.signal;
