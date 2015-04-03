@@ -84,10 +84,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
         jSliderImages = new javax.swing.JSlider();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuOptions = new javax.swing.JMenu();
+        jMenuItemImage = new javax.swing.JMenuItem();
         jMenuHelp = new javax.swing.JMenu();
+        jMenuItemHelp = new javax.swing.JMenuItem();
+        jMenuItemAbout = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -327,15 +330,41 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jPanel2);
 
         jMenuFile.setText("File");
-        jMenuBar1.add(jMenuFile);
+        jMenuBar.add(jMenuFile);
 
         jMenuOptions.setText("Options");
-        jMenuBar1.add(jMenuOptions);
+
+        jMenuItemImage.setText("Image options...");
+        jMenuItemImage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemImageActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemImage);
+
+        jMenuBar.add(jMenuOptions);
 
         jMenuHelp.setText("Help");
-        jMenuBar1.add(jMenuHelp);
 
-        setJMenuBar(jMenuBar1);
+        jMenuItemHelp.setText("Display help...");
+        jMenuItemHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemHelpActionPerformed(evt);
+            }
+        });
+        jMenuHelp.add(jMenuItemHelp);
+
+        jMenuItemAbout.setText("About...");
+        jMenuItemAbout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemAboutActionPerformed(evt);
+            }
+        });
+        jMenuHelp.add(jMenuItemAbout);
+
+        jMenuBar.add(jMenuHelp);
+
+        setJMenuBar(jMenuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -468,6 +497,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jSliderImagesStateChanged
 
+    private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(null, 
+                "<html>Non-linear image filter. <br>Version: 0.1 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
+                "About NonLinear image filter", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jMenuItemAboutActionPerformed
+
+    private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItemHelpActionPerformed
+
+    private void jMenuItemImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItemImageActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -523,9 +567,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JLabel jLabelDiffCoef;
     private javax.swing.JLabel jLabelNSteps;
     private javax.swing.JLabel jLabelNonlinear;
-    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuBar jMenuBar;
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenu jMenuHelp;
+    private javax.swing.JMenuItem jMenuItemAbout;
+    private javax.swing.JMenuItem jMenuItemHelp;
+    private javax.swing.JMenuItem jMenuItemImage;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;
