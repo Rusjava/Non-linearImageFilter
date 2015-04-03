@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
+import java.awt.color.ColorSpace;
 import java.io.IOException;
 import java.io.File;
 import javax.swing.JFileChooser;
@@ -61,7 +62,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("29");
         this.signalField = new JTextField("30");
         this.scaleField = new JTextField("0.5");
-        
+
         initComponents();
         jButtonStart.setEnabled(false);
     }
@@ -435,6 +436,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setStringPainted(true);
         working = true;
         jButtonStart.setText("Stop");
+        jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
 
             @Override
@@ -469,6 +471,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
                 working = false;
                 jButtonStart.setText("Start");
+                jButtonImage.setEnabled(true);
             }
 
             /**
@@ -515,16 +518,24 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                  * if the second choice, load image from file
                  */
                 JFileChooser fo = new JFileChooser();
-                fo.setDialogTitle("Choose image to load");
+                fo.setDialogTitle("Choose grayscale image to load");
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
-                    File file = fo.getSelectedFile();
                     try {
-                        BufferedImage image = ImageIO.read(file);
-                        component = new ImageComponent(image);
+                        BufferedImage image = ImageIO.read(fo.getSelectedFile());
+                        if (image.getColorModel().getColorSpace().getType() == 
+                                ColorSpace.CS_GRAY) {
+                            component = new ImageComponent(image);
+                        } else {
+                            JOptionPane.showMessageDialog(null,
+                                    "<html>The image is not grayscale!</html>",
+                                    "Image Error!", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }                
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
-                                "<html>Error while reading the image file</html>", "IO Error!", JOptionPane.ERROR_MESSAGE);
+                                "<html>Error while reading the image file</html>",
+                                "IO Error!", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
@@ -626,6 +637,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         // TODO add your handling code here:
+        System.exit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
