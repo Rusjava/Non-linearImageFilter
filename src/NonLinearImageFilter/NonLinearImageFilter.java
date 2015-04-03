@@ -95,8 +95,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jSliderImages = new javax.swing.JSlider();
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
+        jMenuItemSaveVideo = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItemExit = new javax.swing.JMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jMenuItemImageOptions = new javax.swing.JMenuItem();
+        jMenuItemFilterOptions = new javax.swing.JMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -339,6 +343,24 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jPanel2);
 
         jMenuFile.setText("File");
+
+        jMenuItemSaveVideo.setText("Save as video...");
+        jMenuItemSaveVideo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveVideoActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemSaveVideo);
+        jMenuFile.add(jSeparator1);
+
+        jMenuItemExit.setText("Exit");
+        jMenuItemExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemExitActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemExit);
+
         jMenuBar.add(jMenuFile);
 
         jMenuOptions.setText("Options");
@@ -350,6 +372,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemImageOptions);
+
+        jMenuItemFilterOptions.setText("Filter options...");
+        jMenuItemFilterOptions.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemFilterOptionsActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemFilterOptions);
 
         jMenuBar.add(jMenuOptions);
 
@@ -590,6 +620,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
+    private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItemSaveVideoActionPerformed
+
+    private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItemExitActionPerformed
+
+    private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -649,8 +691,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenu jMenuHelp;
     private javax.swing.JMenuItem jMenuItemAbout;
+    private javax.swing.JMenuItem jMenuItemExit;
+    private javax.swing.JMenuItem jMenuItemFilterOptions;
     private javax.swing.JMenuItem jMenuItemHelp;
     private javax.swing.JMenuItem jMenuItemImageOptions;
+    private javax.swing.JMenuItem jMenuItemSaveVideo;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;
@@ -661,6 +706,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelSpace;
     private javax.swing.JProgressBar jProgressBar;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JSlider jSliderImages;
     private javax.swing.JTextField jTextFieldDiffCoef;
     private javax.swing.JTextField jTextFieldNSteps;
