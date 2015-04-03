@@ -18,6 +18,7 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JComponent;
+import java.util.Arrays;
 
 /**
  * A component object for images
@@ -38,13 +39,13 @@ public class ImageComponent extends JComponent {
     public ImageComponent(ImageParam imageParam) {
         super();
         /*
-        * Generate image pixelArray for model image
-        */
+         * Generate image pixelArray for model image
+         */
         pixels = generatePixelData(imageParam);
         /*
-        * Create buffered image
-        */
-        this.image=createImage(pixels, imageParam.xsize, imageParam.ysize);
+         * Create buffered image
+         */
+        this.image = createImage(pixels, imageParam.xsize, imageParam.ysize);
     }
 
     /**
@@ -55,14 +56,14 @@ public class ImageComponent extends JComponent {
     public ImageComponent(double[][] pixelData) {
         super();
         /*
-        * Generate image pixelArray from real matrix
-        */
+         * Generate image pixelArray from real matrix
+         */
         pixels = generatePixelData(pixelData);
-        
+
         /*
-        * Create buffered image
-        */
-        this.image=createImage(pixels, pixelData[0].length, pixelData.length);
+         * Create buffered image
+         */
+        this.image = createImage(pixels, pixelData[0].length, pixelData.length);
     }
 
     /**
@@ -74,13 +75,13 @@ public class ImageComponent extends JComponent {
         super();
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
-        this.image=image;
+        this.image = image;
         pixels = new int[ysize * xsize];
-        byte [] pixelsByte = ((DataBufferByte)image.getData().getDataBuffer()).getData();
+        byte[] pixelsByte = ((DataBufferByte) image.getData().getDataBuffer()).getData();
         for (int i = 0; i < ysize; i++) {
+            int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixels[i * xsize + k] = pixelsByte[i * xsize + k];
-                System.out.println(i * xsize + k);
+                pixels[offset + k] = pixelsByte[offset + k];
             }
         }
     }
@@ -119,8 +120,9 @@ public class ImageComponent extends JComponent {
         int ysize = image.getHeight(null);
         double[][] pixels = new double[ysize][xsize];
         for (int i = 0; i < ysize; i++) {
+            int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixels[i][k] = this.pixels[i * xsize + k];
+                pixels[i][k] = this.pixels[offset + k];
             }
         }
 
@@ -131,20 +133,21 @@ public class ImageComponent extends JComponent {
      * A method generates pixel arrays for test images
      */
     private int[] generatePixelData(ImageParam param) {
-        int[] pixels = new int[param.xsize * param.ysize];
+        int[] pixelsArray = new int[param.xsize * param.ysize];
         for (int i = 0; i < param.ysize; i++) {
+            int offset = i * param.xsize;
+            boolean testi=(Math.abs(i - param.xsize / 2 + 1) < param.squareScale * param.ysize / 2);
             for (int k = 0; k < param.xsize; k++) {
-                if ((Math.abs(i - param.xsize / 2 + 1) < param.squareScale * 
-                        param.ysize / 2) && (Math.abs(k - param.ysize / 2 + 1) < 
-                        param.squareScale * param.xsize / 2)) {
-                    pixels[i * param.xsize + k] = 1;
+                if (testi && (Math.abs(k - param.ysize / 2 + 1)
+                        < param.squareScale * param.xsize / 2)) {
+                    pixelsArray[offset + k] = 0;
                 } else {
-                    pixels[i * param.xsize + k] = param.signal;
+                    pixelsArray[offset + k] = param.signal;
                 }
-                pixels[i * param.xsize + k] += (int) (Math.random() * param.noise);
+                pixelsArray[offset + k] += (int) (Math.random() * param.noise);
             }
         }
-        return pixels;
+        return pixelsArray;
     }
 
     /*
@@ -155,30 +158,31 @@ public class ImageComponent extends JComponent {
         int ysize = pixelData.length;
         int[] pixelArray = new int[xsize * ysize];
         for (int i = 0; i < ysize; i++) {
+            int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixelArray[i * xsize + k] += (int) pixelData[i][k];
+                pixelArray[offset + k] += Math.round(pixelData[i][k]);
             }
         }
         return pixelArray;
     }
-    
+
     /*
-    * Create image from integer array pixel data
-    */
-    private BufferedImage createImage(int [] pixels, int xsize, int ysize) {
+     * Creating image from an integer 2D array
+     */
+    private BufferedImage createImage(int[] pixels, int xsize, int ysize) {
         /*
-        * Create a gray-scale ColorSpace and corresponding ColorModel
-        */
+         * Create a gray-scale ColorSpace and corresponding ColorModel
+         */
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31}, 
+        ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31},
                 false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
         /*
-        * Create an image from integer pixel array
-        */
+         * Create an image from integer pixel array
+         */
         Image img = this.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
         /*
-        * Convert image to buffered image
-        */
+         * Convert image to buffered image
+         */
         BufferedImage bImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
         bImage.getGraphics().drawImage(img, 0, 0, null);
         return bImage;
