@@ -46,7 +46,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private double diffCoef = 0.001;
     private double nonLinearCoef = 0.1;
     private final HashMap defaults;
-    private double squareScaleZero = 0.5;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private double[][] currentData;
@@ -62,11 +61,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("29");
         this.signalField = new JTextField("30");
         this.scaleField = new JTextField("0.5");
-        imageParam.xsize = 300;
-        imageParam.ysize = 300;
-        imageParam.noise = (int) Math.pow(2, 29);
-        imageParam.signal = (int) Math.pow(2, 30);
-        imageParam.scale = squareScaleZero;
+        
         initComponents();
         jButtonStart.setEnabled(false);
     }
@@ -419,7 +414,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    imageParamClone.scale = squareScaleZero * (nSteps - i) / nSteps;
+                    imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
                     imageList.add(new ImageComponent(imageParamClone));
                     setStatusBar((int) (100.0 * i / (nSteps - 1)));
                 }

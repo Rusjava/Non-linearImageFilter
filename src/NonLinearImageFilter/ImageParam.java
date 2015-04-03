@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package NonLinearImageFilter;
 
 /**
@@ -16,30 +15,30 @@ public class ImageParam implements Cloneable {
     /**
      * width of the image in pixels
      */
-    public int xsize;
+    public int xsize = 300;
 
     /**
-     *  height of the image in pixels
+     * height of the image in pixels
      */
-    public int ysize;
+    public int ysize = 200;
 
     /**
      * noise range in pixels
      */
-    public int noise;
+    public int noise = (int) Math.pow(2, 29);
 
     /**
      * the default relative size of the square
      */
-    public double scale;
+    public double scale = 0.5;
 
     /**
      * signal level in pixels
      */
-    public int signal;
-      
+    public int signal = (int) Math.pow(2, 30);
+
     @Override
-    public Object clone () throws CloneNotSupportedException {
+    public Object clone() throws CloneNotSupportedException {
         return super.clone();
-    } 
+    }
 }
