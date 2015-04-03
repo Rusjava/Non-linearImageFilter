@@ -37,7 +37,7 @@ public class ImageComponent extends JComponent {
     public ImageComponent(ImageParam imageParam) {
         super();
         /*
-        * Generate image pixels
+        * Generate image pixelArray for model image
         */
         pixels = generatePixelData(imageParam);
         /*
@@ -54,7 +54,7 @@ public class ImageComponent extends JComponent {
     public ImageComponent(double[][] pixelData) {
         super();
         /*
-        * Generate image pixels
+        * Generate image pixelArray from real matrix
         */
         pixels = generatePixelData(pixelData);
         
@@ -107,9 +107,9 @@ public class ImageComponent extends JComponent {
     }
 
     /**
-     * Returning a 2D double array of image pixels
+     * Returning a 2D double array of image pixelArray
      *
-     * @return pixels 2D array
+     * @return pixelArray 2D array
      */
     public double[][] getPixels() {
         int xsize = image.getWidth(null);
@@ -145,32 +145,32 @@ public class ImageComponent extends JComponent {
     }
 
     /*
-     * A method generates pixel arrays for test images
+     * A method generates integer pixel array from a real matrix of data
      */
     private int[] generatePixelData(double[][] pixelData) {
         int xsize = pixelData[0].length;
         int ysize = pixelData.length;
-        int[] pixels = new int[xsize * ysize];
+        int[] pixelArray = new int[xsize * ysize];
         for (int i = 0; i < ysize; i++) {
             for (int k = 0; k < xsize; k++) {
-                pixels[i * xsize + k] += (int) pixelData[i][k];
+                pixelArray[i * xsize + k] += (int) pixelData[i][k];
             }
         }
-        return pixels;
+        return pixelArray;
     }
     
     /*
-    * Create image from integer pixel data
+    * Create image from integer array pixel data
     */
     private BufferedImage createImage(int [] pixels, int xsize, int ysize) {
         /*
-        * Create gray-scale ColorSpace and corresponding ColorModel
+        * Create a gray-scale ColorSpace and corresponding ColorModel
         */
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31}, 
                 false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
         /*
-        * Create image
+        * Create an image from integer pixel array
         */
         Image img = this.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
         /*
