@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferUShort;
 import java.awt.image.DataBufferByte;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JComponent;
@@ -76,14 +77,8 @@ public class ImageComponent extends JComponent {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         this.image = image;
-        pixels = new int[ysize * xsize];
-        byte[] pixelsByte = ((DataBufferByte) image.getData().getDataBuffer()).getData();
-        for (int i = 0; i < ysize; i++) {
-            int offset = i * xsize;
-            for (int k = 0; k < xsize; k++) {
-                pixels[offset + k] = pixelsByte[offset + k];
-            }
-        }
+        int[] iArray = new int[xsize * ysize];
+        pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
     }
 
     @Override
@@ -118,15 +113,15 @@ public class ImageComponent extends JComponent {
     public double[][] getPixels() {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
-        double[][] pixels = new double[ysize][xsize];
+        double[][] data = new double[ysize][xsize];
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixels[i][k] = this.pixels[offset + k];
+                data[i][k] = this.pixels[offset + k];
             }
         }
 
-        return pixels;
+        return data;
     }
 
     /*
@@ -136,7 +131,7 @@ public class ImageComponent extends JComponent {
         int[] pixelsArray = new int[param.xsize * param.ysize];
         for (int i = 0; i < param.ysize; i++) {
             int offset = i * param.xsize;
-            boolean testi=(Math.abs(i - param.ysize / 2 + 1) < param.scale * param.ysize / 2);
+            boolean testi = (Math.abs(i - param.ysize / 2 + 1) < param.scale * param.ysize / 2);
             for (int k = 0; k < param.xsize; k++) {
                 if (testi && (Math.abs(k - param.xsize / 2 + 1) < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
@@ -182,7 +177,7 @@ public class ImageComponent extends JComponent {
         /*
          * Convert image to buffered image
          */
-        BufferedImage bImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
+        BufferedImage bImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_USHORT_GRAY);
         bImage.getGraphics().drawImage(img, 0, 0, null);
         return bImage;
     }

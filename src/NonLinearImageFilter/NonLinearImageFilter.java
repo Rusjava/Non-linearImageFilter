@@ -524,11 +524,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     try {
                         BufferedImage image = ImageIO.read(fo.getSelectedFile());
                         if (image.getColorModel().getColorSpace().getType() == 
-                                ColorSpace.CS_GRAY) {
+                                ColorSpace.TYPE_GRAY) {
                             component = new ImageComponent(image);
                         } else {
                             JOptionPane.showMessageDialog(null,
-                                    "<html>The image is not grayscale!</html>",
+                                    "<html>The image is not grayscale! Type: </html>",
                                     "Image Error!", JOptionPane.ERROR_MESSAGE);
                             return;
                         }                
