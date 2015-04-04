@@ -24,13 +24,12 @@ public class CrankNicholson2D {
     /**
      * Constructor
      *
-     * @param bCondition coefficients in boundary condition
+     * @param bConditionCoef coefficients in boundary condition
      * @param diffCoef diffusion coefficient
      * @param nonLinearCoef nonLinearCoefficient;
      */
-    public CrankNicholson2D(double[] bCondition, double diffCoef, double nonLinearCoef) {
-        bConditionCoef = new double[3];
-        bConditionCoef = Arrays.copyOfRange(bCondition, 0, 3);
+    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef) {
+        this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearCoef = nonLinearCoef;
     }

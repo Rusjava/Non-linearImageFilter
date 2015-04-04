@@ -15,8 +15,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferUShort;
-import java.awt.image.DataBufferByte;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JComponent;
 import java.util.Arrays;
@@ -110,7 +108,7 @@ public class ImageComponent extends JComponent {
      *
      * @return pixelArray 2D array
      */
-    public double[][] getPixels() {
+    public double[][] getPixelData() {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         double[][] data = new double[ysize][xsize];
