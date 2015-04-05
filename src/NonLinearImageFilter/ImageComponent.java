@@ -17,7 +17,6 @@ import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.MemoryImageSource;
 import javax.swing.JComponent;
-import java.util.Arrays;
 
 /**
  * A component object for images

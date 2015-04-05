@@ -6,7 +6,6 @@ package NonLinearImageFilter;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
@@ -26,7 +25,6 @@ import javax.imageio.ImageIO;
 import TextUtilities.MyTextUtilities;
 import java.awt.color.ColorSpace;
 import java.io.IOException;
-import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 
@@ -51,7 +49,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private double[][] currentData;
     private ArrayList<double[][]> dataList;
-    private JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
+    private final JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
