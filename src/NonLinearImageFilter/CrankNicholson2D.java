@@ -16,9 +16,9 @@ import java.util.Arrays;
  */
 public class CrankNicholson2D {
 
-    private double[] bConditionCoef;
-    private double diffCoefFactor;
-    private double nonLinearCoef;
+    private final double[] bConditionCoef;
+    private final double diffCoefFactor;
+    private final double nonLinearCoef;
 
     /**
      * Constructor
@@ -33,6 +33,9 @@ public class CrankNicholson2D {
         this.nonLinearCoef = nonLinearCoef;
     }
 
+    /*
+    * Claculating diffusion coeffcient as a exponential function of the field gradient
+    */
     private double[][] diffCoefficient(double[][] data) {
         int xsize = data[0].length;
         int ysize = data.length;
