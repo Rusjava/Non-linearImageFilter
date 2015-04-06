@@ -34,8 +34,8 @@ public class CrankNicholson2D {
     }
 
     /*
-    * Claculating diffusion coeffcient as a exponential function of the field gradient
-    */
+     * Claculating diffusion coeffcient as a exponential function of the field gradient
+     */
     private double[][] diffCoefficient(double[][] data) {
         int xsize = data[0].length;
         int ysize = data.length;
@@ -82,10 +82,10 @@ public class CrankNicholson2D {
      * four edges
      * @return
      */
-    public double[][] iterateLinear2D(double[][] oldData, double [][] newData, double[][] bConditions) {
+    public double[][] iterateLinear2D(double[][] oldData, double[][] newData, double[][] bConditions) {
         int xsize = oldData[0].length;
         int ysize = oldData.length;
-        double [][] result=new double[xsize][ysize];
+        double[][] result = new double[xsize][ysize];
         double[][] oldDiffCoef = diffCoefficient(oldData);
         double[][] newDiffCoef = diffCoefficient(newData);
         /*

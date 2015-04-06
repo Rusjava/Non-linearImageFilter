@@ -44,6 +44,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int sliderposition = 50;
     private double diffCoef = 0.01;
     private double nonLinearCoef = 1;
+    private boolean test = true;
+    private CrankNicholson2D comp;
     private final HashMap defaults;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
@@ -433,6 +435,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef);
         jButtonStart.setText("Stop");
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -444,8 +447,17 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
-                    imageList.add(new ImageComponent(imageParamClone));
+                    if (test) {
+                        imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
+                        imageList.add(new ImageComponent(imageParamClone));
+                    } else {
+                        currentData=dataList.get(dataList.size());
+                        double [][] bCond=new double [4][];
+                        
+                        double [][] data=    
+                        comp.iterateLinear2D(currentData,
+                                        currentData, new double [4][]);
+                    }
                     setStatusBar((int) (100.0 * i / (nSteps - 1)));
                 }
                 return null;
@@ -521,15 +533,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
                         BufferedImage image = ImageIO.read(fo.getSelectedFile());
-                        if (image.getColorModel().getColorSpace().getType() == 
-                                ColorSpace.TYPE_GRAY) {
+                        if (image.getColorModel().getColorSpace().getType()
+                                == ColorSpace.TYPE_GRAY) {
                             component = new ImageComponent(image);
                         } else {
                             JOptionPane.showMessageDialog(null,
                                     "<html>The image is not grayscale! Type: </html>",
                                     "Image Error!", JOptionPane.ERROR_MESSAGE);
                             return;
-                        }                
+                        }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
                                 "<html>Error while reading the image file</html>",
