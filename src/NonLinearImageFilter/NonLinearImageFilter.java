@@ -40,10 +40,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
-    private int nSteps = 100;
+    private int nSteps = 10;
     private int sliderposition = 50;
-    private double diffCoef = 0.001;
-    private double nonLinearCoef = 0.1;
+    private double diffCoef = 0.01;
+    private double nonLinearCoef = 1;
     private final HashMap defaults;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
@@ -114,7 +114,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelDiffCoef.setText("Diffusion coefficient");
 
-        jTextFieldDiffCoef.setText("0.001");
+        jTextFieldDiffCoef.setText("0.01");
         jTextFieldDiffCoef.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldDiffCoefFocusLost(evt);
@@ -128,7 +128,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelNonlinear.setText("Non-linear coefficient");
 
-        jTextFieldNonlinear.setText("0.1");
+        jTextFieldNonlinear.setText("1");
         jTextFieldNonlinear.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNonlinearFocusLost(evt);
@@ -421,7 +421,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldDiffCoefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefActionPerformed
         // TODO add your handling code here:
         diffCoef = MyTextUtilities.TestValueWithMemory(0, 1, jTextFieldDiffCoef,
-                "0.001", defaults);
+                "0.01", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
@@ -556,32 +556,32 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 1, jTextFieldNonlinear,
-                "0.1", defaults);
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 10, jTextFieldNonlinear,
+                "1", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
         // TODO add your handling code here:
         nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(0, 1000, jTextFieldNSteps,
-                "100", defaults));
+                "10", defaults));
     }//GEN-LAST:event_jTextFieldNStepsActionPerformed
 
     private void jTextFieldDiffCoefFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefFocusLost
         // TODO add your handling code here:
         diffCoef = MyTextUtilities.TestValueWithMemory(0, 1, jTextFieldDiffCoef,
-                "0.001", defaults);
+                "0.01", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefFocusLost
 
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 1, jTextFieldNonlinear,
-                "0.1", defaults);
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 10, jTextFieldNonlinear,
+                "1", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost
         // TODO add your handling code here:
         nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(0, 1000, jTextFieldNSteps,
-                "100", defaults));
+                "10", defaults));
     }//GEN-LAST:event_jTextFieldNStepsFocusLost
 
     private void jSliderImagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSliderImagesStateChanged

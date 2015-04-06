@@ -76,16 +76,18 @@ public class CrankNicholson2D {
     /**
      * 2D linear iteration by one step
      *
-     * @param data initial data
+     * @param oldData data from the previous step
+     * @param result data of the current step
      * @param bConditions 4*size array containing boundary condition values at
      * four edges
      * @return
      */
-    public double[][] iterateLinear2D(double[][] data, double[][] bConditions) {
-        int xsize = data[0].length;
-        int ysize = data.length;
-        double[][] result = new double[ysize][xsize];
-        double[][] diffCoef = diffCoefficient(data);
+    public double[][] iterateLinear2D(double[][] oldData, double [][] newData, double[][] bConditions) {
+        int xsize = oldData[0].length;
+        int ysize = oldData.length;
+        double [][] result=new double[xsize][ysize];
+        double[][] oldDiffCoef = diffCoefficient(oldData);
+        double[][] newDiffCoef = diffCoefficient(newData);
         /*
          * Iteration over rows
          */
@@ -93,7 +95,7 @@ public class CrankNicholson2D {
             double[] bCond = new double[2];
             bCond[0] = bConditions[0][i];
             bCond[0] = bConditions[2][i];
-            result[i] = iterateLinear1D(data[i], bCond, diffCoef[i], diffCoef[i]);
+            result[i] = iterateLinear1D(oldData[i], bCond, oldDiffCoef[i], newDiffCoef[i]);
         }
         /*
          * Iteration over columns
@@ -102,7 +104,7 @@ public class CrankNicholson2D {
             double[] bCond = new double[2];
             bCond[0] = bConditions[1][i];
             bCond[0] = bConditions[3][i];
-            double[] dataY = iterateLinear1D(getColumn(i, result), bCond, getColumn(i, diffCoef), getColumn(i, diffCoef));
+            double[] dataY = iterateLinear1D(getColumn(i, result), bCond, getColumn(i, newDiffCoef), getColumn(i, oldDiffCoef));
             putColumn(i, result, dataY);
         }
         return result;
