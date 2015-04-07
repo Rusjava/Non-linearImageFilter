@@ -45,7 +45,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int sliderposition = 50;
     private double diffCoef = 0.01;
     private double nonLinearCoef = 1;
-    private boolean test = false;
+    private boolean testFlag = false;
+    private boolean nonLinearFlag = false;
     private CrankNicholson2D comp;
     private final HashMap defaults;
     private boolean working = false;
@@ -90,6 +91,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jButtonStart = new javax.swing.JButton();
         jPanelSpace = new javax.swing.JPanel();
         jProgressBar = new javax.swing.JProgressBar();
+        jCheckBoxNonLinear = new javax.swing.JCheckBox();
         jPanelResults = new javax.swing.JPanel();
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
@@ -235,21 +237,33 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelSpace.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), "Progress", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
         jPanelSpace.setMinimumSize(new java.awt.Dimension(100, 116));
 
+        jCheckBoxNonLinear.setText("Non-linear filtering");
+        jCheckBoxNonLinear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxNonLinearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelSpaceLayout = new javax.swing.GroupLayout(jPanelSpace);
         jPanelSpace.setLayout(jPanelSpaceLayout);
         jPanelSpaceLayout.setHorizontalGroup(
             jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanelSpaceLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxNonLinear, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelSpaceLayout.setVerticalGroup(
             jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jCheckBoxNonLinear)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanelResults.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -449,7 +463,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    if (test) {
+                    if (testFlag) {
                         imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
                         component = new ImageComponent(imageParamClone);
                         currentData = ((ImageComponent) component).getPixelData();
@@ -670,6 +684,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
+    private void jCheckBoxNonLinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNonLinearActionPerformed
+        // TODO add your handling code here:
+        nonLinearFlag=jCheckBoxNonLinear.isSelected();
+    }//GEN-LAST:event_jCheckBoxNonLinearActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -722,6 +741,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
     private javax.swing.JButton jButtonStart;
+    private javax.swing.JCheckBox jCheckBoxNonLinear;
     private javax.swing.JLabel jLabelDiffCoef;
     private javax.swing.JLabel jLabelNSteps;
     private javax.swing.JLabel jLabelNonlinear;
