@@ -19,6 +19,7 @@ public class CrankNicholson2D {
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
     private final double nonLinearCoef;
+    protected final double eps = 0.0001;
 
     /**
      * Constructor
@@ -36,9 +37,11 @@ public class CrankNicholson2D {
     /*
      * Claculating diffusion coeffcient as a exponential function of the field gradient
      */
-    private double[][] diffCoefficient(double[][] data) {
+    protected double[][] getDiffCoefficient(double[][] data) {
         int xsize = data[0].length;
         int ysize = data.length;
+        double[] column = new double[ysize];
+        Arrays.fill(column, diffCoefFactor);
         double[][] diffCoef = new double[ysize][xsize];
         for (int i = 1; i < ysize - 1; i++) {
             for (int k = 1; k < xsize - 1; k++) {
@@ -48,13 +51,37 @@ public class CrankNicholson2D {
                                 / nonLinearCoef);
             }
         }
+        Arrays.fill(diffCoef[0], diffCoefFactor);
+        Arrays.fill(diffCoef[ysize - 1], diffCoefFactor);
+        putColumn(0, diffCoef, column);
+        putColumn(xsize - 1, diffCoef, column);
         return diffCoef;
     }
     /*
-     * Exctrating a column from 2D array
+     * Calculating normalized squared difference
      */
 
-    private double[] getColumn(int index, double[][] data) {
+    protected double calcDifference(double[][] data1, double[][] data2) {
+        int xsize = data1[0].length;
+        int ysize = data1.length;
+        double sumDiff = 0, sum = 0;
+        for (int i = 0; i < ysize; i++) {
+            for (int k = 0; k < xsize; k++) {
+                sumDiff += Math.pow(data1[i][k] - data2[i][k], 2);
+                sum = Math.pow(data1[i][k], 2) + Math.pow(data2[i][k], 2);
+            }
+        }
+        return 2 * sumDiff / sum;
+    }
+
+    /**
+     * Extracting a column from 2D array
+     *
+     * @param index
+     * @param data
+     * @return
+     */
+    protected double[] getColumn(int index, double[][] data) {
         int size = data.length;
         double[] result = new double[size];
         for (int i = 0; i < size; i++) {
@@ -66,7 +93,7 @@ public class CrankNicholson2D {
     /*
      * Putting a column to 2D array
      */
-    private void putColumn(int index, double[][] data, double[] dataY) {
+    protected void putColumn(int index, double[][] data, double[] dataY) {
         int size = dataY.length;
         for (int i = 0; i < size; i++) {
             data[i][index] = dataY[i];
@@ -83,7 +110,7 @@ public class CrankNicholson2D {
      * four edges
      * @return
      */
-    public double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef, 
+    public double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
             double[][] newDiffCoef, double[][] bConditions) {
         int xsize = data[0].length;
         int ysize = data.length;
@@ -152,5 +179,53 @@ public class CrankNicholson2D {
             result[m] = q[m] - p[m] * result[m + 1];
         }
         return result;
+    }
+
+    /**
+     * Applies non-linear filter with constant diffusion coefficient and zero
+     * boundary sums
+     *
+     * @param data
+     * @return
+     */
+    public double[][] solveNonLinear(double[][] data) {
+        int xsize = data[0].length;
+        int ysize = data.length;
+        double[][] bCond = new double[4][];
+        bCond[0] = new double[ysize];
+        bCond[2] = new double[ysize];
+        bCond[1] = new double[xsize];
+        bCond[3] = new double[xsize];
+        double[][] coef = getDiffCoefficient(data);
+        double[][] result = data;
+        double[][] prevResult;
+        do {
+            prevResult = result;
+            result = iterateLinear2D(data, coef, getDiffCoefficient(result), bCond);
+        } while (calcDifference(result, prevResult) < eps);
+        return result;
+    }
+
+    /**
+     * Applies linear filter with constant diffusion coefficient and zero
+     * boundary sums
+     *
+     * @param data
+     * @return
+     */
+    public double[][] solveLinear(double[][] data) {
+        int xsize = data[0].length;
+        int ysize = data.length;
+        double[][] bCond = new double[4][];
+        bCond[0] = new double[ysize];
+        bCond[2] = new double[ysize];
+        bCond[1] = new double[xsize];
+        bCond[3] = new double[xsize];
+        double[][] coef = new double[ysize][];
+        for (int k = 0; k < ysize; k++) {
+            coef[k] = new double[xsize];
+            Arrays.fill(coef[k], diffCoefFactor);
+        }
+        return iterateLinear2D(data, coef, coef, bCond);
     }
 }

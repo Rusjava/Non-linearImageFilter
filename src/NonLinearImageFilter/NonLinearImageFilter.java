@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
@@ -48,7 +49,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private boolean testFlag = false;
     private boolean nonLinearFlag = false;
     private CrankNicholson2D comp;
-    private final HashMap defaults;
+    private final Map defaults;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
@@ -468,20 +469,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         component = new ImageComponent(imageParamClone);
                         currentData = ((ImageComponent) component).getPixelData();
                     } else {
-                        currentData = dataList.get(dataList.size() - 1);
-                        int xsize = currentData[0].length;
-                        int ysize = currentData.length;
-                        double[][] bCond = new double[4][];
-                        bCond[0] = new double[ysize];
-                        bCond[2] = new double[ysize];
-                        bCond[1] = new double[xsize];
-                        bCond[3] = new double[xsize];
-                        double[][] coef = new double[ysize][];
-                        for (int k = 0; k < ysize; k++) {
-                            coef[k] = new double [xsize];
-                            Arrays.fill(coef[k], diffCoef);
-                        }
-                        currentData = comp.iterateLinear2D(currentData, coef, coef, bCond);
+                        currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
                         component=new ImageComponent(currentData);
                     }
                     imageList.add(component);
