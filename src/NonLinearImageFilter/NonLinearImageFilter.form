@@ -259,7 +259,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldNSteps">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="100"/>
+                    <Property name="text" type="java.lang.String" value="10"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldNStepsFocusLost"/>
@@ -311,7 +311,7 @@
               <SubComponents>
                 <Component class="javax.swing.JButton" name="jButtonImage">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Get image"/>
+                    <Property name="text" type="java.lang.String" value="Initialize"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonImageActionPerformed"/>
@@ -319,7 +319,7 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="jButtonStart">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Start"/>
+                    <Property name="text" type="java.lang.String" value="Filter"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonStartActionPerformed"/>

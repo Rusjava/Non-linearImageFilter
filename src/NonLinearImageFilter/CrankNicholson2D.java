@@ -87,14 +87,14 @@ public class CrankNicholson2D {
             double[][] newDiffCoef, double[][] bConditions) {
         int xsize = data[0].length;
         int ysize = data.length;
-        double[][] result = new double[xsize][ysize];
+        double[][] result = new double[ysize][xsize];
         /*
          * Iteration over rows
          */
         for (int i = 0; i < ysize; i++) {
             double[] bCond = new double[2];
             bCond[0] = bConditions[0][i];
-            bCond[0] = bConditions[2][i];
+            bCond[1] = bConditions[2][i];
             result[i] = iterateLinear1D(data[i], bCond, oldDiffCoef[i], newDiffCoef[i]);
         }
         /*
@@ -103,7 +103,7 @@ public class CrankNicholson2D {
         for (int i = 0; i < xsize; i++) {
             double[] bCond = new double[2];
             bCond[0] = bConditions[1][i];
-            bCond[0] = bConditions[3][i];
+            bCond[1] = bConditions[3][i];
             double[] dataY = iterateLinear1D(getColumn(i, result), bCond, getColumn(i, oldDiffCoef), getColumn(i, newDiffCoef));
             putColumn(i, result, dataY);
         }

@@ -45,7 +45,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int sliderposition = 50;
     private double diffCoef = 0.01;
     private double nonLinearCoef = 1;
-    private boolean test = true;
+    private boolean test = false;
     private CrankNicholson2D comp;
     private final HashMap defaults;
     private boolean working = false;
@@ -144,7 +144,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelNSteps.setText("Number of steps");
 
-        jTextFieldNSteps.setText("100");
+        jTextFieldNSteps.setText("10");
         jTextFieldNSteps.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNStepsFocusLost(evt);
@@ -198,14 +198,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelAction.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), "Actions", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
         jPanelAction.setMinimumSize(new java.awt.Dimension(100, 116));
 
-        jButtonImage.setText("Get image");
+        jButtonImage.setText("Initialize");
         jButtonImage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonImageActionPerformed(evt);
             }
         });
 
-        jButtonStart.setText("Start");
+        jButtonStart.setText("Filter");
         jButtonStart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonStartActionPerformed(evt);
@@ -454,16 +454,17 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         component = new ImageComponent(imageParamClone);
                         currentData = ((ImageComponent) component).getPixelData();
                     } else {
-                        currentData = dataList.get(dataList.size());
+                        currentData = dataList.get(dataList.size() - 1);
                         int xsize = currentData[0].length;
                         int ysize = currentData.length;
                         double[][] bCond = new double[4][];
-                        bCond[0] = new double[xsize];
-                        bCond[2] = new double[xsize];
-                        bCond[1] = new double[ysize];
-                        bCond[3] = new double[ysize];
+                        bCond[0] = new double[ysize];
+                        bCond[2] = new double[ysize];
+                        bCond[1] = new double[xsize];
+                        bCond[3] = new double[xsize];
                         double[][] coef = new double[ysize][];
-                        for (int k = 0; k < xsize; k++) {
+                        for (int k = 0; k < ysize; k++) {
+                            coef[k] = new double [xsize];
                             Arrays.fill(coef[k], diffCoef);
                         }
                         currentData = comp.iterateLinear2D(currentData, coef, coef, bCond);
@@ -485,15 +486,17 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof CloneNotSupportedException) {
                         Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
+                        return;
                     }
                     if (e.getCause() instanceof Exception) {
                         JOptionPane.showMessageDialog(null, "Error!", "Error", JOptionPane.ERROR_MESSAGE);
+                        Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
                         return;
                     }
                 }
                 updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
                 working = false;
-                jButtonStart.setText("Start");
+                jButtonStart.setText("Filter");
                 jButtonImage.setEnabled(true);
             }
 
