@@ -5,6 +5,7 @@ package NonLinearImageFilter;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +50,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final HashMap defaults;
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
-    private double[][] currentData;
     private ArrayList<double[][]> dataList;
     private final JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
 
@@ -443,21 +443,34 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 ImageParam imageParamClone = (ImageParam) imageParam.clone();
+                double [][] currentData;
+                JComponent component;
                 for (int i = 0; i < nSteps; i++) {
                     if (isCancelled()) {
                         return null;
                     }
                     if (test) {
                         imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
-                        imageList.add(new ImageComponent(imageParamClone));
+                        component = new ImageComponent(imageParamClone);
+                        currentData = ((ImageComponent) component).getPixelData();
                     } else {
-                        currentData=dataList.get(dataList.size());
-                        double [][] bCond=new double [4][];
-                        
-                        double [][] data=    
-                        comp.iterateLinear2D(currentData,
-                                        currentData, new double [4][]);
+                        currentData = dataList.get(dataList.size());
+                        int xsize = currentData[0].length;
+                        int ysize = currentData.length;
+                        double[][] bCond = new double[4][];
+                        bCond[0] = new double[xsize];
+                        bCond[2] = new double[xsize];
+                        bCond[1] = new double[ysize];
+                        bCond[3] = new double[ysize];
+                        double[][] coef = new double[ysize][];
+                        for (int k = 0; k < xsize; k++) {
+                            Arrays.fill(coef[k], diffCoef);
+                        }
+                        currentData = comp.iterateLinear2D(currentData, coef, coef, bCond);
+                        component=new ImageComponent(currentData);
                     }
+                    imageList.add(component);
+                    dataList.add(currentData);
                     setStatusBar((int) (100.0 * i / (nSteps - 1)));
                 }
                 return null;
