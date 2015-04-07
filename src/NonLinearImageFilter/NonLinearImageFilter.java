@@ -486,7 +486,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     }
                     imageList.add(component);
                     dataList.add(currentData);
-                    setStatusBar((int) (100.0 * i / (nSteps - 1)));
+                    setStatusBar((int) (100.0 * (i + 1) / nSteps));
                 }
                 return null;
             }

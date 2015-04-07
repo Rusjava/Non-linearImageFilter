@@ -73,9 +73,14 @@ public class ImageComponent extends JComponent {
         super();
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
+        int size = xsize * ysize;
+        int shift = 31 - image.getColorModel().getComponentSize(0);
         this.image = image;
-        int[] iArray = new int[xsize * ysize];
+        int[] iArray = new int[size];
         pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
+        for (int i = 0; i < size; i++) {
+            pixels[i] <<= shift;
+        }
     }
 
     @Override
@@ -98,7 +103,7 @@ public class ImageComponent extends JComponent {
      *
      * @return image
      */
-    public Image getImage() {
+    public BufferedImage getImage() {
         return image;
     }
 
