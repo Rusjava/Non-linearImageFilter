@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package NonLinearImageFilter;
 
 import java.awt.BorderLayout;
@@ -56,6 +55,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private int nSteps = 10;
+    private double precision = 1e-10;
     private int sliderposition = 50;
     private double diffCoef = 0.01;
     private double nonLinearCoef = 10000;
@@ -464,7 +464,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
-        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef);
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision);
         jButtonStart.setText("Stop");
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -472,7 +472,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 ImageParam imageParamClone = (ImageParam) imageParam.clone();
-                double [][] currentData;
+                double[][] currentData;
                 JComponent component;
                 for (int i = 0; i < nSteps; i++) {
                     if (isCancelled()) {
@@ -488,7 +488,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         } else {
                             currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
                         }
-                        component=new ImageComponent(currentData);
+                        component = new ImageComponent(currentData);
                     }
                     imageList.add(component);
                     dataList.add(currentData);
@@ -692,7 +692,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jCheckBoxNonLinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNonLinearActionPerformed
         // TODO add your handling code here:
-        nonLinearFlag=jCheckBoxNonLinear.isSelected();
+        nonLinearFlag = jCheckBoxNonLinear.isSelected();
     }//GEN-LAST:event_jCheckBoxNonLinearActionPerformed
 
     /**

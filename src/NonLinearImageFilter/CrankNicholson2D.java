@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package NonLinearImageFilter;
 
 import java.util.Arrays;
@@ -31,19 +30,21 @@ public class CrankNicholson2D {
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
     private final double nonLinearFactor;
-    protected final double eps = 1e-10;
+    protected final double eps;
 
     /**
      * Constructor
      *
      * @param bConditionCoef coefficients in boundary condition
      * @param diffCoef diffusion coefficient
-     * @param nonLinearCoef nonLinearCoefficient;
+     * @param nonLinearCoef non-Linear coefficient;
+     * @param precision precision of numerical solution
      */
-    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef) {
+    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef, double precision) {
         this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearFactor = 1 / Math.pow(nonLinearCoef, 2);
+        this.eps = precision;
     }
 
     /*
@@ -180,7 +181,7 @@ public class CrankNicholson2D {
         double factor = 1 / (bConditionCoef[0] * (coef[1] + coef[2]) / 2 - bConditionCoef[2] * (coef[0] + coef[1]) / 2);
         p[0] = (bConditionCoef[2] * (coef[1] + (coef[0] + coef[2]) / 2 + 1) + bConditionCoef[1] * (coef[1] + coef[2]) / 2) * factor;
         q[0] = (bSum[0] * (coef[1] + coef[2]) / 2 + bConditionCoef[2] * d) * factor;
-        
+
         /*
          * Iteratively calculating all p and q coefficients
          */
@@ -192,11 +193,11 @@ public class CrankNicholson2D {
             q[m] = (d + (coef[m] + coef[m - 1]) / 2 * q[m - 1]) * factor;
         }
         result[size - 1] = (bSum[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * d - q[size - 2]
-         * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2
-         + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)))
-         / (bConditionCoef[2] * (coef[size - 3] + coef[size - 2]) / 2 - bConditionCoef[0] * (coef[size - 2] + coef[size - 1]) / 2 - p[size - 2]
-         * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)));
-        
+                * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2
+                + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)))
+                / (bConditionCoef[2] * (coef[size - 3] + coef[size - 2]) / 2 - bConditionCoef[0] * (coef[size - 2] + coef[size - 1]) / 2 - p[size - 2]
+                * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)));
+
         /*
          * Iteratively calculating the result
          */
