@@ -27,7 +27,6 @@ public class ImageComponent extends JComponent {
 
     private final BufferedImage image;
     private final int[] pixels;
-    private ColorSpace cs;
     private ColorModel grayColorModel;
     private int BIT_NUM = 16;
 
@@ -35,7 +34,7 @@ public class ImageComponent extends JComponent {
      * Create a gray-scale ColorSpace and corresponding ColorModel
      */
     {
-        cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         grayColorModel = new ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
     }
 
@@ -89,7 +88,6 @@ public class ImageComponent extends JComponent {
         int[] iArray = new int[size];
         pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
         for (int i = 0; i < size; i++) {
-            //pixels[i] >>>= 2;
             pixels[i] <<= shift;
         }
     }

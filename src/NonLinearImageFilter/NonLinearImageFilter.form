@@ -231,7 +231,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldDiffCoef">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="0.01"/>
+                    <Property name="text" type="java.lang.String" value="0.3"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldDiffCoefFocusLost"/>
@@ -245,7 +245,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldNonlinear">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="1"/>
+                    <Property name="text" type="java.lang.String" value="10000"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldNonlinearFocusLost"/>
