@@ -19,7 +19,7 @@ public class CrankNicholson2D {
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
     private final double nonLinearFactor;
-    protected final double eps = 0.001;
+    protected final double eps = 1e-10;
 
     /**
      * Constructor
@@ -76,7 +76,7 @@ public class CrankNicholson2D {
         for (int i = 0; i < ysize; i++) {
             for (int k = 0; k < xsize; k++) {
                 sumDiff += Math.pow(data1[i][k] - data2[i][k], 2);
-                sum = Math.pow(data1[i][k], 2) + Math.pow(data2[i][k], 2);
+                sum += Math.pow(data1[i][k], 2) + Math.pow(data2[i][k], 2);
             }
         }
         return 2 * sumDiff / sum;
@@ -215,7 +215,7 @@ public class CrankNicholson2D {
         do {
             prevResult = result;
             result = iterateLinear2D(data, coef, getDiffCoefficient(prevResult), bCond);
-        } while (calcDifference(result, prevResult) < eps);
+        } while (calcDifference(result, prevResult) > eps);
         return result;
     }
 
