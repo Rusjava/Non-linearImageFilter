@@ -127,12 +127,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setPreferredSize(new java.awt.Dimension(100, 539));
 
-        jPanelParam.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), "Parameters", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
+        jPanelParam.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelParam.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelParam.setMinimumSize(new java.awt.Dimension(100, 116));
 
-        jLabelDiffCoef.setText("Diffusion coefficient");
+        jLabelDiffCoef.setText(bundle.getString("NonLinearImageFilter.jLabelDiffCoef.text")); // NOI18N
 
-        jTextFieldDiffCoef.setText("0.3");
+        jTextFieldDiffCoef.setText(bundle.getString("NonLinearImageFilter.jTextFieldDiffCoef.text")); // NOI18N
         jTextFieldDiffCoef.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldDiffCoefFocusLost(evt);
@@ -144,9 +145,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
 
-        jLabelNonlinear.setText("Non-linear coefficient");
+        jLabelNonlinear.setText(bundle.getString("NonLinearImageFilter.jLabelNonlinear.text")); // NOI18N
 
-        jTextFieldNonlinear.setText("10000");
+        jTextFieldNonlinear.setText(bundle.getString("NonLinearImageFilter.jTextFieldNonlinear.text")); // NOI18N
         jTextFieldNonlinear.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNonlinearFocusLost(evt);
@@ -158,9 +159,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
 
-        jLabelNSteps.setText("Number of steps");
+        jLabelNSteps.setText(bundle.getString("NonLinearImageFilter.jLabelNSteps.text")); // NOI18N
 
-        jTextFieldNSteps.setText("10");
+        jTextFieldNSteps.setText(bundle.getString("NonLinearImageFilter.jTextFieldNSteps.text")); // NOI18N
         jTextFieldNSteps.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNStepsFocusLost(evt);
@@ -211,17 +212,17 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanelAction.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), "Actions", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
+        jPanelAction.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelAction.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelAction.setMinimumSize(new java.awt.Dimension(100, 116));
 
-        jButtonImage.setText("Initialize");
+        jButtonImage.setText(bundle.getString("NonLinearImageFilter.jButtonImage.text")); // NOI18N
         jButtonImage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonImageActionPerformed(evt);
             }
         });
 
-        jButtonStart.setText("Filter");
+        jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.text")); // NOI18N
         jButtonStart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonStartActionPerformed(evt);
@@ -248,10 +249,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jPanelSpace.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), "Progress", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
+        jPanelSpace.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelSpace.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelSpace.setMinimumSize(new java.awt.Dimension(100, 116));
 
-        jCheckBoxNonLinear.setText("Non-linear filtering");
+        jCheckBoxNonLinear.setText(bundle.getString("NonLinearImageFilter.jCheckBoxNonLinear.text")); // NOI18N
         jCheckBoxNonLinear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxNonLinearActionPerformed(evt);
@@ -282,7 +283,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jPanelResults.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        jPanelImages.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Images", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
+        jPanelImages.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), bundle.getString("NonLinearImageFilter.jPanelImages.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
 
         javax.swing.GroupLayout jPanelImagesLayout = new javax.swing.GroupLayout(jPanelImages);
         jPanelImages.setLayout(jPanelImagesLayout);
@@ -295,7 +296,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             .addGap(0, 0, Short.MAX_VALUE)
         );
 
-        jPanelControls.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Controls", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION));
+        jPanelControls.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), bundle.getString("NonLinearImageFilter.jPanelControls.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
 
         jSliderImages.setOrientation(javax.swing.JSlider.VERTICAL);
         jSliderImages.setMaximumSize(new java.awt.Dimension(100, 32767));
@@ -371,9 +372,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jScrollPane1.setViewportView(jPanel2);
 
-        jMenuFile.setText("File");
+        jMenuFile.setText(bundle.getString("NonLinearImageFilter.jMenuFile.text")); // NOI18N
 
-        jMenuItemSaveVideo.setText("Save as video...");
+        jMenuItemSaveVideo.setText(bundle.getString("NonLinearImageFilter.jMenuItemSaveVideo.text")); // NOI18N
         jMenuItemSaveVideo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemSaveVideoActionPerformed(evt);
@@ -382,7 +383,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuFile.add(jMenuItemSaveVideo);
         jMenuFile.add(jSeparator1);
 
-        jMenuItemExit.setText("Exit");
+        jMenuItemExit.setText(bundle.getString("NonLinearImageFilter.jMenuItemExit.text")); // NOI18N
         jMenuItemExit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemExitActionPerformed(evt);
@@ -392,9 +393,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuBar.add(jMenuFile);
 
-        jMenuOptions.setText("Options");
+        jMenuOptions.setText(bundle.getString("NonLinearImageFilter.jMenuOptions.text")); // NOI18N
 
-        jMenuItemImageOptions.setText("Image options...");
+        jMenuItemImageOptions.setText(bundle.getString("NonLinearImageFilter.jMenuItemImageOptions.text")); // NOI18N
         jMenuItemImageOptions.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemImageOptionsActionPerformed(evt);
@@ -402,7 +403,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
         jMenuOptions.add(jMenuItemImageOptions);
 
-        jMenuItemFilterOptions.setText("Filter options...");
+        jMenuItemFilterOptions.setText(bundle.getString("NonLinearImageFilter.jMenuItemFilterOptions.text")); // NOI18N
         jMenuItemFilterOptions.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemFilterOptionsActionPerformed(evt);
@@ -412,9 +413,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuBar.add(jMenuOptions);
 
-        jMenuHelp.setText("Help");
+        jMenuHelp.setText(bundle.getString("NonLinearImageFilter.jMenuHelp.text")); // NOI18N
 
-        jMenuItemHelp.setText("Display help...");
+        jMenuItemHelp.setText(bundle.getString("NonLinearImageFilter.jMenuItemHelp.text")); // NOI18N
         jMenuItemHelp.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemHelpActionPerformed(evt);
@@ -422,7 +423,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
         jMenuHelp.add(jMenuItemHelp);
 
-        jMenuItemAbout.setText("About...");
+        jMenuItemAbout.setText(bundle.getString("NonLinearImageFilter.jMenuItemAbout.text")); // NOI18N
         jMenuItemAbout.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemAboutActionPerformed(evt);
