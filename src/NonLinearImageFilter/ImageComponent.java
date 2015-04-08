@@ -3,7 +3,6 @@
  */
 package NonLinearImageFilter;
 
-import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Transparency;
@@ -15,7 +14,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
-import java.awt.image.MemoryImageSource;
+import java.awt.image.WritableRaster;
 import javax.swing.JComponent;
 
 /**
@@ -28,6 +27,17 @@ public class ImageComponent extends JComponent {
 
     private final BufferedImage image;
     private final int[] pixels;
+    private ColorSpace cs;
+    private ColorModel grayColorModel;
+    private int BIT_NUM = 16;
+
+    /*
+     * Create a gray-scale ColorSpace and corresponding ColorModel
+     */
+    {
+        cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        grayColorModel = new ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+    }
 
     /**
      * Constructor generating sample image
@@ -74,11 +84,12 @@ public class ImageComponent extends JComponent {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
-        int shift = 31 - image.getColorModel().getComponentSize(0);
+        int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
         this.image = image;
         int[] iArray = new int[size];
         pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
         for (int i = 0; i < size; i++) {
+            //pixels[i] >>>= 2;
             pixels[i] <<= shift;
         }
     }
@@ -167,20 +178,13 @@ public class ImageComponent extends JComponent {
      */
     private BufferedImage createImage(int[] pixels, int xsize, int ysize) {
         /*
-         * Create a gray-scale ColorSpace and corresponding ColorModel
+         * Create an Writableraster from existing color model and fill it with pixels
          */
-        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        ColorModel grayColorModel = new ComponentColorModel(cs, new int[]{31},
-                false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+        WritableRaster raster = grayColorModel.createCompatibleWritableRaster(xsize, ysize);
+        raster.setPixels(0, 0, xsize, ysize, pixels);
         /*
-         * Create an image from integer pixel array
+         * Create a BufferedImage from the raster and color model and return it
          */
-        Image img = this.createImage(new MemoryImageSource(xsize, ysize, grayColorModel, pixels, 0, xsize));
-        /*
-         * Convert image to buffered image
-         */
-        BufferedImage bImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_USHORT_GRAY);
-        bImage.getGraphics().drawImage(img, 0, 0, null);
-        return bImage;
+        return new BufferedImage(grayColorModel, raster, true, null);
     }
 }

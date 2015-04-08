@@ -26,6 +26,7 @@ import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
 import java.awt.color.ColorSpace;
+import java.awt.image.DataBuffer;
 import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
@@ -61,8 +62,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.imageParam = new ImageParam();
         this.xsizeField = new JTextField("300");
         this.ysizeField = new JTextField("200");
-        this.noiseField = new JTextField("29");
-        this.signalField = new JTextField("30");
+        this.noiseField = new JTextField("14");
+        this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
 
         initComponents();
@@ -651,9 +652,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             imageParam.ysize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
                     1000, ysizeField, "200", defaults));
             imageParam.noise = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    30, noiseField, "29", defaults)));
+                    15, noiseField, "14", defaults)));
             imageParam.signal = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    31, signalField, "30", defaults)));
+                    16, signalField, "15", defaults)));
             imageParam.scale = MyTextUtilities.TestValueWithMemory(0,
                     1, scaleField, "0.5", defaults);
         }
