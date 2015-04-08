@@ -44,7 +44,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int nSteps = 10;
     private int sliderposition = 50;
     private double diffCoef = 0.01;
-    private double nonLinearCoef = 1;
+    private double nonLinearCoef = 10000;
     private boolean testFlag = false;
     private boolean nonLinearFlag = false;
     private CrankNicholson2D comp;

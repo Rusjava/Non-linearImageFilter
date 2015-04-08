@@ -56,9 +56,13 @@ public class CrankNicholson2D {
             }
         }
         Arrays.fill(diffCoef[0], diffCoefFactor);
+        Arrays.fill(diffCoef[1], diffCoefFactor);
         Arrays.fill(diffCoef[ysize - 1], diffCoefFactor);
+        Arrays.fill(diffCoef[ysize - 2], diffCoefFactor);
         putColumn(0, diffCoef, column);
+        putColumn(1, diffCoef, column);
         putColumn(xsize - 1, diffCoef, column);
+        putColumn(xsize - 2, diffCoef, column);
         return diffCoef;
     }
     /*
@@ -164,21 +168,22 @@ public class CrankNicholson2D {
         double factor = 1 / (bConditionCoef[0] * (coef[1] + coef[2]) / 2 - bConditionCoef[2] * (coef[0] + coef[1]) / 2);
         p[0] = (bConditionCoef[2] * (coef[1] + (coef[0] + coef[2]) / 2 + 1) + bConditionCoef[1] * (coef[1] + coef[2]) / 2) * factor;
         q[0] = (bSum[0] * (coef[1] + coef[2]) / 2 + bConditionCoef[2] * d) * factor;
+        
         /*
          * Iteratively calculating all p and q coefficients
          */
         for (int m = 1; m < size - 1; m++) {
-            d = (coefOld[m] + coefOld[m + 1]) / 2 * data[m + 1] + (coefOld[m - 1] + coefOld[m]) / 2 * data[m - 1] 
+            d = (coefOld[m] + coefOld[m + 1]) / 2 * data[m + 1] + (coefOld[m - 1] + coefOld[m]) / 2 * data[m - 1]
                     - (coefOld[m] + (coefOld[m - 1] + coefOld[m + 1]) / 2 - 1) * data[m];
             factor = 1 / ((coef[m] + (coef[m - 1] + coef[m + 1]) / 2 + 1) + (coef[m - 1] + coef[m]) / 2 * p[m - 1]);
-            p[m] = -(coef[m+1] + coef[m]) / 2 * factor;
-            q[m] = (d + (coef[m] + coef[m-1]) / 2 * q[m - 1]) * factor;
+            p[m] = -(coef[m + 1] + coef[m]) / 2 * factor;
+            q[m] = (d + (coef[m] + coef[m - 1]) / 2 * q[m - 1]) * factor;
         }
         result[size - 1] = (bSum[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * d - q[size - 2]
-                * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2
-                + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)))
-                / (bConditionCoef[2] * (coef[size - 3] + coef[size - 2]) / 2 - bConditionCoef[0] * (coef[size - 2] + coef[size - 1]) / 2 - p[size - 2]
-                * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)));
+         * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2
+         + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)))
+         / (bConditionCoef[2] * (coef[size - 3] + coef[size - 2]) / 2 - bConditionCoef[0] * (coef[size - 2] + coef[size - 1]) / 2 - p[size - 2]
+         * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * (coef[size - 2] + (coef[size - 3] + coef[size - 1]) / 2 + 1)));
         
         /*
          * Iteratively calculating the result
