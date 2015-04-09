@@ -36,6 +36,7 @@ import javax.swing.JSlider;
 import javax.swing.SwingWorker;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.border.TitledBorder;
 import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
@@ -71,7 +72,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final JTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, nStepsField, precisionField;
     private ResourceBundle bundle;
-    
+
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
         this.defaults = new HashMap();
@@ -81,8 +82,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("14");
         this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
-        this.nStepsField=new JTextField("10");
-        this.precisionField=new JTextField("1e-10");
+        this.nStepsField = new JTextField("10");
+        this.precisionField = new JTextField("1e-10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle", currentLocale);
 
         initComponents();
@@ -490,7 +491,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (nonLinearFlag) {
                         currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
                     } else {
-                       currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
+                        currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
                     }
                     component = new ImageComponent(currentData);
                     imageList.add(component);
@@ -736,13 +737,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
-                /* Setting default locale */
+
+        /* Setting default locale */
         Locale.setDefault(new Locale("en", "US"));
         /* Setting currrent locale */
-        currentLocale=Locale.getDefault();
-        if (args!=null) {
-            currentLocale=new Locale(args[0], args[1]);
+        currentLocale = Locale.getDefault();
+        if (args != null) {
+            currentLocale = new Locale(args[0], args[1]);
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -762,6 +763,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
         jPanelImages.setLayout(new BorderLayout(0, 0));
         jPanelImages.add(component, BorderLayout.CENTER);
+        ((TitledBorder) jPanelImages.getBorder()).setTitle(bundle.
+                getString("NonLinearImageFilter.jPanelImages.border.title") + " - " + index);
         jPanelImages.revalidate();
         jPanelImages.repaint();
     }
