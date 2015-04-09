@@ -131,8 +131,9 @@ public class CrankNicholson2D {
      * @param bConditions 4*size array containing boundary condition values at
      * four edges
      * @return
+     * @throws java.lang.InterruptedException
      */
-    public double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
+    protected double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
             double[][] newDiffCoef, double[][] bConditions) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
@@ -175,7 +176,7 @@ public class CrankNicholson2D {
      * @param coef the iterated values of diffusion coefficient
      * @return
      */
-    public double[] iterateLinear1D(double[] data, double[] bSum, double[] coefOld, double[] coef) {
+    protected double[] iterateLinear1D(double[] data, double[] bSum, double[] coefOld, double[] coef) {
         int size = data.length;
         double[] result = new double[size];
         double[] p = new double[size - 1];
@@ -217,9 +218,10 @@ public class CrankNicholson2D {
     /**
      * Applies non-linear filter with constant diffusion coefficient and zero
      * boundary sums
-     *
+     * 
      * @param data
      * @return
+     * @throws java.lang.InterruptedException
      */
     public double[][] solveNonLinear(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
@@ -242,9 +244,10 @@ public class CrankNicholson2D {
     /**
      * Applies linear filter with constant diffusion coefficient and zero
      * boundary sums
-     *
+     * 
      * @param data
      * @return
+     * @throws java.lang.InterruptedException
      */
     public double[][] solveLinear(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
