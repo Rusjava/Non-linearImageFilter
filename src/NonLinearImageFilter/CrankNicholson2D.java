@@ -24,7 +24,7 @@ import java.lang.InterruptedException;
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 0.1
+ * @version 1.0
  */
 public class CrankNicholson2D {
 

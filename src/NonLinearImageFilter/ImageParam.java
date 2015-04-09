@@ -19,7 +19,7 @@ package NonLinearImageFilter;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 0.1
+ * @version 1.0
  */
 public class ImageParam implements Cloneable {
 

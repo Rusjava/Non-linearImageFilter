@@ -35,7 +35,7 @@ import javax.swing.JComponent;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 0.1
+ * @version 1.0
  */
 public class ImageComponent extends JComponent {
 
