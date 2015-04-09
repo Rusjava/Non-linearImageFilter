@@ -68,7 +68,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
-    private final JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
+    private final JTextField xsizeField, ysizeField, noiseField, signalField,
+            scaleField, nStepsField, precisionField;
     private ResourceBundle bundle;
     
     public NonLinearImageFilter() {
@@ -80,6 +81,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("14");
         this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
+        this.nStepsField=new JTextField("10");
+        this.precisionField=new JTextField("1e-10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle", currentLocale);
 
         initComponents();
@@ -688,6 +691,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
         // TODO add your handling code here:
+        Object[] message = {
+            bundle.getString("NonLinearImageFilter.jTextFieldnSteps.text"), nStepsField,
+            bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField
+        };
+        int option = JOptionPane.showConfirmDialog(null, message,
+                bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(1,
+                    1000, nStepsField, "10", defaults));
+            precision = MyTextUtilities.TestValueWithMemory(1e-14,
+                    1e-1, precisionField, "1e-8", defaults);
+        }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
     private void jCheckBoxNonLinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNonLinearActionPerformed
