@@ -17,6 +17,8 @@
 package NonLinearImageFilter;
 
 import java.awt.BorderLayout;
+import java.util.ResourceBundle;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     /**
      * Creates new form NonLinearImageFilter
      */
+    private static Locale currentLocale;
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private int nSteps = 10;
@@ -67,7 +70,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JTextField xsizeField, ysizeField, noiseField, signalField, scaleField;
-
+    private ResourceBundle bundle;
+    
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
         this.defaults = new HashMap();
@@ -77,6 +81,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("14");
         this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
+        this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle", currentLocale);
 
         initComponents();
         jButtonStart.setEnabled(false);
@@ -123,11 +128,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuItemAbout = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
+        setTitle(bundle.getString("NonLinearImageFilter.title")); // NOI18N
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setPreferredSize(new java.awt.Dimension(100, 539));
 
-        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
         jPanelParam.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelParam.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelParam.setMinimumSize(new java.awt.Dimension(100, 116));
 
@@ -465,7 +471,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setStringPainted(true);
         working = true;
         comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision);
-        jButtonStart.setText("Stop");
+        jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
 
@@ -516,7 +522,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 }
                 updateImagePanel((int) (sliderposition * (imageList.size() - 1) / 100.0));
                 working = false;
-                jButtonStart.setText("Filter");
+                jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.text"));
                 jButtonImage.setEnabled(true);
             }
 
@@ -721,7 +727,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-
+        
+                /* Setting default locale */
+        Locale.setDefault(new Locale("en", "US"));
+        /* Setting currrent locale */
+        currentLocale=Locale.getDefault();
+        if (args!=null) {
+            currentLocale=new Locale(args[0], args[1]);
+        }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
