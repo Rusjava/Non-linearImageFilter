@@ -17,6 +17,7 @@
 package NonLinearImageFilter;
 
 import java.util.Arrays;
+import java.lang.InterruptedException;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
@@ -132,7 +133,7 @@ public class CrankNicholson2D {
      * @return
      */
     public double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
-            double[][] newDiffCoef, double[][] bConditions) {
+            double[][] newDiffCoef, double[][] bConditions) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] result = new double[ysize][xsize];
@@ -140,6 +141,9 @@ public class CrankNicholson2D {
          * Iteration over rows
          */
         for (int i = 0; i < ysize; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
             double[] bCond = new double[2];
             bCond[0] = bConditions[0][i];
             bCond[1] = bConditions[2][i];
@@ -149,6 +153,9 @@ public class CrankNicholson2D {
          * Iteration over columns
          */
         for (int i = 0; i < xsize; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
             double[] bCond = new double[2];
             bCond[0] = bConditions[1][i];
             bCond[1] = bConditions[3][i];
@@ -214,7 +221,7 @@ public class CrankNicholson2D {
      * @param data
      * @return
      */
-    public double[][] solveNonLinear(double[][] data) {
+    public double[][] solveNonLinear(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
@@ -239,7 +246,7 @@ public class CrankNicholson2D {
      * @param data
      * @return
      */
-    public double[][] solveLinear(double[][] data) {
+    public double[][] solveLinear(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
