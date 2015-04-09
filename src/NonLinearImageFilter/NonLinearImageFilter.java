@@ -62,7 +62,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int sliderposition = 50;
     private double diffCoef = 0.01;
     private double nonLinearCoef = 10000;
-    private boolean testFlag = false;
     private boolean nonLinearFlag = false;
     private CrankNicholson2D comp;
     private final Map defaults;
@@ -484,18 +483,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    if (testFlag) {
-                        imageParamClone.scale = imageParam.scale * (nSteps - i) / nSteps;
-                        component = new ImageComponent(imageParamClone);
-                        currentData = ((ImageComponent) component).getPixelData();
+                    /* Linear or non-linear ltering fidepending on user choice */
+                    if (nonLinearFlag) {
+                        currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
                     } else {
-                        if (nonLinearFlag) {
-                            currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
-                        } else {
-                            currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
-                        }
-                        component = new ImageComponent(currentData);
+                       currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
                     }
+                    component = new ImageComponent(currentData);
                     imageList.add(component);
                     dataList.add(currentData);
                     setStatusBar((int) (100.0 * (i + 1) / nSteps));
