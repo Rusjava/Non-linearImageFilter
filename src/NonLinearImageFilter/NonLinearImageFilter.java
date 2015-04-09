@@ -119,6 +119,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jSliderImages = new javax.swing.JSlider();
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
+        jMenuItemSaveImage = new javax.swing.JMenuItem();
         jMenuItemSaveVideo = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItemExit = new javax.swing.JMenuItem();
@@ -380,6 +381,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuFile.setText(bundle.getString("NonLinearImageFilter.jMenuFile.text")); // NOI18N
 
+        jMenuItemSaveImage.setText(bundle.getString("NonLinearImageFilter.jMenuItemSaveImage.text")); // NOI18N
+        jMenuItemSaveImage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveImageActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemSaveImage);
+
         jMenuItemSaveVideo.setText(bundle.getString("NonLinearImageFilter.jMenuItemSaveVideo.text")); // NOI18N
         jMenuItemSaveVideo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -464,7 +473,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
         if (working == true) {
-            worker.cancel(false);
+            worker.cancel(true);
             return;
         }
         jProgressBar.setValue(0);
@@ -477,7 +486,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
             @Override
             protected Void doInBackground() throws Exception {
-                ImageParam imageParamClone = (ImageParam) imageParam.clone();
                 double[][] currentData;
                 JComponent component;
                 for (int i = 0; i < nSteps; i++) {
@@ -708,6 +716,26 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         nonLinearFlag = jCheckBoxNonLinear.isSelected();
     }//GEN-LAST:event_jCheckBoxNonLinearActionPerformed
 
+    private void jMenuItemSaveImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageActionPerformed
+        // TODO add your handling code here:
+        JFileChooser fo = new JFileChooser();
+        fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
+        int ans = fo.showSaveDialog(this);
+        if (ans == JFileChooser.APPROVE_OPTION) {
+            try {
+                int index=(int) (sliderposition * (imageList.size() - 1) / 100.0);
+                ImageIO.write(((ImageComponent)imageList.get(index)).getImage(), "png", fo.getSelectedFile());  
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,
+                                bundle.getString("IO ERROR DIALOG TITLE"),
+                                bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } else {
+            return;
+        }
+    }//GEN-LAST:event_jMenuItemSaveImageActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -780,6 +808,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemFilterOptions;
     private javax.swing.JMenuItem jMenuItemHelp;
     private javax.swing.JMenuItem jMenuItemImageOptions;
+    private javax.swing.JMenuItem jMenuItemSaveImage;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
