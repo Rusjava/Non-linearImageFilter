@@ -383,11 +383,8 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="jProgressBar" max="32767" attributes="0"/>
-                              <Group type="102" attributes="0">
-                                  <Component id="jCheckBoxNonLinear" min="-2" pref="151" max="-2" attributes="0"/>
-                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                              </Group>
+                              <Component id="jProgressBar" pref="256" max="32767" attributes="0"/>
+                              <Component id="jCheckBoxNonLinear" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
