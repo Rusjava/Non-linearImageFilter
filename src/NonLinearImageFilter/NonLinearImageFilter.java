@@ -55,7 +55,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     /**
      * Creates new form NonLinearImageFilter
      */
-    private static Locale currentLocale;
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private int nSteps = 10;
@@ -84,7 +83,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.scaleField = new JTextField("0.5");
         this.nStepsField = new JTextField("10");
         this.precisionField = new JTextField("1e-10");
-        this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle", currentLocale);
+        this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
 
         initComponents();
         jButtonStart.setEnabled(false);
@@ -142,7 +141,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelDiffCoef.setText(bundle.getString("NonLinearImageFilter.jLabelDiffCoef.text")); // NOI18N
 
-        jTextFieldDiffCoef.setText(bundle.getString("NonLinearImageFilter.jTextFieldDiffCoef.text")); // NOI18N
+        jTextFieldDiffCoef.setText("0.3");
         jTextFieldDiffCoef.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldDiffCoefFocusLost(evt);
@@ -156,7 +155,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelNonlinear.setText(bundle.getString("NonLinearImageFilter.jLabelNonlinear.text")); // NOI18N
 
-        jTextFieldNonlinear.setText(bundle.getString("NonLinearImageFilter.jTextFieldNonlinear.text")); // NOI18N
+        jTextFieldNonlinear.setText("10000");
         jTextFieldNonlinear.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNonlinearFocusLost(evt);
@@ -170,7 +169,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelNSteps.setText(bundle.getString("NonLinearImageFilter.jLabelNSteps.text")); // NOI18N
 
-        jTextFieldNSteps.setText(bundle.getString("NonLinearImageFilter.jTextFieldNSteps.text")); // NOI18N
+        jTextFieldNSteps.setText("10");
         jTextFieldNSteps.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNStepsFocusLost(evt);
@@ -513,7 +512,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         return;
                     }
                     if (e.getCause() instanceof Exception) {
-                        JOptionPane.showMessageDialog(null, "Error!", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, bundle.getString("ERROR DIALOG"), bundle.getString("ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
                         Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
                         return;
                     }
@@ -546,9 +545,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
          * create a button group to chose the source of initial image
          */
         ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButton button1 = new JRadioButton("Generate");
+        JRadioButton button1 = new JRadioButton(bundle.getString("GENERATE OPTION"));
         button1.setSelected(true);
-        JRadioButton button2 = new JRadioButton("From file");
+        JRadioButton button2 = new JRadioButton(bundle.getString("FROM FILE OPTION"));
         buttonGroup.add(button1);
         buttonGroup.add(button2);
         JPanel panel = new JPanel();
@@ -558,7 +557,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
          * Display option window
          */
         Object[] message = {panel};
-        int option = JOptionPane.showConfirmDialog(null, message, "Choose image source", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(null, message, bundle.getString("IMAGE SOURCE DIALOG TITLE"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             /*
              * if OK, proceed to generate/load image
@@ -568,7 +567,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                  * if the second choice, load image from file
                  */
                 JFileChooser fo = new JFileChooser();
-                fo.setDialogTitle("Choose grayscale image to load");
+                fo.setDialogTitle(bundle.getString("IMAGE LOAD DIALOG TITLE"));
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
@@ -578,14 +577,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                             component = new ImageComponent(image);
                         } else {
                             JOptionPane.showMessageDialog(null,
-                                    "<html>The image is not grayscale! Type: </html>",
-                                    "Image Error!", JOptionPane.ERROR_MESSAGE);
+                                    bundle.getString("NOTGRAYSCALE DIALOG"),
+                                    bundle.getString("NOTGRAYSCALE DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
                             return;
                         }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
-                                "<html>Error while reading the image file</html>",
-                                "IO Error!", JOptionPane.ERROR_MESSAGE);
+                                bundle.getString("IO ERROR DIALOG TITLE"),
+                                bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
@@ -649,7 +648,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
         JOptionPane.showMessageDialog(null,
                 "<html>Non-linear image filter. <br>Version: 0.1 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
-                "About NonLinear image filter", JOptionPane.INFORMATION_MESSAGE);
+                bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
@@ -659,13 +658,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
         // TODO add your handling code here:
         Object[] message = {
-            "Image width, px:", xsizeField,
-            "Image height, px:", ysizeField,
-            "Log of noise amplitude:", noiseField,
-            "Log of signal amplitude:", signalField,
-            "Scale:", scaleField
+            bundle.getString("IMAGE WIDTH"), xsizeField,
+            bundle.getString("IMAGE HEIGHT"), ysizeField,
+            bundle.getString("NOISE"), noiseField,
+            bundle.getString("SIGNAL"), signalField,
+            bundle.getString("SCALE"), scaleField
         };
-        int option = JOptionPane.showConfirmDialog(null, message, "Image generation parameters",
+        int option = JOptionPane.showConfirmDialog(null, message, bundle.getString("IMAGE GENERATOR PARAMETERS DIALOG"),
                 JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             imageParam.xsize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
@@ -741,9 +740,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         /* Setting default locale */
         Locale.setDefault(new Locale("en", "US"));
         /* Setting currrent locale */
-        currentLocale = Locale.getDefault();
-        if (args != null) {
-            currentLocale = new Locale(args[0], args[1]);
+        if (args.length > 0) {
+            Locale.setDefault(new Locale(args[0], "US"));
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {

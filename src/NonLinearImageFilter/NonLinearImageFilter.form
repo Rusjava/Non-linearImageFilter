@@ -255,9 +255,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldDiffCoef">
                   <Properties>
-                    <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                      <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.jTextFieldDiffCoef.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
-                    </Property>
+                    <Property name="text" type="java.lang.String" value="0.3"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldDiffCoefFocusLost"/>
@@ -273,9 +271,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldNonlinear">
                   <Properties>
-                    <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                      <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.jTextFieldNonlinear.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
-                    </Property>
+                    <Property name="text" type="java.lang.String" value="10000"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldNonlinearFocusLost"/>
@@ -291,9 +287,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldNSteps">
                   <Properties>
-                    <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                      <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.jTextFieldNSteps.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
-                    </Property>
+                    <Property name="text" type="java.lang.String" value="10"/>
                   </Properties>
                   <Events>
                     <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTextFieldNStepsFocusLost"/>
