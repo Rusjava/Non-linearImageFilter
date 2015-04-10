@@ -17,6 +17,9 @@
 package NonLinearImageFilter;
 
 import java.awt.BorderLayout;
+import java.awt.image.BufferedImage;
+import java.awt.color.ColorSpace;
+
 import java.util.ResourceBundle;
 import java.util.Locale;
 import java.util.ArrayList;
@@ -26,7 +29,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -40,8 +42,8 @@ import javax.swing.border.TitledBorder;
 import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
-import java.awt.color.ColorSpace;
 import java.io.IOException;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 
@@ -721,6 +723,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JFileChooser fo = new JFileChooser();
         fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
         int ans = fo.showSaveDialog(this);
+        FileFilter ext=fo.getFileFilter();
+        
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
                 int index=(int) (sliderposition * (imageList.size() - 1) / 100.0);
@@ -729,10 +733,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null,
                                 bundle.getString("IO ERROR DIALOG TITLE"),
                                 bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
-                return;
             }
-        } else {
-            return;
         }
     }//GEN-LAST:event_jMenuItemSaveImageActionPerformed
 
