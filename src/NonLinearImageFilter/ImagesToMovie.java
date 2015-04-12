@@ -20,7 +20,7 @@ package NonLinearImageFilter;
 import java.io.IOException;
 import java.util.List;
 import java.awt.Dimension;
-import java.awt.image.DataBufferShort;
+import java.awt.image.DataBufferUShort;
 
 import javax.media.*;
 import javax.media.control.*;
@@ -322,7 +322,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         format = new VideoFormat(VideoFormat.JPEG,
                 new Dimension(width, height),
                 Format.NOT_SPECIFIED,
-                Format.byteArray,
+                Format.shortArray,
                 (float)frameRate);
     }
 
@@ -341,8 +341,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         // Check if we've finished all the frames.
         if (nextImage >= images.size()) {
-            // We are done.  Set EndOfMedia.
-        
+            // We are done.  Set EndOfMedia.    
             buf.setEOM(true);
             buf.setOffset(0);
             buf.setLength(0);
@@ -350,9 +349,16 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             return;
         }
 
-        short [] data=((DataBufferShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
+        short [] dataShort=((DataBufferUShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
         nextImage++;
+        
+        byte [] data=new byte[dataShort.length];
+        for (int i = 0; i < dataShort.length; i++) {
+            //data[i] = (byte)(dataShort[i] >>> 8);
+            data[i] = (byte)dataShort[i];
+        }
 
+        buf.setData(data);
         buf.setOffset(0);
         buf.setLength(data.length);
         buf.setFormat(format);
