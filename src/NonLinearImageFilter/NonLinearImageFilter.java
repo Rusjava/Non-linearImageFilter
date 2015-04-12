@@ -43,9 +43,13 @@ import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
 import java.io.IOException;
+import java.io.File;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
+
+import javax.media.MediaLocator;
 
 /**
  *
@@ -73,6 +77,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final JTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, nStepsField, precisionField;
     private ResourceBundle bundle;
+    private FileFilter[] filters;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -86,6 +91,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.nStepsField = new JTextField("10");
         this.precisionField = new JTextField("1e-10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
+        filters = new FileFilter[]{new FileNameExtensionFilter("jpg/jpeg", "jpg", "jpeg"),
+            new FileNameExtensionFilter("png", "png"), new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
+            new FileNameExtensionFilter("bmp", "bmp"), new FileNameExtensionFilter("gif", "gif")};
 
         initComponents();
         jButtonStart.setEnabled(false);
@@ -576,6 +584,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                  */
                 JFileChooser fo = new JFileChooser();
                 fo.setDialogTitle(bundle.getString("IMAGE LOAD DIALOG TITLE"));
+                for (FileFilter filter : filters) {
+                    fo.addChoosableFileFilter(filter);
+                }
+                fo.setAcceptAllFileFilterUsed(false);
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
@@ -690,6 +702,24 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
         // TODO add your handling code here:
+        FileFilter videoFilter = new FileNameExtensionFilter("avi", "avi");
+        JFileChooser fo = new JFileChooser();
+        fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
+        fo.addChoosableFileFilter(videoFilter);
+        fo.setAcceptAllFileFilterUsed(false);
+        int ans = fo.showSaveDialog(this);
+       
+        if (ans == JFileChooser.APPROVE_OPTION) {
+            try {
+                MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURL());
+                ImagesToMovie imageToMovie = new ImagesToMovie();
+                imageToMovie.doIt(imageList.get(0).getWidth(), imageList.get(0).getHeight(), 10, imageList, mc);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,
+                        bundle.getString("IO ERROR DIALOG TITLE"),
+                        bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_jMenuItemSaveVideoActionPerformed
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
@@ -722,17 +752,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
         JFileChooser fo = new JFileChooser();
         fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
+        for (FileFilter filter : filters) {
+            fo.addChoosableFileFilter(filter);
+        }
+        fo.setAcceptAllFileFilterUsed(false);
         int ans = fo.showSaveDialog(this);
-        FileFilter ext=fo.getFileFilter();
-        
+
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
-                int index=(int) (sliderposition * (imageList.size() - 1) / 100.0);
-                ImageIO.write(((ImageComponent)imageList.get(index)).getImage(), "png", fo.getSelectedFile());  
+                int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
+                String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
+                ImageIO.write(((ImageComponent) imageList.get(index)).getImage(), type, fo.getSelectedFile());
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
-                                bundle.getString("IO ERROR DIALOG TITLE"),
-                                bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+                        bundle.getString("IO ERROR DIALOG TITLE"),
+                        bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_jMenuItemSaveImageActionPerformed

@@ -17,9 +17,10 @@
 
 package NonLinearImageFilter;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.List;
 import java.awt.Dimension;
+import java.awt.image.DataBufferShort;
 
 import javax.media.*;
 import javax.media.control.*;
@@ -40,7 +41,7 @@ import javax.media.format.VideoFormat;
  */
 public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
-    public boolean doIt(int width, int height, int frameRate, Vector inFiles, MediaLocator outML) {
+    public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) {
     ImageDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
     Processor p;
@@ -229,38 +230,6 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     }
     }
 
-
-    public void convert (List imageList, File outputFile) {
-
-    // Parse the arguments.
-    int i = 0;
-    int width = -1, height = -1, frameRate = 1;
-    Vector inputFiles = new Vector();
-    
-    // Generate the output media locators.
-    MediaLocator oml;
-
-    if ((oml = createMediaLocator(outputFile)) == null) {
-        System.err.println("Cannot build media locator");
-        System.exit(0);
-    }
-
-    ImagesToMovie imageToMovie = new ImagesToMovie();
-    imageToMovie.doIt(width, height, frameRate, inputFiles, oml);
-
-    System.exit(0);
-    }
-
-    /**
-     * Create a media locator from the given string.
-     */
-    private MediaLocator createMediaLocator(File file) {
-        MediaLocator ml;
-        ml = new MediaLocator(file.getAbsolutePath());
-        return ml;
-    }
-
-
     ///////////////////////////////////////////////
     //
     // Inner classes.
@@ -276,7 +245,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
     ImageSourceStream streams[];
 
-    ImageDataSource(int width, int height, int frameRate, Vector images) {
+    ImageDataSource(int width, int height, int frameRate, List images) {
         streams = new ImageSourceStream[1];
         streams[0] = new ImageSourceStream(width, height, frameRate, images);
     }
@@ -333,20 +302,19 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     }
     }
 
-
     /**
      * The source stream to go along with ImageDataSource.
      */
     class ImageSourceStream implements PullBufferStream {
 
-    Vector images;
+    List images;
     int width, height;
     VideoFormat format;
 
     int nextImage = 0;  // index of the next image to be read.
     boolean ended = false;
 
-    public ImageSourceStream(int width, int height, int frameRate, Vector images) {
+    public ImageSourceStream(int width, int height, int frameRate, List images) {
         this.width = width;
         this.height = height;
         this.images = images;
@@ -373,49 +341,23 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         // Check if we've finished all the frames.
         if (nextImage >= images.size()) {
-        // We are done.  Set EndOfMedia.
-        System.err.println("Done reading all images.");
-        buf.setEOM(true);
-        buf.setOffset(0);
-        buf.setLength(0);
-        ended = true;
-        return;
+            // We are done.  Set EndOfMedia.
+        
+            buf.setEOM(true);
+            buf.setOffset(0);
+            buf.setLength(0);
+            ended = true;
+            return;
         }
 
-        String imageFile = (String)images.elementAt(nextImage);
+        short [] data=((DataBufferShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
         nextImage++;
 
-        System.err.println("  - reading image file: " + imageFile);
-
-        // Open a random access file for the next image. 
-        RandomAccessFile raFile;
-        raFile = new RandomAccessFile(imageFile, "r");
-
-        byte data[] = null;
-
-        // Check the input buffer type & size.
-
-        if (buf.getData() instanceof byte[])
-        data = (byte[])buf.getData();
-
-        // Check to see the given buffer is big enough for the frame.
-        if (data == null || data.length < raFile.length()) {
-        data = new byte[(int)raFile.length()];
-        buf.setData(data);
-        }
-
-        // Read the entire JPEG image from the file.
-        raFile.readFully(data, 0, (int)raFile.length());
-
-        System.err.println("    read " + raFile.length() + " bytes.");
-
         buf.setOffset(0);
-        buf.setLength((int)raFile.length());
+        buf.setLength(data.length);
         buf.setFormat(format);
         buf.setFlags(buf.getFlags() | buf.FLAG_KEY_FRAME);
 
-        // Close the random access file.
-        raFile.close();
     }
 
     /**
