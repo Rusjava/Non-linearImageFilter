@@ -91,9 +91,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.nStepsField = new JTextField("10");
         this.precisionField = new JTextField("1e-10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
-        filters = new FileFilter[]{new FileNameExtensionFilter("jpg/jpeg", "jpg", "jpeg"),
-            new FileNameExtensionFilter("png", "png"), new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
-            new FileNameExtensionFilter("bmp", "bmp"), new FileNameExtensionFilter("gif", "gif")};
+        filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
+            new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
+            new FileNameExtensionFilter("gif", "gif")};
 
         initComponents();
         jButtonStart.setEnabled(false);
@@ -587,6 +587,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 for (FileFilter filter : filters) {
                     fo.addChoosableFileFilter(filter);
                 }
+                fo.addChoosableFileFilter(new FileNameExtensionFilter("jpg/jpeg", "jpg", "jpeg"));
                 fo.setAcceptAllFileFilterUsed(false);
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
@@ -765,7 +766,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 ImageIO.write(((ImageComponent) imageList.get(index)).getImage(), type, fo.getSelectedFile());
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
-                        bundle.getString("IO ERROR DIALOG TITLE"),
+                        bundle.getString("IO SAVE ERROR DIALOG TITLE"),
                         bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
             }
         }

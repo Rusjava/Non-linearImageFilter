@@ -76,7 +76,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         // Set the output content descriptor to QuickTime. 
-        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.QUICKTIME));
+        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.MSVIDEO));
 
         // Query for the processor for supported formats.
         // Then set it on the processor.
@@ -336,7 +336,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.height = height;
             this.images = images;
 
-            format = new VideoFormat(VideoFormat.IRGB,
+            format = new VideoFormat(VideoFormat.RGB,
                     new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.shortArray,
