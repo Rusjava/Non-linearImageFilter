@@ -52,6 +52,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) {
 
         PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
+
         Processor p;
         TrackControl tcs[];
         Format f[];
@@ -76,13 +77,13 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         // Set the output content descriptor to QuickTime. 
-        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.RAW));
+        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.MSVIDEO));
 
         // Query for the processor for supported formats.
         // Then set it on the processor.
         tcs = p.getTrackControls();
         f = tcs[0].getSupportedFormats();
-        System.out.println(f);
+
         if (f == null || f.length <= 0) {
             return false;
         }
@@ -103,8 +104,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             return false;
         }
         dsink.addDataSinkListener(this);
-        fileDone = false;
 
+        fileDone = false;
+       
         // OK, we can now start the actual transcoding.
         try {
             p.start();
@@ -141,6 +143,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if ((ds = p.getDataOutput()) == null) {
             return null;
         }
+        System.out.println(ds.getDuration().getSeconds());
         /*
          * creating datasink
          */
@@ -243,8 +246,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     // Inner classes.
     ///////////////////////////////////////////////
     /**
-     * A DataSource to read from a list of JPEG image files and turn that into a
-     * stream of JMF buffers. The DataSource is not seekable or positionable.
+     * A DataSource to read from a list of BufferedImage files and turn that
+     * into a stream of JMF buffers. The DataSource is not seekable or
+     * positionable.
      */
     class ImageDataSource extends PullBufferDataSource {
 
@@ -256,7 +260,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.streams = new ImageSourceStream[1];
             this.streams[0] = new ImageSourceStream(width, height, frameRate, images);
             this.frameRate = frameRate;
-            frameNumber = images.size();
+            this.frameNumber = images.size();
         }
 
         @Override
@@ -306,7 +310,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
          */
         @Override
         public Time getDuration() {
-            return new Time(1000.0 * frameNumber / frameRate);
+            return DURATION_UNKNOWN;
         }
 
         @Override
@@ -374,7 +378,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
             byte[] data = new byte[dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
-                data[i] = (byte)(dataShort[i] >>> 8);
+                data[i] = (byte) (dataShort[i] >>> 8);
                 //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
                 //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
             }
@@ -383,6 +387,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             buf.setOffset(0);
             buf.setLength(data.length);
             buf.setFormat(format);
+            buf.setDuration(100000000);
+            buf.setTimeStamp(100000000 * nextImage);
             buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
         }
 
@@ -401,7 +407,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         @Override
         public long getContentLength() {
-            return width * height;
+            return LENGTH_UNKNOWN;
         }
 
         @Override
