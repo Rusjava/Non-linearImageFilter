@@ -41,86 +41,91 @@ import javax.media.format.VideoFormat;
  */
 public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
+    /**
+     * Do actual video file generation
+     * @param width
+     * @param height
+     * @param frameRate
+     * @param inFiles
+     * @param outML
+     * @return
+     */
     public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) {
-    ImageDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
+        
+        ImageDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
+        Processor p;
+        TrackControl tcs[];
+        Format f[];
+        DataSink dsink;
+        
+        /*
+        * Creating processor for the image datasource
+        */
+        try {  
+            p = Manager.createProcessor(ids);
+        } catch (Exception e) {
+            return false;
+        }
 
-    Processor p;
+        p.addControllerListener(this);
 
-    try {
-        System.err.println("- create processor for the image datasource ...");
-        p = Manager.createProcessor(ids);
-    } catch (Exception e) {
-        System.err.println("Yikes!  Cannot create a processor from the data source.");
-        return false;
-    }
+        // Put the Processor into configured state so we can set
+        // some processing options on the processor.
+        p.configure();
+        if (!waitForState(p, Processor.Configured)) {
+            return false;
+        }
 
-    p.addControllerListener(this);
+        // Set the output content descriptor to QuickTime. 
+        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.QUICKTIME));
 
-    // Put the Processor into configured state so we can set
-    // some processing options on the processor.
-    p.configure();
-    if (!waitForState(p, p.Configured)) {
-        System.err.println("Failed to configure the processor.");
-        return false;
-    }
+        // Query for the processor for supported formats.
+        // Then set it on the processor.
+        tcs = p.getTrackControls();
+        f = tcs[0].getSupportedFormats();
+        if (f == null || f.length <= 0) {
+            return false;
+        }
+        /*
+        * Setting track format
+        */
+        tcs[0].setFormat(f[0]);
 
-    // Set the output content descriptor to QuickTime. 
-    p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.QUICKTIME));
+        // We are done with programming the processor.  Let's just
+        // realize it.
+        p.realize();
+        if (!waitForState(p, Processor.Realized)) {
+            return false;
+        }
 
-    // Query for the processor for supported formats.
-    // Then set it on the processor.
-    TrackControl tcs[] = p.getTrackControls();
-    Format f[] = tcs[0].getSupportedFormats();
-    if (f == null || f.length <= 0) {
-        System.err.println("The mux does not support the input format: " + tcs[0].getFormat());
-        return false;
-    }
+        // Now, we'll need to create a DataSink.
+        
+        if ((dsink = createDataSink(p, outML)) == null) {
+            return false;
+        }
+        dsink.addDataSinkListener(this);
+        fileDone = false;
 
-    tcs[0].setFormat(f[0]);
+        // OK, we can now start the actual transcoding.
+        try {
+            p.start();
+            dsink.start();
+        } catch (IOException e) {
+            return false;
+        }
 
-    System.err.println("Setting the track format to: " + f[0]);
+        // Wait for EndOfStream event.
+        waitForFileDone();
 
-    // We are done with programming the processor.  Let's just
-    // realize it.
-    p.realize();
-    if (!waitForState(p, p.Realized)) {
-        System.err.println("Failed to realize the processor.");
-        return false;
-    }
+        // Cleanup.
+        try {
+            dsink.close();
+        } catch (Exception e) {
+            
+        }
+        p.removeControllerListener(this);
 
-    // Now, we'll need to create a DataSink.
-    DataSink dsink;
-    if ((dsink = createDataSink(p, outML)) == null) {
-        System.err.println("Failed to create a DataSink for the given output MediaLocator: " + outML);
-        return false;
-    }
-
-    dsink.addDataSinkListener(this);
-    fileDone = false;
-
-    System.err.println("start processing...");
-
-    // OK, we can now start the actual transcoding.
-    try {
-        p.start();
-        dsink.start();
-    } catch (IOException e) {
-        System.err.println("IO error during processing");
-        return false;
-    }
-
-    // Wait for EndOfStream event.
-    waitForFileDone();
-
-    // Cleanup.
-    try {
-        dsink.close();
-    } catch (Exception e) {}
-    p.removeControllerListener(this);
-
-    System.err.println("...done processing.");
-
-    return true;
+        return true;
     }
 
 
@@ -129,105 +134,108 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      */
     DataSink createDataSink(Processor p, MediaLocator outML) {
 
-    DataSource ds;
+        DataSource ds;
+        DataSink dsink;
+        
+        /*
+        * Checking if processor have getDataOutput
+        */
+        if ((ds = p.getDataOutput()) == null) {
+            return null;
+        }
+        /*
+        * creating datasink
+        */
+        try {
+            dsink = Manager.createDataSink(ds, outML);
+            dsink.open();
+        } catch (Exception e) {
+            return null;
+        }
 
-    if ((ds = p.getDataOutput()) == null) {
-        System.err.println("Something is really wrong: the processor does not have an output DataSource");
-        return null;
+        return dsink;
     }
 
-    DataSink dsink;
 
-    try {
-        System.err.println("- create DataSink for: " + outML);
-        dsink = Manager.createDataSink(ds, outML);
-        dsink.open();
-    } catch (Exception e) {
-        System.err.println("Cannot create the DataSink: " + e);
-        return null;
-    }
-
-    return dsink;
-    }
-
-
-    Object waitSync = new Object();
-    boolean stateTransitionOK = true;
+    private final Object waitSync = new Object();
+    private boolean stateTransitionOK = true;
 
     /**
      * Block until the processor has transitioned to the given state.
      * Return false if the transition failed.
      */
-    boolean waitForState(Processor p, int state) {
-    synchronized (waitSync) {
-        try {
-        while (p.getState() < state && stateTransitionOK)
-            waitSync.wait();
-        } catch (Exception e) {}
-    }
-    return stateTransitionOK;
+    private boolean waitForState(Processor p, int state) {
+        synchronized (waitSync) {
+            try {
+                while (p.getState() < state && stateTransitionOK)
+                    waitSync.wait();
+            } catch (Exception e) {}
+        }
+        return stateTransitionOK;
     }
 
 
     /**
      * Controller Listener.
+     * @param evt
      */
+    @Override
     public void controllerUpdate(ControllerEvent evt) {
-
-    if (evt instanceof ConfigureCompleteEvent ||
-        evt instanceof RealizeCompleteEvent ||
-        evt instanceof PrefetchCompleteEvent) {
-        synchronized (waitSync) {
-        stateTransitionOK = true;
-        waitSync.notifyAll();
+        if (evt instanceof ConfigureCompleteEvent ||
+            evt instanceof RealizeCompleteEvent ||
+            evt instanceof PrefetchCompleteEvent) {
+            synchronized (waitSync) {
+                stateTransitionOK = true;
+                waitSync.notifyAll();
+            }
+        } else if (evt instanceof ResourceUnavailableEvent) {
+            synchronized (waitSync) {
+                stateTransitionOK = false;
+                waitSync.notifyAll();
+            }
+        } else if (evt instanceof EndOfMediaEvent) {
+            evt.getSourceController().stop();
+            evt.getSourceController().close();
         }
-    } else if (evt instanceof ResourceUnavailableEvent) {
-        synchronized (waitSync) {
-        stateTransitionOK = false;
-        waitSync.notifyAll();
-        }
-    } else if (evt instanceof EndOfMediaEvent) {
-        evt.getSourceController().stop();
-        evt.getSourceController().close();
-    }
     }
 
 
-    Object waitFileSync = new Object();
-    boolean fileDone = false;
-    boolean fileSuccess = true;
+    private final Object waitFileSync = new Object();
+    private boolean fileDone = false;
+    private boolean fileSuccess = true;
 
     /**
      * Block until file writing is done. 
      */
     boolean waitForFileDone() {
-    synchronized (waitFileSync) {
-        try {
-        while (!fileDone)
-            waitFileSync.wait();
-        } catch (Exception e) {}
-    }
-    return fileSuccess;
+        synchronized (waitFileSync) {
+            try {
+            while (!fileDone)
+                waitFileSync.wait();
+            } catch (Exception e) {}
+        }
+        return fileSuccess;
     }
 
 
     /**
      * Event handler for the file writer.
+     * @param evt
      */
+    @Override
     public void dataSinkUpdate(DataSinkEvent evt) {
-
-    if (evt instanceof EndOfStreamEvent) {
-        synchronized (waitFileSync) {
-        fileDone = true;
-        waitFileSync.notifyAll();
+        if (evt instanceof EndOfStreamEvent) {
+            synchronized (waitFileSync) {
+                fileDone = true;
+                waitFileSync.notifyAll();
+            }
+        } else if (evt instanceof DataSinkErrorEvent) {
+            synchronized (waitFileSync) {
+                fileDone = true;
+                fileSuccess = false;
+                waitFileSync.notifyAll();
+            }
         }
-    } else if (evt instanceof DataSinkErrorEvent) {
-        synchronized (waitFileSync) {
-        fileDone = true;
-        fileSuccess = false;
-        waitFileSync.notifyAll();
-        }
-    }
     }
 
     ///////////////////////////////////////////////
@@ -243,63 +251,72 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      */
     class ImageDataSource extends PullBufferDataSource {
 
-    ImageSourceStream streams[];
+        ImageSourceStream streams[];
 
-    ImageDataSource(int width, int height, int frameRate, List images) {
-        streams = new ImageSourceStream[1];
-        streams[0] = new ImageSourceStream(width, height, frameRate, images);
-    }
+        ImageDataSource(int width, int height, int frameRate, List images) {
+            streams = new ImageSourceStream[1];
+            streams[0] = new ImageSourceStream(width, height, frameRate, images);
+        }
 
-    public void setLocator(MediaLocator source) {
-    }
+        @Override
+        public void setLocator(MediaLocator source) {
+        }
 
-    public MediaLocator getLocator() {
-        return null;
-    }
+        @Override
+        public MediaLocator getLocator() {
+            return null;
+        }
 
-    /**
-     * Content type is of RAW since we are sending buffers of video
-     * frames without a container format.
-     */
-    public String getContentType() {
-        return ContentDescriptor.RAW;
-    }
+        /**
+        * Content type is of RAW since we are sending buffers of video
+        * frames without a container format.
+        */
+        @Override
+        public String getContentType() {
+            return ContentDescriptor.RAW;
+        }
 
-    public void connect() {
-    }
+        @Override
+        public void connect() {
+        }
 
-    public void disconnect() {
-    }
+        @Override
+        public void disconnect() {
+        }
 
-    public void start() {
-    }
+        @Override
+        public void start() {
+        }
 
-    public void stop() {
-    }
+        @Override
+        public void stop() {
+        }
 
-    /**
-     * Return the ImageSourceStreams.
-     */
-    public PullBufferStream[] getStreams() {
-        return streams;
-    }
+        /**
+        * Return the ImageSourceStreams.
+        */
+        public PullBufferStream[] getStreams() {
+            return streams;
+        }
 
-    /**
-     * We could have derived the duration from the number of
-     * frames and frame rate.  But for the purpose of this program,
-     * it's not necessary.
-     */
-    public Time getDuration() {
-        return DURATION_UNKNOWN;
-    }
+        /**
+        * We could have derived the duration from the number of
+        * frames and frame rate.  But for the purpose of this program,
+        * it's not necessary.
+        */
+        @Override
+        public Time getDuration() {
+            return DURATION_UNKNOWN;
+        }
 
-    public Object[] getControls() {
-        return new Object[0];
-    }
+        @Override
+        public Object[] getControls() {
+            return new Object[0];
+        }
 
-    public Object getControl(String type) {
-        return null;
-    }
+        public Object getControl(String type) {
+            return null;
+        }
     }
 
     /**
@@ -307,90 +324,97 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      */
     class ImageSourceStream implements PullBufferStream {
 
-    List images;
-    int width, height;
-    VideoFormat format;
+        List images;
+        int width, height;
+        VideoFormat format;
 
-    int nextImage = 0;  // index of the next image to be read.
-    boolean ended = false;
+        int nextImage = 0;  // index of the next image to be read.
+        boolean ended = false;
 
-    public ImageSourceStream(int width, int height, int frameRate, List images) {
-        this.width = width;
-        this.height = height;
-        this.images = images;
+        public ImageSourceStream(int width, int height, int frameRate, List images) {
+            this.width = width;
+            this.height = height;
+            this.images = images;
 
-        format = new VideoFormat(VideoFormat.JPEG,
+            format = new VideoFormat(VideoFormat.JPEG,
                 new Dimension(width, height),
                 Format.NOT_SPECIFIED,
                 Format.shortArray,
                 (float)frameRate);
-    }
-
-    /**
-     * We should never need to block assuming data are read from files.
-     */
-    public boolean willReadBlock() {
-        return false;
-    }
-
-    /**
-     * This is called from the Processor to read a frame worth
-     * of video data.
-     */
-    public void read(Buffer buf) throws IOException {
-
-        // Check if we've finished all the frames.
-        if (nextImage >= images.size()) {
-            // We are done.  Set EndOfMedia.    
-            buf.setEOM(true);
-            buf.setOffset(0);
-            buf.setLength(0);
-            ended = true;
-            return;
         }
 
-        short [] dataShort=((DataBufferUShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
-        nextImage++;
+        /**
+        * We should never need to block assuming data are read from files.
+        */
+        @Override
+        public boolean willReadBlock() {
+            return false;
+        }
+
+        /**
+        * This is called from the Processor to read a frame worth
+        * of video data.
+        */
+        @Override
+        public void read(Buffer buf) throws IOException {
+
+            // Check if we've finished all the frames.
+            if (nextImage >= images.size()) {
+                // We are done.  Set EndOfMedia.    
+                buf.setEOM(true);
+                buf.setOffset(0);
+                buf.setLength(0);
+                ended = true;
+                return;
+            }
+
+            short [] dataShort=((DataBufferUShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
+            nextImage++;
         
-        byte [] data=new byte[dataShort.length];
-        for (int i = 0; i < dataShort.length; i++) {
-            //data[i] = (byte)(dataShort[i] >>> 8);
-            data[i] = (byte)dataShort[i];
+            byte [] data=new byte[dataShort.length];
+            for (int i = 0; i < dataShort.length; i++) {
+                //data[i] = (byte)(dataShort[i] >>> 8);
+                data[i] = (byte)dataShort[i];
+            }
+
+            buf.setData(data);
+            buf.setOffset(0);
+            buf.setLength(data.length);
+            buf.setFormat(format);
+            buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
+    }
+
+        /**
+        * Return the format of each video frame.  That will be JPEG.
+        */
+        @Override
+        public Format getFormat() {
+            return format;
         }
 
-        buf.setData(data);
-        buf.setOffset(0);
-        buf.setLength(data.length);
-        buf.setFormat(format);
-        buf.setFlags(buf.getFlags() | buf.FLAG_KEY_FRAME);
+        @Override
+        public ContentDescriptor getContentDescriptor() {
+            return new ContentDescriptor(ContentDescriptor.RAW);
+        }
 
-    }
+        @Override
+        public long getContentLength() {
+            return 0;
+        }
 
-    /**
-     * Return the format of each video frame.  That will be JPEG.
-     */
-    public Format getFormat() {
-        return format;
-    }
+        @Override
+        public boolean endOfStream() {
+            return ended;
+        }
 
-    public ContentDescriptor getContentDescriptor() {
-        return new ContentDescriptor(ContentDescriptor.RAW);
-    }
+        @Override
+        public Object[] getControls() {
+            return new Object[0];
+        }
 
-    public long getContentLength() {
-        return 0;
-    }
-
-    public boolean endOfStream() {
-        return ended;
-    }
-
-    public Object[] getControls() {
-        return new Object[0];
-    }
-
-    public Object getControl(String type) {
-        return null;
-    }
+        @Override
+        public Object getControl(String type) {
+            return null;
+        }
     }
 }
