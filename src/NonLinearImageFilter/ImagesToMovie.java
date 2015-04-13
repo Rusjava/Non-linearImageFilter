@@ -336,7 +336,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.height = height;
             this.images = images;
 
-            format = new VideoFormat(VideoFormat.JPEG,
+            format = new VideoFormat(VideoFormat.IRGB,
                     new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.shortArray,
