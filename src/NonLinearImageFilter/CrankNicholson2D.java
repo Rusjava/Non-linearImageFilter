@@ -69,15 +69,54 @@ public class CrankNicholson2D {
                 }
             }
         }
-        Arrays.fill(diffCoef[0], diffCoefFactor);
-        Arrays.fill(diffCoef[1], diffCoefFactor);
-        Arrays.fill(diffCoef[ysize - 1], diffCoefFactor);
-        Arrays.fill(diffCoef[ysize - 2], diffCoefFactor);
-        putColumn(0, diffCoef, column);
-        putColumn(1, diffCoef, column);
-        putColumn(xsize - 1, diffCoef, column);
-        putColumn(xsize - 2, diffCoef, column);
+        /*
+        * Treating boundaries differently
+        */
+        diffCoef[0] = getDiffCoefficient1D(data, 0, true);
+        diffCoef[1] = getDiffCoefficient1D(data, 1, true);
+        diffCoef[xsize - 1] = getDiffCoefficient1D(data, xsize - 1, true);
+        diffCoef[xsize] = getDiffCoefficient1D(data, xsize, true);
+        putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false));
+        putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false));
+        putColumn(ysize - 1, diffCoef, getDiffCoefficient1D(data, ysize - 1, false));
+        putColumn(ysize, diffCoef, getDiffCoefficient1D(data, ysize, false));
+        
         return diffCoef;
+    }
+    /*
+     * calculating one column/row of diffusion coefficient
+     */
+
+    protected double[] getDiffCoefficient1D(double[][] data, int index, boolean ifx) {
+        double[] result;
+        int size;
+        if (ifx) {
+            size = data[0].length;
+            result = new double[data[0].length];
+            for (int i = 1; i < size - 1; i++) {
+                double tm = diffCoefFactor
+                        * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor);
+                if ((new Double(tm).isNaN())) {
+                    result[i] = 0;
+                } else {
+                    result[i] = tm;
+                }
+            }
+        } else {
+            size = data.length;
+            result = new double[size];
+            for (int i = 1; i < size - 1; i++) {
+                double tm = diffCoefFactor
+                        * Math.exp(-Math.pow(data[i + 1][index] - data[i - 1][index], 2) * nonLinearFactor);
+                if ((new Double(tm).isNaN())) {
+                    result[i] = 0;
+                } else {
+                    result[i] = tm;
+                }
+            }
+
+        }
+        return result;
     }
     /*
      * Calculating normalized squared difference
@@ -184,21 +223,27 @@ public class CrankNicholson2D {
         /*
          * The step zero - calculationg p0 and q0 based on the lower boundary condition 
          */
+        double a = (coef[1] + coef[2]) / 2;
+        double b = (coef[0] + coef[1]) / 2;
+        double c = a + b + 1;
         double d = (coefOld[1] + coefOld[2]) / 2 * data[2] + (coefOld[0] + coefOld[1]) / 2 * data[0]
                 - (coefOld[1] + (coefOld[0] + coefOld[2]) / 2 - 1) * data[1];
-        double factor = 1 / (bConditionCoef[0] * (coef[1] + coef[2]) / 2 - bConditionCoef[2] * (coef[0] + coef[1]) / 2);
-        p[0] = (bConditionCoef[2] * (coef[1] + (coef[0] + coef[2]) / 2 + 1) + bConditionCoef[1] * (coef[1] + coef[2]) / 2) * factor;
-        q[0] = (bSum[0] * (coef[1] + coef[2]) / 2 + bConditionCoef[2] * d) * factor;
+        double factor = 1 / (bConditionCoef[0] * a - bConditionCoef[2] * b);
+        p[0] = (bConditionCoef[2] * c + bConditionCoef[1] * a) * factor;
+        q[0] = (bSum[0] * a + bConditionCoef[2] * d) * factor;
 
         /*
          * Iteratively calculating all p and q coefficients
          */
         for (int m = 1; m < size - 1; m++) {
+            a = (coef[m] + coef[m + 1]) / 2;
+            b = (coef[m - 1] + coef[m]) / 2;
+            c = a + b + 1;
             d = (coefOld[m] + coefOld[m + 1]) / 2 * data[m + 1] + (coefOld[m - 1] + coefOld[m]) / 2 * data[m - 1]
                     - (coefOld[m] + (coefOld[m - 1] + coefOld[m + 1]) / 2 - 1) * data[m];
-            factor = 1 / ((coef[m] + (coef[m - 1] + coef[m + 1]) / 2 + 1) + (coef[m - 1] + coef[m]) / 2 * p[m - 1]);
-            p[m] = -(coef[m + 1] + coef[m]) / 2 * factor;
-            q[m] = (d + (coef[m] + coef[m - 1]) / 2 * q[m - 1]) * factor;
+            factor = 1 / (c + b * p[m - 1]);
+            p[m] = -a * factor;
+            q[m] = (d + b * q[m - 1]) * factor;
         }
         result[size - 1] = (bSum[1] * (coef[size - 3] + coef[size - 2]) / 2 + bConditionCoef[0] * d - q[size - 2]
                 * (bConditionCoef[1] * (coef[size - 3] + coef[size - 2]) / 2
@@ -218,7 +263,7 @@ public class CrankNicholson2D {
     /**
      * Applies non-linear filter with constant diffusion coefficient and zero
      * boundary sums
-     * 
+     *
      * @param data
      * @return
      * @throws java.lang.InterruptedException
@@ -244,7 +289,7 @@ public class CrankNicholson2D {
     /**
      * Applies linear filter with constant diffusion coefficient and zero
      * boundary sums
-     * 
+     *
      * @param data
      * @return
      * @throws java.lang.InterruptedException
