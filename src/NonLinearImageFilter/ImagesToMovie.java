@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package NonLinearImageFilter;
 
 import java.io.IOException;
@@ -34,15 +33,15 @@ import javax.media.format.VideoFormat;
  * @author Ruslan Feshchenko
  * @version 0.1
  */
-
 /**
- * This program takes a list of BufferedImages and convert them into
- * an AVI movie.
+ * This program takes a list of BufferedImages and convert them into an AVI
+ * movie.
  */
 public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
     /**
      * Do actual video file generation
+     *
      * @param width
      * @param height
      * @param frameRate
@@ -51,17 +50,17 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @return
      */
     public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) {
-        
-        ImageDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
+
+        PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
         Processor p;
         TrackControl tcs[];
         Format f[];
         DataSink dsink;
-        
+
         /*
-        * Creating processor for the image datasource
-        */
-        try {  
+         * Creating processor for the image datasource
+         */
+        try {
             p = Manager.createProcessor(ids);
         } catch (Exception e) {
             return false;
@@ -87,8 +86,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             return false;
         }
         /*
-        * Setting track format
-        */
+         * Setting track format
+         */
         tcs[0].setFormat(f[0]);
 
         // We are done with programming the processor.  Let's just
@@ -99,7 +98,6 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         // Now, we'll need to create a DataSink.
-        
         if ((dsink = createDataSink(p, outML)) == null) {
             return false;
         }
@@ -121,13 +119,12 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         try {
             dsink.close();
         } catch (Exception e) {
-            
+
         }
         p.removeControllerListener(this);
 
         return true;
     }
-
 
     /**
      * Create the DataSink.
@@ -136,16 +133,16 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         DataSource ds;
         DataSink dsink;
-        
+
         /*
-        * Checking if processor have getDataOutput
-        */
+         * Checking if processor have getDataOutput
+         */
         if ((ds = p.getDataOutput()) == null) {
             return null;
         }
         /*
-        * creating datasink
-        */
+         * creating datasink
+         */
         try {
             dsink = Manager.createDataSink(ds, outML);
             dsink.open();
@@ -156,34 +153,35 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         return dsink;
     }
 
-
     private final Object waitSync = new Object();
     private boolean stateTransitionOK = true;
 
     /**
-     * Block until the processor has transitioned to the given state.
-     * Return false if the transition failed.
+     * Block until the processor has transitioned to the given state. Return
+     * false if the transition failed.
      */
     private boolean waitForState(Processor p, int state) {
         synchronized (waitSync) {
             try {
-                while (p.getState() < state && stateTransitionOK)
+                while (p.getState() < state && stateTransitionOK) {
                     waitSync.wait();
-            } catch (Exception e) {}
+                }
+            } catch (Exception e) {
+            }
         }
         return stateTransitionOK;
     }
 
-
     /**
      * Controller Listener.
+     *
      * @param evt
      */
     @Override
     public void controllerUpdate(ControllerEvent evt) {
-        if (evt instanceof ConfigureCompleteEvent ||
-            evt instanceof RealizeCompleteEvent ||
-            evt instanceof PrefetchCompleteEvent) {
+        if (evt instanceof ConfigureCompleteEvent
+                || evt instanceof RealizeCompleteEvent
+                || evt instanceof PrefetchCompleteEvent) {
             synchronized (waitSync) {
                 stateTransitionOK = true;
                 waitSync.notifyAll();
@@ -199,27 +197,28 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
     }
 
-
     private final Object waitFileSync = new Object();
     private boolean fileDone = false;
     private boolean fileSuccess = true;
 
     /**
-     * Block until file writing is done. 
+     * Block until file writing is done.
      */
     boolean waitForFileDone() {
         synchronized (waitFileSync) {
             try {
-            while (!fileDone)
-                waitFileSync.wait();
-            } catch (Exception e) {}
+                while (!fileDone) {
+                    waitFileSync.wait();
+                }
+            } catch (Exception e) {
+            }
         }
         return fileSuccess;
     }
 
-
     /**
      * Event handler for the file writer.
+     *
      * @param evt
      */
     @Override
@@ -242,20 +241,21 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     //
     // Inner classes.
     ///////////////////////////////////////////////
-
-
     /**
-     * A DataSource to read from a list of JPEG image files and
-     * turn that into a stream of JMF buffers.
-     * The DataSource is not seekable or positionable.
+     * A DataSource to read from a list of JPEG image files and turn that into a
+     * stream of JMF buffers. The DataSource is not seekable or positionable.
      */
     class ImageDataSource extends PullBufferDataSource {
 
-        ImageSourceStream streams[];
+        private final PullBufferStream streams[];
+        private final int frameRate;
+        private final int frameNumber;
 
         ImageDataSource(int width, int height, int frameRate, List images) {
-            streams = new ImageSourceStream[1];
-            streams[0] = new ImageSourceStream(width, height, frameRate, images);
+            this.streams = new ImageSourceStream[1];
+            this.streams[0] = new ImageSourceStream(width, height, frameRate, images);
+            this.frameRate = frameRate;
+            frameNumber = images.size();
         }
 
         @Override
@@ -268,9 +268,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         /**
-        * Content type is of RAW since we are sending buffers of video
-        * frames without a container format.
-        */
+         * Content type is of RAW since we are sending buffers of video frames
+         * without a container format.
+         */
         @Override
         public String getContentType() {
             return ContentDescriptor.RAW;
@@ -293,20 +293,19 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         /**
-        * Return the ImageSourceStreams.
-        */
+         * Return the ImageSourceStreams.
+         */
+        @Override
         public PullBufferStream[] getStreams() {
             return streams;
         }
 
         /**
-        * We could have derived the duration from the number of
-        * frames and frame rate.  But for the purpose of this program,
-        * it's not necessary.
-        */
+         * Returning the movie duration
+         */
         @Override
         public Time getDuration() {
-            return DURATION_UNKNOWN;
+            return new Time(1000.0 * frameNumber / frameRate);
         }
 
         @Override
@@ -314,6 +313,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             return new Object[0];
         }
 
+        @Override
         public Object getControl(String type) {
             return null;
         }
@@ -337,24 +337,24 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.images = images;
 
             format = new VideoFormat(VideoFormat.JPEG,
-                new Dimension(width, height),
-                Format.NOT_SPECIFIED,
-                Format.shortArray,
-                (float)frameRate);
+                    new Dimension(width, height),
+                    Format.NOT_SPECIFIED,
+                    Format.shortArray,
+                    (float) frameRate);
         }
 
         /**
-        * We should never need to block assuming data are read from files.
-        */
+         * We should never need to block assuming data are read from files.
+         */
         @Override
         public boolean willReadBlock() {
             return false;
         }
 
         /**
-        * This is called from the Processor to read a frame worth
-        * of video data.
-        */
+         * This is called from the Processor to read a frame worth of video
+         * data.
+         */
         @Override
         public void read(Buffer buf) throws IOException {
 
@@ -368,13 +368,13 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
                 return;
             }
 
-            short [] dataShort=((DataBufferUShort)((ImageComponent)images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
+            short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
             nextImage++;
-        
-            byte [] data=new byte[dataShort.length];
+
+            byte[] data = new byte[dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
                 //data[i] = (byte)(dataShort[i] >>> 8);
-                data[i] = (byte)dataShort[i];
+                data[i] = (byte) dataShort[i];
             }
 
             buf.setData(data);
@@ -382,11 +382,11 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             buf.setLength(data.length);
             buf.setFormat(format);
             buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
-    }
+        }
 
         /**
-        * Return the format of each video frame.  That will be JPEG.
-        */
+         * Return the format of each video frame. That will be JPEG.
+         */
         @Override
         public Format getFormat() {
             return format;
@@ -399,7 +399,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         @Override
         public long getContentLength() {
-            return 0;
+            return width * height;
         }
 
         @Override
