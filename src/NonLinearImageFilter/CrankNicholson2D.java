@@ -70,8 +70,8 @@ public class CrankNicholson2D {
             }
         }
         /*
-        * Treating boundaries differently
-        */
+         * Treating boundaries differently
+         */
         diffCoef[0] = getDiffCoefficient1D(data, 0, true);
         diffCoef[1] = getDiffCoefficient1D(data, 1, true);
         diffCoef[xsize - 1] = getDiffCoefficient1D(data, xsize - 1, true);
@@ -80,7 +80,7 @@ public class CrankNicholson2D {
         putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false));
         putColumn(ysize - 1, diffCoef, getDiffCoefficient1D(data, ysize - 1, false));
         putColumn(ysize, diffCoef, getDiffCoefficient1D(data, ysize, false));
-        
+
         return diffCoef;
     }
     /*
@@ -114,8 +114,11 @@ public class CrankNicholson2D {
                     result[i] = tm;
                 }
             }
-
         }
+        result[0] = diffCoefFactor;
+        result[1] = diffCoefFactor;
+        result[size - 1] = diffCoefFactor;
+        result[size - 1] = diffCoefFactor;
         return result;
     }
     /*
@@ -177,6 +180,32 @@ public class CrankNicholson2D {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] result = new double[ysize][xsize];
+        double[][] coefNew = new double[4][];
+        double[][] coefOld = new double[4][];
+        /*
+        * Saving diffusion coefficients on the boundary and filling in with constants instead
+        */
+        coefNew[0] = getColumn(0, newDiffCoef);
+        coefNew[1] = getColumn(1, newDiffCoef);
+        coefNew[2] = getColumn(xsize - 1, newDiffCoef);
+        coefNew[3] = getColumn(xsize, newDiffCoef);
+        Arrays.fill(newDiffCoef[0], diffCoefFactor);
+        Arrays.fill(newDiffCoef[1], diffCoefFactor);
+        Arrays.fill(newDiffCoef[ysize - 1], diffCoefFactor);
+        Arrays.fill(newDiffCoef[ysize], diffCoefFactor);
+        coefOld[0] = oldDiffCoef[0];
+        coefOld[1] = oldDiffCoef[1];
+        coefOld[ysize - 1] = oldDiffCoef[ysize - 1];
+        coefOld[ysize] = oldDiffCoef[ysize];
+        oldDiffCoef[0] = new double[xsize];
+        oldDiffCoef[1] = new double[xsize];
+        oldDiffCoef[ysize - 1] = new double[xsize];
+        oldDiffCoef[ysize] = new double[xsize];
+        Arrays.fill(oldDiffCoef[0], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[1], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[ysize - 1], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[ysize], diffCoefFactor);
+        
         /*
          * Iteration over rows
          */
@@ -189,6 +218,30 @@ public class CrankNicholson2D {
             bCond[1] = bConditions[2][i];
             result[i] = iterateLinear1D(data[i], bCond, oldDiffCoef[i], newDiffCoef[i]);
         }
+
+        /*
+        * Reinstating old diffusion coefficient values at the boundaries of rows
+        */
+        putColumn(0, newDiffCoef, coefNew[0]);
+        putColumn(1, newDiffCoef, coefNew[1]);
+        putColumn(xsize - 1, newDiffCoef, coefNew[2]);
+        putColumn(xsize, newDiffCoef, coefNew[3]);
+        putColumn(0, oldDiffCoef, coefOld[0]);
+        putColumn(1, oldDiffCoef, coefOld[1]);
+        putColumn(xsize - 1, oldDiffCoef, coefOld[2]);
+        putColumn(xsize, oldDiffCoef, coefOld[3]);
+
+        /*
+        * Filling in column's boundaries with constants
+        */
+        Arrays.fill(newDiffCoef[0], diffCoefFactor);
+        Arrays.fill(newDiffCoef[1], diffCoefFactor);
+        Arrays.fill(newDiffCoef[ysize - 1], diffCoefFactor);
+        Arrays.fill(newDiffCoef[ysize], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[0], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[1], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[ysize - 1], diffCoefFactor);
+        Arrays.fill(oldDiffCoef[ysize], diffCoefFactor);
         /*
          * Iteration over columns
          */
