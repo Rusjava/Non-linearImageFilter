@@ -76,12 +76,13 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         // Set the output content descriptor to QuickTime. 
-        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.MSVIDEO));
+        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.RAW));
 
         // Query for the processor for supported formats.
         // Then set it on the processor.
         tcs = p.getTrackControls();
         f = tcs[0].getSupportedFormats();
+        System.out.println(f);
         if (f == null || f.length <= 0) {
             return false;
         }
@@ -339,7 +340,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             format = new VideoFormat(VideoFormat.RGB,
                     new Dimension(width, height),
                     Format.NOT_SPECIFIED,
-                    Format.shortArray,
+                    Format.byteArray,
                     (float) frameRate);
         }
 
@@ -373,8 +374,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
             byte[] data = new byte[dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
-                //data[i] = (byte)(dataShort[i] >>> 8);
-                data[i] = (byte) dataShort[i];
+                data[i] = (byte)(dataShort[i] >>> 8);
+                //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
+                //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
             }
 
             buf.setData(data);

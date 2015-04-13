@@ -589,6 +589,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 }
                 fo.addChoosableFileFilter(new FileNameExtensionFilter("jpg/jpeg", "jpg", "jpeg"));
                 fo.setAcceptAllFileFilterUsed(false);
+                
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
