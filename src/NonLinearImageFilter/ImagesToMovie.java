@@ -34,7 +34,7 @@ import javax.media.format.VideoFormat;
  * @version 0.1
  */
 /**
- * This program takes a list of BufferedImages and convert them into an AVI
+ * This program takes a list of BufferedImages and converts them into an AVI
  * movie.
  */
 public class ImagesToMovie implements ControllerListener, DataSinkListener {
@@ -98,7 +98,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if (!waitForState(p, Processor.Realized)) {
             return false;
         }
-
+        
         // Now, we'll need to create a DataSink.
         if ((dsink = createDataSink(p, outML)) == null) {
             return false;
@@ -368,6 +368,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
                 // We are done.  Set EndOfMedia.    
                 buf.setEOM(true);
                 buf.setOffset(0);
+                buf.setTimeStamp(100000000L * nextImage);
                 buf.setLength(0);
                 ended = true;
                 return;
@@ -376,20 +377,21 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
             nextImage++;
 
-            byte[] data = new byte[dataShort.length];
+            byte[] data = new byte[3 * dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
-                data[i] = (byte) (dataShort[i] >>> 8);
-                //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
-                //data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
+                data[3 * i] = (byte) (dataShort[i] >>> 8);
+                data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
+                data[3 * i + 2] = (byte) (dataShort[i] >>> 8);
             }
 
             buf.setData(data);
             buf.setOffset(0);
             buf.setLength(data.length);
             buf.setFormat(format);
-            buf.setDuration(100000000);
-            buf.setTimeStamp(100000000 * nextImage);
-            buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
+            //buf.setSequenceNumber(nextImage - 1);
+            //buf.setDuration(100000000L);
+            buf.setTimeStamp(100000000L * (nextImage - 1));
+            //buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
         }
 
         /**
