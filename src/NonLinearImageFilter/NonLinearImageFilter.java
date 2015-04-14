@@ -704,19 +704,25 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
         // TODO add your handling code here:
+        int width = ((ImageComponent)imageList.get(0)).getImage().getWidth();
+        int height = ((ImageComponent)imageList.get(0)).getImage().getHeight();
         FileFilter videoFilter = new FileNameExtensionFilter("avi", "avi");
+        /*
+        * Create file choosing dialog
+        */
         JFileChooser fo = new JFileChooser();
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
         fo.addChoosableFileFilter(videoFilter);
         fo.setAcceptAllFileFilterUsed(false);
         int ans = fo.showSaveDialog(this);
-       
+        /*
+        * Saving uncompressed avi video
+        */
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
                 MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
-                imageToMovie.doIt(((ImageComponent)imageList.get(0)).getImage().getWidth(),
-                        ((ImageComponent)imageList.get(0)).getImage().getHeight(), 10, imageList, mc);
+                imageToMovie.doIt(width, height, 2, imageList, mc);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG TITLE"),

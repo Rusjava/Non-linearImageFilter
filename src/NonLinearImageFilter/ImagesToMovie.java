@@ -28,6 +28,7 @@ import javax.media.protocol.DataSource;
 import javax.media.datasink.*;
 import javax.media.format.RGBFormat;
 import javax.media.format.VideoFormat;
+import javax.media.util.ImageToBuffer;
 
 /**
  *
@@ -99,7 +100,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if (!waitForState(p, Processor.Realized)) {
             return false;
         }
-        
+
         // Now, we'll need to create a DataSink.
         if ((dsink = createDataSink(p, outML)) == null) {
             return false;
@@ -107,7 +108,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         dsink.addDataSinkListener(this);
 
         fileDone = false;
-       
+
         // OK, we can now start the actual transcoding.
         try {
             p.start();
@@ -332,6 +333,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         List images;
         int width, height;
         RGBFormat format;
+        long duration;
+        int frameRate;
 
         int nextImage = 0;  // index of the next image to be read.
         boolean ended = false;
@@ -340,17 +343,13 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.width = width;
             this.height = height;
             this.images = images;
+            this.duration = 1000000000L / frameRate;
+            this.frameRate = frameRate;
 
-            /*this.format = new VideoFormat(VideoFormat.RGB,
-                    new Dimension(width, height),
-                    Format.NOT_SPECIFIED,
-                    Format.byteArray,
-                    (float) frameRate);*/
-            
-            this.format = new RGBFormat (new Dimension(width, height),
+            this.format = new RGBFormat(new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.byteArray, (float) frameRate, 24, 1, 2, 3);
-            
+
         }
 
         /**
@@ -373,7 +372,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
                 // We are done.  Set EndOfMedia.    
                 buf.setEOM(true);
                 buf.setOffset(0);
-                buf.setTimeStamp(100000000L * nextImage);
+                buf.setTimeStamp(duration * nextImage);
                 buf.setLength(0);
                 ended = true;
                 return;
@@ -381,22 +380,23 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
             short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
             nextImage++;
-            
+
             byte[] data = new byte[3 * dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
-                data[3 * i] = (byte) (dataShort[i] >>> 8);
-                data[3 * i + 1] = (byte) (dataShort[i] >>> 8);
-                data[3 * i + 2] = (byte) (dataShort[i] >>> 8);
+                byte value = (byte) Math.round(dataShort[i] / Math.pow(2, 8));
+                data[3 * i] = value;
+                data[3 * i + 1] = value;
+                data[3 * i + 2] = value;
             }
 
             buf.setData(data);
             buf.setOffset(0);
             buf.setLength(data.length);
             buf.setFormat(format);
-            //buf.setSequenceNumber(nextImage - 1);
-            //buf.setDuration(100000000L);
-            buf.setTimeStamp(100000000L * (nextImage - 1));
-            //buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
+            buf.setSequenceNumber(nextImage - 1);
+            buf.setDuration(duration);
+            buf.setTimeStamp(duration * (nextImage - 1));
+            buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
         }
 
         /**
@@ -414,7 +414,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         @Override
         public long getContentLength() {
-            return LENGTH_UNKNOWN;
+            return 3L * width * height;
         }
 
         @Override
