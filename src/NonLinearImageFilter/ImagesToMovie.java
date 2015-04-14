@@ -26,6 +26,7 @@ import javax.media.control.*;
 import javax.media.protocol.*;
 import javax.media.protocol.DataSource;
 import javax.media.datasink.*;
+import javax.media.format.RGBFormat;
 import javax.media.format.VideoFormat;
 
 /**
@@ -143,7 +144,6 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if ((ds = p.getDataOutput()) == null) {
             return null;
         }
-        System.out.println(ds.getDuration().getSeconds());
         /*
          * creating datasink
          */
@@ -331,7 +331,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         List images;
         int width, height;
-        VideoFormat format;
+        RGBFormat format;
 
         int nextImage = 0;  // index of the next image to be read.
         boolean ended = false;
@@ -341,11 +341,16 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.height = height;
             this.images = images;
 
-            format = new VideoFormat(VideoFormat.RGB,
+            /*this.format = new VideoFormat(VideoFormat.RGB,
                     new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.byteArray,
-                    (float) frameRate);
+                    (float) frameRate);*/
+            
+            this.format = new RGBFormat (new Dimension(width, height),
+                    Format.NOT_SPECIFIED,
+                    Format.byteArray, (float) frameRate, 24, 1, 2, 3);
+            
         }
 
         /**
@@ -376,7 +381,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
             short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
             nextImage++;
-
+            
             byte[] data = new byte[3 * dataShort.length];
             for (int i = 0; i < dataShort.length; i++) {
                 data[3 * i] = (byte) (dataShort[i] >>> 8);

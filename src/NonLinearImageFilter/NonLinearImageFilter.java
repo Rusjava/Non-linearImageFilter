@@ -715,7 +715,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             try {
                 MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
-                imageToMovie.doIt(imageList.get(0).getWidth(), imageList.get(0).getHeight(), 10, imageList, mc);
+                imageToMovie.doIt(((ImageComponent)imageList.get(0)).getImage().getWidth(),
+                        ((ImageComponent)imageList.get(0)).getImage().getHeight(), 10, imageList, mc);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG TITLE"),
