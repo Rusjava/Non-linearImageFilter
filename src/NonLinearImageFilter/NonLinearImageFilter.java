@@ -42,6 +42,8 @@ import javax.swing.border.TitledBorder;
 import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
+import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -49,6 +51,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 
 import javax.media.MediaLocator;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 
 /**
  *
@@ -604,8 +608,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
-                                bundle.getString("IO ERROR DIALOG TITLE"),
-                                bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+                                bundle.getString("IO ERROR DIALOG"),
+                                bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 } else {
@@ -674,6 +678,30 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
         // TODO add your handling code here:
+        File file=new File("NonLinearImageFilterHelp.html");
+        if (!file.exists()) {
+            JOptionPane.showMessageDialog(null, bundle.getString("IO HELP NOTEXIST DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
+                        JOptionPane.ERROR_MESSAGE);
+            return;
+        } 
+        JTextPane textArea=new JTextPane();
+        try {
+            textArea.setPage(file.toURI().toURL());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, bundle.getString("IO HELP ERROR DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
+                        JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        textArea.setPreferredSize(new Dimension(600, 400)); 
+        textArea.setEditable(false);
+        
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getViewport().add(textArea, BorderLayout.CENTER);
+        Object[] message = {
+                        bundle.getString("HELP DESCRIPTION"), scrollPane
+        };
+        JOptionPane.showMessageDialog(null, message, bundle.getString("HELP TITLE"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemHelpActionPerformed
 
     private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
