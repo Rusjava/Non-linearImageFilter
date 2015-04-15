@@ -43,7 +43,6 @@ import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
 import java.io.IOException;
-import java.io.File;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
@@ -54,7 +53,7 @@ import javax.media.MediaLocator;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 0.5
+ * @version 1.0
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -811,10 +810,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             Locale.setDefault(new Locale(args[0], "US"));
         }
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new NonLinearImageFilter().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new NonLinearImageFilter().setVisible(true);
         });
     }
 
