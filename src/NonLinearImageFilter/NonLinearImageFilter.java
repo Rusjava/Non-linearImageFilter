@@ -76,8 +76,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, nStepsField, precisionField;
-    private ResourceBundle bundle;
-    private FileFilter[] filters;
+    private final ResourceBundle bundle;
+    private final FileFilter[] filters;
+    private float frameRate = 2;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -720,9 +721,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         */
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
-                MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURL());
+                MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURI().toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
-                imageToMovie.doIt(width, height, 2, imageList, mc);
+                imageToMovie.doIt(width, height, frameRate, imageList, mc);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG TITLE"),

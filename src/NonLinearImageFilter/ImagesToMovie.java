@@ -21,19 +21,36 @@ import java.util.List;
 import java.awt.Dimension;
 import java.awt.image.DataBufferUShort;
 
-import javax.media.*;
-import javax.media.control.*;
-import javax.media.protocol.*;
+import javax.media.ControllerListener;
+import javax.media.Processor;
+import javax.media.Format;
+import javax.media.DataSink;
+import javax.media.Manager;
+import javax.media.MediaLocator;
+import javax.media.ControllerEvent;
+import javax.media.ConfigureCompleteEvent;
+import javax.media.RealizeCompleteEvent;
+import javax.media.PrefetchCompleteEvent;
+import javax.media.ResourceUnavailableEvent;
+import javax.media.EndOfMediaEvent;
+import javax.media.Time;
+import javax.media.Buffer;
+import javax.media.control.TrackControl;
+import javax.media.protocol.PullBufferDataSource;
+import javax.media.protocol.PullBufferStream;
+import javax.media.protocol.ContentDescriptor;
+import javax.media.protocol.FileTypeDescriptor;
 import javax.media.protocol.DataSource;
-import javax.media.datasink.*;
+import javax.media.datasink.EndOfStreamEvent;
+import javax.media.datasink.DataSinkListener;
+import javax.media.datasink.DataSinkEvent;
+import javax.media.datasink.DataSinkErrorEvent;
 import javax.media.format.RGBFormat;
-import javax.media.format.VideoFormat;
-import javax.media.util.ImageToBuffer;
 
 /**
  *
  * @author Ruslan Feshchenko
- * @version 0.1
+ * @version 0.5
  */
 /**
  * This program takes a list of BufferedImages and converts them into an AVI
@@ -51,7 +68,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @param outML
      * @return
      */
-    public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) {
+    public boolean doIt(int width, int height, float frameRate, List inFiles, MediaLocator outML) {
 
         PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
@@ -132,9 +149,12 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     }
 
     /**
-     * Create the DataSink.
+     * Creates the DataSink.
+     * @param p
+     * @param outML
+     * @return 
      */
-    DataSink createDataSink(Processor p, MediaLocator outML) {
+    protected DataSink createDataSink(Processor p, MediaLocator outML) {
 
         DataSource ds;
         DataSink dsink;
@@ -164,8 +184,11 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Block until the processor has transitioned to the given state. Return
      * false if the transition failed.
+     * @param p
+     * @param state
+     * @return 
      */
-    private boolean waitForState(Processor p, int state) {
+    protected boolean waitForState(Processor p, int state) {
         synchronized (waitSync) {
             try {
                 while (p.getState() < state && stateTransitionOK) {
@@ -208,8 +231,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
     /**
      * Block until file writing is done.
+     * @return 
      */
-    boolean waitForFileDone() {
+    protected boolean waitForFileDone() {
         synchronized (waitFileSync) {
             try {
                 while (!fileDone) {
@@ -251,17 +275,20 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * into a stream of JMF buffers. The DataSource is not seekable or
      * positionable.
      */
-    class ImageDataSource extends PullBufferDataSource {
+    public class ImageDataSource extends PullBufferDataSource {
 
         private final PullBufferStream streams[];
-        private final int frameRate;
-        private final int frameNumber;
 
-        ImageDataSource(int width, int height, int frameRate, List images) {
+        /**
+         * The constructor
+         * @param width
+         * @param height
+         * @param frameRate
+         * @param images
+         */
+        public ImageDataSource(int width, int height, float frameRate, List images) {
             this.streams = new ImageSourceStream[1];
             this.streams[0] = new ImageSourceStream(width, height, frameRate, images);
-            this.frameRate = frameRate;
-            this.frameNumber = images.size();
         }
 
         @Override
@@ -276,6 +303,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * Content type is of RAW since we are sending buffers of video frames
          * without a container format.
+         * @return 
          */
         @Override
         public String getContentType() {
@@ -300,6 +328,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Return the ImageSourceStreams.
+         * @return 
          */
         @Override
         public PullBufferStream[] getStreams() {
@@ -308,17 +337,27 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returning the movie duration
+         * @return 
          */
         @Override
         public Time getDuration() {
             return DURATION_UNKNOWN;
         }
 
+        /**
+         * Returning controls
+         * @return
+         */
         @Override
         public Object[] getControls() {
             return new Object[0];
         }
 
+        /**
+         * Returning control object of given type
+         * @param type
+         * @return
+         */
         @Override
         public Object getControl(String type) {
             return null;
@@ -328,32 +367,37 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * The source stream to go along with ImageDataSource.
      */
-    class ImageSourceStream implements PullBufferStream {
+    public class ImageSourceStream implements PullBufferStream {
 
         List images;
         int width, height;
         RGBFormat format;
         long duration;
-        int frameRate;
-
         int nextImage = 0;  // index of the next image to be read.
         boolean ended = false;
 
-        public ImageSourceStream(int width, int height, int frameRate, List images) {
+        /**
+         * The constructor
+         * @param width
+         * @param height
+         * @param frameRate
+         * @param images
+         */
+        public ImageSourceStream(int width, int height, float frameRate, List images) {
             this.width = width;
             this.height = height;
             this.images = images;
-            this.duration = 1000000000L / frameRate;
-            this.frameRate = frameRate;
-
+            this.duration = 1000000000L / (long) frameRate;
             this.format = new RGBFormat(new Dimension(width, height),
                     Format.NOT_SPECIFIED,
-                    Format.byteArray, (float) frameRate, 24, 1, 2, 3);
+                    Format.byteArray, frameRate, 24, 1, 2, 3);
 
         }
 
         /**
-         * We should never need to block assuming data are read from files.
+         * We should never need to block assuming data are read from
+         * BufferedImages.
+         * @return 
          */
         @Override
         public boolean willReadBlock() {
@@ -363,6 +407,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * This is called from the Processor to read a frame worth of video
          * data.
+         * @param buf
+         * @throws java.io.IOException
          */
         @Override
         public void read(Buffer buf) throws IOException {
@@ -378,12 +424,14 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
                 return;
             }
 
-            short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage)).getImage().getData().getDataBuffer()).getData();
+            short[] dataShort = ((DataBufferUShort) ((ImageComponent) images.get(nextImage))
+                    .getImage().getData().getDataBuffer()).getData();
             nextImage++;
 
             byte[] data = new byte[3 * dataShort.length];
+            double dr = Math.pow(2, 8);
             for (int i = 0; i < dataShort.length; i++) {
-                byte value = (byte) Math.round(dataShort[i] / Math.pow(2, 8));
+                byte value = (byte) Math.round(dataShort[i] / dr);
                 data[3 * i] = value;
                 data[3 * i + 1] = value;
                 data[3 * i + 2] = value;
@@ -401,32 +449,54 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Return the format of each video frame. That will be JPEG.
+         * @return 
          */
         @Override
         public Format getFormat() {
             return format;
         }
 
+        /**
+         * Returns content descriptor 
+         * @return
+         */
         @Override
         public ContentDescriptor getContentDescriptor() {
             return new ContentDescriptor(ContentDescriptor.RAW);
         }
 
+        /**
+         * Returns buffer size in bytes
+         * @return
+         */
         @Override
         public long getContentLength() {
             return 3L * width * height;
         }
 
+        /**
+         * Returns the end of stream flag
+         * @return
+         */
         @Override
         public boolean endOfStream() {
             return ended;
         }
 
+        /**
+         * returns controls
+         * @return
+         */
         @Override
         public Object[] getControls() {
             return new Object[0];
         }
 
+        /**
+         * Return control object of given type
+         * @param type
+         * @return
+         */
         @Override
         public Object getControl(String type) {
             return null;
