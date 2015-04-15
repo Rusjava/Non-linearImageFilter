@@ -45,6 +45,7 @@ import javax.media.datasink.EndOfStreamEvent;
 import javax.media.datasink.DataSinkListener;
 import javax.media.datasink.DataSinkEvent;
 import javax.media.datasink.DataSinkErrorEvent;
+import javax.media.NoDataSinkException;
 import javax.media.format.RGBFormat;
 
 /**
@@ -67,8 +68,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @param inFiles
      * @param outML
      * @return
+     * @throws java.io.IOException
      */
-    public boolean doIt(int width, int height, float frameRate, List inFiles, MediaLocator outML) {
+    public boolean doIt(int width, int height, float frameRate, List inFiles, MediaLocator outML) throws IOException {
 
         PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
@@ -153,8 +155,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @param p
      * @param outML
      * @return 
+     * @throws java.io.IOException 
      */
-    protected DataSink createDataSink(Processor p, MediaLocator outML) {
+    protected DataSink createDataSink(Processor p, MediaLocator outML) throws IOException {
 
         DataSource ds;
         DataSink dsink;
@@ -171,9 +174,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         try {
             dsink = Manager.createDataSink(ds, outML);
             dsink.open();
-        } catch (Exception e) {
+        } catch (NoDataSinkException e) {
             return null;
-        }
+        } 
 
         return dsink;
     }
@@ -387,7 +390,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.width = width;
             this.height = height;
             this.images = images;
-            this.duration = 1000000000L / (long) frameRate;
+            this.duration = 1000000000L / (int) frameRate;
             this.format = new RGBFormat(new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.byteArray, frameRate, 24, 1, 2, 3);

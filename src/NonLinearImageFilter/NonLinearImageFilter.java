@@ -75,7 +75,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, nStepsField, precisionField;
+            scaleField, precisionField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private float frameRate = 2;
@@ -89,7 +89,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = new JTextField("14");
         this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
-        this.nStepsField = new JTextField("10");
         this.precisionField = new JTextField("1e-10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
@@ -477,7 +476,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefActionPerformed
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.001, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
 
@@ -630,31 +629,31 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 1000000, jTextFieldNonlinear,
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, 1000000, jTextFieldNonlinear,
                 "10000", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
         // TODO add your handling code here:
-        nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(0, 1000, jTextFieldNSteps,
+        nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(1, 1000, jTextFieldNSteps,
                 "10", defaults));
     }//GEN-LAST:event_jTextFieldNStepsActionPerformed
 
     private void jTextFieldDiffCoefFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefFocusLost
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.001, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefFocusLost
 
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(0, 1000000, jTextFieldNonlinear,
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, 1000000, jTextFieldNonlinear,
                 "10000", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost
         // TODO add your handling code here:
-        nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(0, 1000, jTextFieldNSteps,
+        nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(1, 1000, jTextFieldNSteps,
                 "10", defaults));
     }//GEN-LAST:event_jTextFieldNStepsFocusLost
 
@@ -721,7 +720,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         */
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
-                MediaLocator mc=new MediaLocator(fo.getSelectedFile().toURI().toURL());
+                MediaLocator mc=new MediaLocator(fo.getSelectedFile().getAbsolutePath());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
                 imageToMovie.doIt(width, height, frameRate, imageList, mc);
             } catch (IOException ex) {
@@ -740,14 +739,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
         // TODO add your handling code here:
         Object[] message = {
-            bundle.getString("NonLinearImageFilter.jTextFieldnSteps.text"), nStepsField,
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            nSteps = (int) Math.round(MyTextUtilities.TestValueWithMemory(1,
-                    1000, nStepsField, "10", defaults));
             precision = MyTextUtilities.TestValueWithMemory(1e-14,
                     1e-1, precisionField, "1e-8", defaults);
         }
