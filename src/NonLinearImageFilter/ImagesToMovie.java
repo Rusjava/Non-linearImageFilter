@@ -70,7 +70,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @return
      * @throws java.io.IOException
      */
-    public boolean doIt(int width, int height, float frameRate, List inFiles, MediaLocator outML) throws IOException {
+    public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) throws IOException {
 
         PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
@@ -289,7 +289,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
          * @param frameRate
          * @param images
          */
-        public ImageDataSource(int width, int height, float frameRate, List images) {
+        public ImageDataSource(int width, int height, int frameRate, List images) {
             this.streams = new ImageSourceStream[1];
             this.streams[0] = new ImageSourceStream(width, height, frameRate, images);
         }
@@ -386,14 +386,14 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
          * @param frameRate
          * @param images
          */
-        public ImageSourceStream(int width, int height, float frameRate, List images) {
+        public ImageSourceStream(int width, int height, int frameRate, List images) {
             this.width = width;
             this.height = height;
             this.images = images;
-            this.duration = 1000000000L / (int) frameRate;
+            this.duration = 1000000000L / frameRate;
             this.format = new RGBFormat(new Dimension(width, height),
                     Format.NOT_SPECIFIED,
-                    Format.byteArray, frameRate, 24, 1, 2, 3);
+                    Format.byteArray, (float) frameRate, 24, 1, 2, 3);
 
         }
 

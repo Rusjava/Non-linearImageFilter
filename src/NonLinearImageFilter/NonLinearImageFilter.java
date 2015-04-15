@@ -34,6 +34,7 @@ import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.JSlider;
 import javax.swing.SwingWorker;
 import javax.swing.JOptionPane;
@@ -78,10 +79,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField;
+            scaleField, precisionField, frameRateField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
-    private float frameRate = 2;
+    private int frameRate = 10;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -93,6 +94,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.signalField = new JTextField("15");
         this.scaleField = new JTextField("0.5");
         this.precisionField = new JTextField("1e-10");
+        this.frameRateField = new JTextField("10");
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -592,7 +594,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 }
                 fo.addChoosableFileFilter(new FileNameExtensionFilter("jpg/jpeg", "jpg", "jpeg"));
                 fo.setAcceptAllFileFilterUsed(false);
-                
+
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
@@ -678,28 +680,28 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
         // TODO add your handling code here:
-        File file=new File("NonLinearImageFilterHelp.html");
+        File file = new File("NonLinearImageFilterHelp.html");
         if (!file.exists()) {
             JOptionPane.showMessageDialog(null, bundle.getString("IO HELP NOTEXIST DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.ERROR_MESSAGE);
             return;
-        } 
-        JTextPane textArea=new JTextPane();
+        }
+        JTextPane textArea = new JTextPane();
         try {
             textArea.setPage(file.toURI().toURL());
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, bundle.getString("IO HELP ERROR DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
-        textArea.setPreferredSize(new Dimension(600, 400)); 
+        textArea.setPreferredSize(new Dimension(600, 400));
         textArea.setEditable(false);
-        
+
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getViewport().add(textArea, BorderLayout.CENTER);
         Object[] message = {
-                        bundle.getString("HELP DESCRIPTION"), scrollPane
+            bundle.getString("HELP DESCRIPTION"), scrollPane
         };
         JOptionPane.showMessageDialog(null, message, bundle.getString("HELP TITLE"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemHelpActionPerformed
@@ -731,23 +733,32 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
         // TODO add your handling code here:
-        int width = ((ImageComponent)imageList.get(0)).getImage().getWidth();
-        int height = ((ImageComponent)imageList.get(0)).getImage().getHeight();
+        if (imageList.isEmpty()) {
+            return;
+        }
+        int width = ((ImageComponent) imageList.get(0)).getImage().getWidth();
+        int height = ((ImageComponent) imageList.get(0)).getImage().getHeight();
         FileFilter videoFilter = new FileNameExtensionFilter("avi", "avi");
+        JPanel saveVideoPanel = new JPanel();
+        saveVideoPanel.add(new JLabel(bundle.getString("FRAME RATE LABEL")));
+        saveVideoPanel.add(frameRateField);
         /*
-        * Create file choosing dialog
-        */
+         * Create file choosing dialog
+         */
         JFileChooser fo = new JFileChooser();
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
         fo.addChoosableFileFilter(videoFilter);
         fo.setAcceptAllFileFilterUsed(false);
+        fo.setAccessory(saveVideoPanel);
         int ans = fo.showSaveDialog(this);
         /*
-        * Saving uncompressed avi video
-        */
+         * Saving uncompressed avi video
+         */
         if (ans == JFileChooser.APPROVE_OPTION) {
+            frameRate = (int) Math.round(MyTextUtilities.TestValueWithMemory(1, 50, frameRateField,
+                    "10", defaults));
             try {
-                MediaLocator mc=new MediaLocator(fo.getSelectedFile().getAbsolutePath());
+                MediaLocator mc = new MediaLocator(fo.getSelectedFile().toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
                 imageToMovie.doIt(width, height, frameRate, imageList, mc);
             } catch (IOException ex) {
@@ -783,6 +794,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemSaveImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageActionPerformed
         // TODO add your handling code here:
+        if (imageList.isEmpty()) {
+            return;
+        }
         JFileChooser fo = new JFileChooser();
         fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
         for (FileFilter filter : filters) {
