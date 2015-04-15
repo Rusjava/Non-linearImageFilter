@@ -668,7 +668,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: 0.5 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
+                "<html>Non-linear image filter. <br>Version: 1.0 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
