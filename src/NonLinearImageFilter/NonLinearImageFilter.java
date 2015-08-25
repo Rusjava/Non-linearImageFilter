@@ -49,7 +49,7 @@ import java.io.IOException;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
-import javax.swing.JTextField;
+import javax.swing.JFormattedTextField;
 
 import javax.media.MediaLocator;
 import javax.swing.JScrollPane;
@@ -78,7 +78,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
-    private final JTextField xsizeField, ysizeField, noiseField, signalField,
+    private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, frameRateField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
@@ -88,13 +88,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.imageList = new ArrayList<>();
         this.defaults = new HashMap();
         this.imageParam = new ImageParam();
-        this.xsizeField = new JTextField("300");
-        this.ysizeField = new JTextField("200");
-        this.noiseField = new JTextField("14");
-        this.signalField = new JTextField("15");
-        this.scaleField = new JTextField("0.5");
-        this.precisionField = new JTextField("1e-10");
-        this.frameRateField = new JTextField("10");
+        this.xsizeField = MyTextUtilities.getIntegerFormattedTextField(300, 2, 10000);
+        this.ysizeField = MyTextUtilities.getIntegerFormattedTextField(200, 2, 10000);
+        this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
+        this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
+        this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0);
+        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-3, 1e-14);
+        this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -718,16 +718,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         int option = JOptionPane.showConfirmDialog(null, message, bundle.getString("IMAGE GENERATOR PARAMETERS DIALOG"),
                 JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            imageParam.xsize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    1000, xsizeField, "300", defaults));
-            imageParam.ysize = (int) Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    1000, ysizeField, "200", defaults));
-            imageParam.noise = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    15, noiseField, "14", defaults)));
-            imageParam.signal = (int) Math.pow(2, Math.round(MyTextUtilities.TestValueWithMemory(0,
-                    16, signalField, "15", defaults)));
-            imageParam.scale = MyTextUtilities.TestValueWithMemory(0,
-                    1, scaleField, "0.5", defaults);
+            imageParam.xsize = (Integer) xsizeField.getValue();
+            imageParam.ysize = (Integer) ysizeField.getValue();
+            imageParam.noise = (Integer) noiseField.getValue();
+            imageParam.signal = (Integer) signalField.getValue();
+            imageParam.scale = (Double) scaleField.getValue();
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
@@ -755,8 +750,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
          * Saving uncompressed avi video
          */
         if (ans == JFileChooser.APPROVE_OPTION) {
-            frameRate = (int) Math.round(MyTextUtilities.TestValueWithMemory(1, 50, frameRateField,
-                    "10", defaults));
+            frameRate = (Integer) frameRateField.getValue();
             try {
                 MediaLocator mc = new MediaLocator(fo.getSelectedFile().toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
@@ -782,8 +776,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            precision = MyTextUtilities.TestValueWithMemory(1e-14,
-                    1e-1, precisionField, "1e-8", defaults);
+            precision = (Double) precisionField.getValue();
         }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
