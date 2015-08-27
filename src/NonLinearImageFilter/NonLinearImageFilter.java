@@ -92,8 +92,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.ysizeField = MyTextUtilities.getIntegerFormattedTextField(200, 2, 10000);
         this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
         this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
-        this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0);
-        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-3, 1e-14);
+        this.scaleField = MyTextUtilities
+                .getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
+        this.precisionField = MyTextUtilities
+                .getDoubleFormattedTextField(1e-10, 1e-3, 1e-14, true);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
