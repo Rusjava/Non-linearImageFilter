@@ -83,6 +83,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10;
+    private File imageRFile = null, imageWFile = null, videoWFile = null;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -589,7 +590,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 /*
                  * if the second choice, load image from file
                  */
-                JFileChooser fo = new JFileChooser();
+                JFileChooser fo = new JFileChooser(imageRFile);
                 fo.setDialogTitle(bundle.getString("IMAGE LOAD DIALOG TITLE"));
                 for (FileFilter filter : filters) {
                     fo.addChoosableFileFilter(filter);
@@ -600,7 +601,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 int ans = fo.showOpenDialog(this);
                 if (ans == JFileChooser.APPROVE_OPTION) {
                     try {
-                        BufferedImage image = ImageIO.read(fo.getSelectedFile());
+                        imageRFile = fo.getSelectedFile();
+                        BufferedImage image = ImageIO.read(imageRFile);
                         if (image.getColorModel().getColorSpace().getType()
                                 == ColorSpace.TYPE_GRAY) {
                             component = new ImageComponent(image);
@@ -676,29 +678,26 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: 1.0 <br>Date: April 2015. <br>Author: Ruslan Feshchenko</html>",
+                "<html>Non-linear image filter. <br>Version: 2.0 <br>Date: August 2015. <br>Author: Ruslan Feshchenko</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
-        // TODO add your handling code here:
-        File file = new File("NonLinearImageFilterHelp.html");
-        if (!file.exists()) {
+        // Creating JTextPane for the help
+        JTextPane textArea = new JTextPane();
+        //Reading the HTML help file
+        try {
+            textArea.setPage(NonLinearImageFilter.class.
+                    getResource("/nonlinearimagefilter/NonLinearImageFilterHelp.html"));
+        } catch (IOException e) {
             JOptionPane.showMessageDialog(null, bundle.getString("IO HELP NOTEXIST DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        JTextPane textArea = new JTextPane();
-        try {
-            textArea.setPage(file.toURI().toURL());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, bundle.getString("IO HELP ERROR DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+        // Setting dimensions and non-editable
         textArea.setPreferredSize(new Dimension(600, 400));
         textArea.setEditable(false);
-
+        //Creating scroll pane and showing up help
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getViewport().add(textArea, BorderLayout.CENTER);
@@ -742,7 +741,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         /*
          * Create file choosing dialog
          */
-        JFileChooser fo = new JFileChooser();
+        JFileChooser fo = new JFileChooser(videoWFile);
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
         fo.addChoosableFileFilter(videoFilter);
         fo.setAcceptAllFileFilterUsed(false);
@@ -754,7 +753,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (ans == JFileChooser.APPROVE_OPTION) {
             frameRate = (Integer) frameRateField.getValue();
             try {
-                MediaLocator mc = new MediaLocator(fo.getSelectedFile().toURL());
+                videoWFile = fo.getSelectedFile();
+                MediaLocator mc = new MediaLocator(videoWFile.toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
                 imageToMovie.doIt(width, height, frameRate, imageList, mc);
             } catch (IOException ex) {
@@ -792,7 +792,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (imageList.isEmpty()) {
             return;
         }
-        JFileChooser fo = new JFileChooser();
+        JFileChooser fo = new JFileChooser(imageWFile);
         fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
         for (FileFilter filter : filters) {
             fo.addChoosableFileFilter(filter);
@@ -802,9 +802,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
+                imageWFile = fo.getSelectedFile();
                 int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
                 String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
-                ImageIO.write(((ImageComponent) imageList.get(index)).getImage(), type, fo.getSelectedFile());
+                ImageIO.write(((ImageComponent) imageList.get(index)).getImage(), type, imageWFile);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO SAVE ERROR DIALOG TITLE"),

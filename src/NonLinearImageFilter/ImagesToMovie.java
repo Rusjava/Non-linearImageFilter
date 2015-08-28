@@ -393,8 +393,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             this.duration = 1000000000L / frameRate;
             this.format = new RGBFormat(new Dimension(width, height),
                     Format.NOT_SPECIFIED,
-                    Format.byteArray, (float) frameRate, 24, 1, 2, 3);
-
+                    Format.byteArray, (float) frameRate, 24, 1, 2, 3
+            );
         }
 
         /**
