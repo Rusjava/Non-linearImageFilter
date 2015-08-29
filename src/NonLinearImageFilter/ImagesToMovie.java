@@ -108,6 +108,9 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if (f == null || f.length <= 0) {
             return false;
         }
+        for (int i = 0; i < tcs.length; i++) {
+            System.out.println(f[i].getEncoding());
+        }
         /*
          * Setting track format
          */

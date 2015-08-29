@@ -52,6 +52,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 
 import javax.media.MediaLocator;
+import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
@@ -736,8 +738,17 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         int height = ((ImageComponent) imageList.get(0)).getImage().getHeight();
         FileFilter videoFilter = new FileNameExtensionFilter("avi", "avi");
         JPanel saveVideoPanel = new JPanel();
-        saveVideoPanel.add(new JLabel(bundle.getString("FRAME RATE LABEL")));
-        saveVideoPanel.add(frameRateField);
+        JPanel innerPanel1 = new JPanel();
+        JPanel innerPanel2 = new JPanel();
+        saveVideoPanel.setLayout(new BoxLayout(saveVideoPanel, BoxLayout.PAGE_AXIS));
+        innerPanel1.add(new JLabel(bundle.getString("FRAME RATE LABEL")));
+        innerPanel1.add(frameRateField);
+        saveVideoPanel.add(innerPanel1);
+        JComboBox<String> box = new JComboBox<>();
+        box.addItem("Uncompressed AVI");
+        box.addItem("Quicktime");
+        innerPanel2.add(box);
+        saveVideoPanel.add(innerPanel2);
         /*
          * Create file choosing dialog
          */
