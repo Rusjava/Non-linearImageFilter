@@ -81,12 +81,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField, frameRateField;
+            scaleField, precisionField, anisotropyField, frameRateField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
     private int videoFormat = 0;
+    private double anisotropy = 0;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -100,6 +101,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
         this.precisionField = MyTextUtilities
                 .getDoubleFormattedTextField(1e-10, 1e-3, 1e-14, true);
+        this.anisotropyField = MyTextUtilities
+                .getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
@@ -500,7 +503,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
-        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision);
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision, anisotropy);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -786,12 +789,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
         // TODO add your handling code here:
         Object[] message = {
-            bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField
+            bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
+            bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             precision = (Double) precisionField.getValue();
+            anisotropy = (Double) anisotropyField.getValue();
         }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 

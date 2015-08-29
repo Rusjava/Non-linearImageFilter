@@ -17,7 +17,6 @@
 package NonLinearImageFilter;
 
 import java.util.Arrays;
-import java.lang.InterruptedException;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
@@ -31,6 +30,7 @@ public class CrankNicholson2D {
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
     private final double nonLinearFactor;
+    private final double anisotropyFactor;
     protected final double eps;
 
     /**
@@ -40,11 +40,13 @@ public class CrankNicholson2D {
      * @param diffCoef diffusion coefficient
      * @param nonLinearCoef non-Linear coefficient;
      * @param precision precision of numerical solution
+     * @param anisotropy
      */
-    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef, double precision) {
+    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef, double precision, double anisotropy) {
         this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearFactor = 1 / Math.pow(nonLinearCoef, 2);
+        this.anisotropyFactor = anisotropy;
         this.eps = precision;
     }
 
@@ -60,8 +62,8 @@ public class CrankNicholson2D {
         for (int i = 2; i < ysize - 2; i++) {
             for (int k = 2; k < xsize - 2; k++) {
                 double tm = diffCoefFactor
-                        * Math.exp(-(Math.pow(data[i][k + 1] - data[i][k - 1], 2)
-                                + Math.pow(data[i + 1][k] - data[i - 1][k], 2)) * nonLinearFactor);
+                        * Math.exp(-(Math.pow(data[i][k + 1] - data[i][k - 1], 2) / (1 - anisotropyFactor)
+                                + Math.pow(data[i + 1][k] - data[i - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
                 if ((new Double(tm).isNaN())) {
                     diffCoef[i][k] = 0;
                 } else {
@@ -72,14 +74,14 @@ public class CrankNicholson2D {
         /*
          * Treating boundaries differently
          */
-        diffCoef[0] = getDiffCoefficient1D(data, 0, true);
-        diffCoef[1] = getDiffCoefficient1D(data, 1, true);
-        diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true);
-        diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true);
-        putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false));
-        putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false));
-        putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false));
-        putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false));
+        diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
+        diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
+        diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
+        diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
+        putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
+        putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
+        putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
+        putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
 
         return diffCoef;
     }
@@ -87,7 +89,7 @@ public class CrankNicholson2D {
      * calculating one column/row of diffusion coefficient
      */
 
-    protected double[] getDiffCoefficient1D(double[][] data, int index, boolean ifrow) {
+    protected double[] getDiffCoefficient1D(double[][] data, int index, boolean ifrow, double factor) {
         double[] result;
         int size;
         if (ifrow) {
@@ -95,7 +97,7 @@ public class CrankNicholson2D {
             result = new double[data[0].length];
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
-                        * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor);
+                        * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor * factor);
                 if ((new Double(tm).isNaN())) {
                     result[i] = 0;
                 } else {
@@ -107,7 +109,7 @@ public class CrankNicholson2D {
             result = new double[size];
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
-                        * Math.exp(-Math.pow(data[i + 1][index] - data[i - 1][index], 2) * nonLinearFactor);
+                        * Math.exp(-Math.pow(data[i + 1][index] - data[i - 1][index], 2) * nonLinearFactor * factor);
                 if ((new Double(tm).isNaN())) {
                     result[i] = 0;
                 } else {
@@ -182,11 +184,11 @@ public class CrankNicholson2D {
         double[][] result = new double[ysize][xsize];
         double[][] coefNew = new double[4][];
         double[][] coefOld = new double[4][];
-        double [] column=new double [ysize];
+        double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
         /*
-        * Saving diffusion coefficients on the row boundaries and filling them in with constants instead
-        */
+         * Saving diffusion coefficients on the row boundaries and filling them in with constants instead
+         */
         coefNew[0] = getColumn(0, newDiffCoef);
         coefNew[1] = getColumn(1, newDiffCoef);
         coefNew[2] = getColumn(xsize - 2, newDiffCoef);
@@ -203,7 +205,7 @@ public class CrankNicholson2D {
         putColumn(1, oldDiffCoef, column);
         putColumn(xsize - 2, oldDiffCoef, column);
         putColumn(xsize - 1, oldDiffCoef, column);
-        
+
         /*
          * Iteration over rows
          */
@@ -218,8 +220,8 @@ public class CrankNicholson2D {
         }
 
         /*
-        * Reinstating old diffusion coefficient values at the boundaries of rows
-        */
+         * Reinstating old diffusion coefficient values at the boundaries of rows
+         */
         putColumn(0, newDiffCoef, coefNew[0]);
         putColumn(1, newDiffCoef, coefNew[1]);
         putColumn(xsize - 2, newDiffCoef, coefNew[2]);
@@ -230,8 +232,8 @@ public class CrankNicholson2D {
         putColumn(xsize - 1, oldDiffCoef, coefOld[3]);
 
         /*
-        * Filling in column's boundaries with constants
-        */
+         * Filling in column's boundaries with constants
+         */
         Arrays.fill(newDiffCoef[0], diffCoefFactor);
         Arrays.fill(newDiffCoef[1], diffCoefFactor);
         Arrays.fill(newDiffCoef[ysize - 2], diffCoefFactor);
