@@ -60,7 +60,7 @@ import javax.swing.JTextPane;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 1.0
+ * @version 2.0
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -493,7 +493,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         diffCoef = MyTextUtilities.TestValueWithMemory(0.001, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
-
+    /**
+     * Main code
+     * @param evt 
+     */
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
         if (working == true) {
@@ -569,7 +572,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
-        // TODO add your handling code here
+        // Defining JComponent
         JComponent component = null;
         /*
          * create a button group to chose the source of initial image

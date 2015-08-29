@@ -23,7 +23,7 @@ import java.util.Arrays;
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 1.0
+ * @version 2.0
  */
 public class CrankNicholson2D {
 
@@ -50,8 +50,10 @@ public class CrankNicholson2D {
         this.eps = precision;
     }
 
-    /*
-     * Claculating diffusion coeffcient as a exponential function of the field gradient
+    /**
+     * Calculating diffusion coefficient as a exponential function of the field gradient
+     * @param data
+     * @return 
      */
     protected double[][] getDiffCoefficient(double[][] data) {
         int xsize = data[0].length;
@@ -85,10 +87,15 @@ public class CrankNicholson2D {
 
         return diffCoef;
     }
-    /*
+    
+    /**
      * calculating one column/row of diffusion coefficient
+     * @param data
+     * @param index
+     * @param ifrow
+     * @param factor
+     * @return 
      */
-
     protected double[] getDiffCoefficient1D(double[][] data, int index, boolean ifrow, double factor) {
         double[] result;
         int size;
@@ -123,10 +130,13 @@ public class CrankNicholson2D {
         result[size - 1] = diffCoefFactor;
         return result;
     }
-    /*
+    
+    /**
      * Calculating normalized squared difference
+     * @param data1
+     * @param data2
+     * @return 
      */
-
     protected double calcDifference(double[][] data1, double[][] data2) {
         int xsize = data1[0].length;
         int ysize = data1.length;
@@ -156,8 +166,11 @@ public class CrankNicholson2D {
         return result;
     }
 
-    /*
+    /**
      * Putting a column to 2D array
+     * @param index
+     * @param data
+     * @param dataY 
      */
     protected void putColumn(int index, double[][] data, double[] dataY) {
         int size = dataY.length;
