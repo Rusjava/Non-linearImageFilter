@@ -67,10 +67,11 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
      * @param frameRate
      * @param inFiles
      * @param outML
+     * @param videoFormat
      * @return
      * @throws java.io.IOException
      */
-    public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML) throws IOException {
+    public boolean doIt(int width, int height, int frameRate, List inFiles, MediaLocator outML, int videoFormat) throws IOException {
 
         PullBufferDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
@@ -98,7 +99,12 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         // Set the output content descriptor to QuickTime. 
-        p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.MSVIDEO));
+        switch (videoFormat) {
+            case 0:
+                p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.MSVIDEO));
+            case 1:
+                p.setContentDescriptor(new ContentDescriptor(FileTypeDescriptor.QUICKTIME));
+        }
 
         // Query for the processor for supported formats.
         // Then set it on the processor.
@@ -108,9 +114,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         if (f == null || f.length <= 0) {
             return false;
         }
-        for (int i = 0; i < tcs.length; i++) {
-            System.out.println(f[i].getEncoding());
-        }
+        
         /*
          * Setting track format
          */
@@ -155,10 +159,11 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
     /**
      * Creates the DataSink.
+     *
      * @param p
      * @param outML
-     * @return 
-     * @throws java.io.IOException 
+     * @return
+     * @throws java.io.IOException
      */
     protected DataSink createDataSink(Processor p, MediaLocator outML) throws IOException {
 
@@ -179,7 +184,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
             dsink.open();
         } catch (NoDataSinkException e) {
             return null;
-        } 
+        }
 
         return dsink;
     }
@@ -190,9 +195,10 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Block until the processor has transitioned to the given state. Return
      * false if the transition failed.
+     *
      * @param p
      * @param state
-     * @return 
+     * @return
      */
     protected boolean waitForState(Processor p, int state) {
         synchronized (waitSync) {
@@ -237,7 +243,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
     /**
      * Block until file writing is done.
-     * @return 
+     *
+     * @return
      */
     protected boolean waitForFileDone() {
         synchronized (waitFileSync) {
@@ -287,6 +294,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * The constructor
+         *
          * @param width
          * @param height
          * @param frameRate
@@ -309,7 +317,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * Content type is of RAW since we are sending buffers of video frames
          * without a container format.
-         * @return 
+         *
+         * @return
          */
         @Override
         public String getContentType() {
@@ -334,7 +343,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Return the ImageSourceStreams.
-         * @return 
+         *
+         * @return
          */
         @Override
         public PullBufferStream[] getStreams() {
@@ -343,7 +353,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returning the movie duration
-         * @return 
+         *
+         * @return
          */
         @Override
         public Time getDuration() {
@@ -352,6 +363,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returning controls
+         *
          * @return
          */
         @Override
@@ -361,6 +373,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returning control object of given type
+         *
          * @param type
          * @return
          */
@@ -384,6 +397,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * The constructor
+         *
          * @param width
          * @param height
          * @param frameRate
@@ -403,7 +417,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * We should never need to block assuming data are read from
          * BufferedImages.
-         * @return 
+         *
+         * @return
          */
         @Override
         public boolean willReadBlock() {
@@ -413,6 +428,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * This is called from the Processor to read a frame worth of video
          * data.
+         *
          * @param buf
          * @throws java.io.IOException
          */
@@ -455,7 +471,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Return the format of each video frame. That will be JPEG.
-         * @return 
+         *
+         * @return
          */
         @Override
         public Format getFormat() {
@@ -463,7 +480,8 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
         }
 
         /**
-         * Returns content descriptor 
+         * Returns content descriptor
+         *
          * @return
          */
         @Override
@@ -473,6 +491,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returns buffer size in bytes
+         *
          * @return
          */
         @Override
@@ -482,6 +501,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Returns the end of stream flag
+         *
          * @return
          */
         @Override
@@ -491,6 +511,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * returns controls
+         *
          * @return
          */
         @Override
@@ -500,6 +521,7 @@ public class ImagesToMovie implements ControllerListener, DataSinkListener {
 
         /**
          * Return control object of given type
+         *
          * @param type
          * @return
          */

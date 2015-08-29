@@ -86,6 +86,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final FileFilter[] filters;
     private int frameRate = 10;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
+    private int videoFormat = 0;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -736,7 +737,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
         int width = ((ImageComponent) imageList.get(0)).getImage().getWidth();
         int height = ((ImageComponent) imageList.get(0)).getImage().getHeight();
-        FileFilter videoFilter = new FileNameExtensionFilter("avi", "avi");
         JPanel saveVideoPanel = new JPanel();
         JPanel innerPanel1 = new JPanel();
         JPanel innerPanel2 = new JPanel();
@@ -745,8 +745,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         innerPanel1.add(frameRateField);
         saveVideoPanel.add(innerPanel1);
         JComboBox<String> box = new JComboBox<>();
-        box.addItem("Uncompressed AVI");
-        box.addItem("Quicktime");
+        box.addItem(bundle.getString("VIDEO FORMAT 1"));
+        box.addItem(bundle.getString("VIDEO FORMAT 2"));
         innerPanel2.add(box);
         saveVideoPanel.add(innerPanel2);
         /*
@@ -754,7 +754,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
          */
         JFileChooser fo = new JFileChooser(videoWFile);
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
-        fo.addChoosableFileFilter(videoFilter);
+        fo.addChoosableFileFilter(new FileNameExtensionFilter("avi", "avi"));
+        fo.addChoosableFileFilter(new FileNameExtensionFilter("quicktime", "mov"));
         fo.setAcceptAllFileFilterUsed(false);
         fo.setAccessory(saveVideoPanel);
         int ans = fo.showSaveDialog(this);
@@ -763,11 +764,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
          */
         if (ans == JFileChooser.APPROVE_OPTION) {
             frameRate = (Integer) frameRateField.getValue();
+            videoFormat = box.getSelectedIndex();
             try {
                 videoWFile = fo.getSelectedFile();
                 MediaLocator mc = new MediaLocator(videoWFile.toURL());
                 ImagesToMovie imageToMovie = new ImagesToMovie();
-                imageToMovie.doIt(width, height, frameRate, imageList, mc);
+                imageToMovie.doIt(width, height, frameRate, imageList, mc, videoFormat);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG TITLE"),
