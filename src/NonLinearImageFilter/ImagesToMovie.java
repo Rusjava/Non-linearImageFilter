@@ -51,7 +51,7 @@ import javax.media.format.RGBFormat;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 0.5
+ * @version 1.0
  */
 /**
  * This program takes a list of BufferedImages and converts them into an AVI
