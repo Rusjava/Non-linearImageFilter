@@ -697,7 +697,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         //Reading the HTML help file
         try {
             textArea.setPage(NonLinearImageFilter.class.
-                    getResource("/nonlinearimagefilter/NonLinearImageFilterHelp.html"));
+                    getResource("/nonlinearimagefilterhelp/NonLinearImageFilterHelp.html"));
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, bundle.getString("IO HELP NOTEXIST DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
                     JOptionPane.ERROR_MESSAGE);
