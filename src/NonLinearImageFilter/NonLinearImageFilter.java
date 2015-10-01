@@ -506,7 +506,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
-        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision, anisotropy);
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, 
+                precision, anisotropy, 2);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
