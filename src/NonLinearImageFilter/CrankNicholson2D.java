@@ -16,6 +16,8 @@
  */
 package NonLinearImageFilter;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -33,7 +35,7 @@ import java.util.logging.Logger;
  * @author Ruslan Feshchenko
  * @version 2.0
  */
-public class CrankNicholson2D {
+public class CrankNicholson2D implements Closeable {
 
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
@@ -398,7 +400,6 @@ public class CrankNicholson2D {
             prevResult = result;
             result = iterateLinear2D(data, coef, getDiffCoefficient(prevResult), bCond);
         } while (calcDifference(result, prevResult) > eps);
-        exc.shutdown();
         return result;
     }
 
@@ -424,8 +425,12 @@ public class CrankNicholson2D {
             Arrays.fill(coef[k], diffCoefFactor);
         }
         double[][] res = iterateLinear2D(data, coef, coef, bCond);
-        exc.shutdown();
         return res;
+    }
+
+    @Override
+    public void close() throws IOException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**

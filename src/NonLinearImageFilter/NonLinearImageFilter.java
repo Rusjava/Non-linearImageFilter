@@ -495,7 +495,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
     /**
      * Main code
-     * @param evt 
+     *
+     * @param evt
      */
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
@@ -506,7 +507,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
-        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, 
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
                 precision, anisotropy, 2);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
@@ -516,11 +517,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             protected Void doInBackground() throws Exception {
                 double[][] currentData;
                 JComponent component;
+                long t1 = System.nanoTime();
                 for (int i = 0; i < nSteps; i++) {
                     if (isCancelled()) {
                         return null;
                     }
                     /* Linear or non-linear ltering fidepending on user choice */
+                    
                     if (nonLinearFlag) {
                         currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
                     } else {
@@ -531,6 +534,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     dataList.add(currentData);
                     setStatusBar((int) (100.0 * (i + 1) / nSteps));
                 }
+                System.out.println(System.nanoTime() - t1);
                 return null;
             }
 
