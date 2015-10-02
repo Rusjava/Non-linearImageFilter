@@ -17,7 +17,6 @@
 package NonLinearImageFilter;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -25,8 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.DoubleAdder;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
@@ -154,18 +152,29 @@ public class CrankNicholson2D implements Closeable {
      * @param data1
      * @param data2
      * @return
+     * @throws java.lang.InterruptedException
      */
-    protected double calcDifference(double[][] data1, double[][] data2) {
+    protected double calcDifference(double[][] data1, double[][] data2) throws InterruptedException {
         int xsize = data1[0].length;
         int ysize = data1.length;
-        double sumDiff = 0, sum = 0;
+        //Atomic variables for the sums
+        DoubleAdder sumDiff = new DoubleAdder(), sum = new DoubleAdder();
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 0; i < ysize; i++) {
-            for (int k = 0; k < xsize; k++) {
-                sumDiff += Math.pow(data1[i][k] - data2[i][k], 2);
-                sum += Math.pow(data1[i][k], 2) + Math.pow(data2[i][k], 2);
-            }
+            int[] ind = new int[1];
+            ind[0] = i;
+            //Creating additional threads to accelerate summation
+            exc.execute(() -> {
+                for (int k = 0; k < xsize; k++) {
+                    sumDiff.add(Math.pow(data1[ind[0]][k] - data2[ind[0]][k], 2));
+                    sum.add(Math.pow(data1[ind[0]][k], 2) + Math.pow(data2[ind[0]][k], 2));
+                }
+                lt.countDown();
+            });
         }
-        return 2 * sumDiff / sum;
+        lt.await();
+        return 2 * sumDiff.sum() / sum.sum();
     }
 
     /**
@@ -305,10 +314,8 @@ public class CrankNicholson2D implements Closeable {
         }
         lt.await();
         for (int i = 0; i < xsize; i++) {
-            double[] dataY;
             try {
-                dataY = res[i].get();
-                putColumn(i, result, dataY);
+                putColumn(i, result, res[i].get());
             } catch (ExecutionException | InterruptedException ex) {
                 System.out.println("Error in a thread!");
             }
@@ -424,13 +431,12 @@ public class CrankNicholson2D implements Closeable {
             coef[k] = new double[xsize];
             Arrays.fill(coef[k], diffCoefFactor);
         }
-        double[][] res = iterateLinear2D(data, coef, coef, bCond);
-        return res;
+        return iterateLinear2D(data, coef, coef, bCond);
     }
 
     @Override
-    public void close() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void close() {
+        exc.shutdown();
     }
 
     /**

@@ -69,25 +69,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
-    private int nSteps = 10;
-    private double precision = 1e-10;
-    private int sliderposition = 50;
-    private double diffCoef = 0.01;
-    private double nonLinearCoef = 10000;
-    private boolean nonLinearFlag = false;
+    private int nSteps = 10, threadNumber = 2, sliderposition = 50;
+    private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
+            anisotropy = 0;
+    private boolean nonLinearFlag = false, working = false;
     private CrankNicholson2D comp;
     private final Map defaults;
-    private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField, anisotropyField, frameRateField;
+            scaleField, precisionField, anisotropyField, frameRateField, threadNumberField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
-    private int frameRate = 10;
+    private int frameRate = 10, videoFormat = 0;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
-    private int videoFormat = 0;
-    private double anisotropy = 0;
 
     public NonLinearImageFilter() {
         this.imageList = new ArrayList<>();
@@ -104,6 +99,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.anisotropyField = MyTextUtilities
                 .getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
+        this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(2, 1, 10);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -508,7 +504,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setStringPainted(true);
         working = true;
         comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
-                precision, anisotropy, 2);
+                precision, anisotropy, threadNumber);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -559,6 +555,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 working = false;
                 jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.text"));
                 jButtonImage.setEnabled(true);
+                comp.close();
             }
 
             /**
@@ -798,13 +795,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // TODO add your handling code here:
         Object[] message = {
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
-            bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField
+            bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField,
+            bundle.getString("NonLinearImageFilter.jTextFieldThreadNumber.text"), threadNumberField
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             precision = (Double) precisionField.getValue();
             anisotropy = (Double) anisotropyField.getValue();
+            threadNumber = (Integer) threadNumberField.getValue();
         }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
