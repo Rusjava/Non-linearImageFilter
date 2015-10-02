@@ -68,37 +68,51 @@ public class CrankNicholson2D implements Closeable {
      *
      * @param data
      * @return
+     * @throws java.lang.InterruptedException
      */
-    protected double[][] getDiffCoefficient(double[][] data) {
+    protected double[][] getDiffCoefficient(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
         double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
         double[][] diffCoef = new double[ysize][xsize];
+        CountDownLatch lt = new CountDownLatch(ysize - 2);
         for (int i = 2; i < ysize - 2; i++) {
-            for (int k = 2; k < xsize - 2; k++) {
-                double tm = diffCoefFactor
-                        * Math.exp(-(Math.pow(data[i][k + 1] - data[i][k - 1], 2) / (1 - anisotropyFactor)
-                                + Math.pow(data[i + 1][k] - data[i - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
-                if ((new Double(tm).isNaN())) {
-                    diffCoef[i][k] = 0;
-                } else {
-                    diffCoef[i][k] = tm;
+            int[] ind = new int[1];
+            ind[0] = i;
+            //Creating additional threads to accelerate diffusion coefficient matrix calculation
+            exc.execute(() -> {
+                for (int k = 2; k < xsize - 2; k++) {
+                    double tm = diffCoefFactor
+                            * Math.exp(-(Math.pow(data[ind[0]][k + 1] - data[ind[0]][k - 1], 2) / (1 - anisotropyFactor)
+                                    + Math.pow(data[ind[0] + 1][k] - data[ind[0] - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
+                    if ((new Double(tm).isNaN())) {
+                        diffCoef[ind[0]][k] = 0;
+                    } else {
+                        diffCoef[ind[0]][k] = tm;
+                    }
                 }
-            }
+                lt.countDown();
+            });
         }
         /*
-         * Treating boundaries differently
+         * Treating boundaries differently - multithreading
          */
-        diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
-        diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
-        diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
-        diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
-        putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
-        putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
-        putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
-        putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
-
+        exc.execute(() -> {
+            diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
+            diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
+            diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
+            diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
+            lt.countDown();
+        });
+        exc.execute(() -> {
+            putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
+            putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
+            putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
+            putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
+            lt.countDown();
+        });
+        lt.await();
         return diffCoef;
     }
 
