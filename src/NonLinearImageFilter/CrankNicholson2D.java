@@ -25,8 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.DoubleAdder;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with

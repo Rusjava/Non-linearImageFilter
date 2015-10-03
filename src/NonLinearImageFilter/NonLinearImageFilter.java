@@ -681,7 +681,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldNStepsFocusLost
 
     private void jSliderImagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSliderImagesStateChanged
-        // TODO add your handling code here:
+        // Going over the image sequence
         JSlider source = (JSlider) evt.getSource();
         if (!source.getValueIsAdjusting()) {
             sliderposition = source.getValue();
@@ -692,7 +692,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: 2.0 <br>Date: August 2015. <br>Author: Ruslan Feshchenko</html>",
+                "<html>Non-linear image filter. <br>Version: 2.0 <br>Date: October 2015. <br>Author: Ruslan Feshchenko</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
@@ -722,7 +722,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemHelpActionPerformed
 
     private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
-        // TODO add your handling code here:
+        // Initial image generating options
         Object[] message = {
             bundle.getString("IMAGE WIDTH"), xsizeField,
             bundle.getString("IMAGE HEIGHT"), ysizeField,
@@ -742,7 +742,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
-        // TODO add your handling code here:
+        // Saving the image sequence as an image file
         if (imageList.isEmpty()) {
             return;
         }
@@ -761,7 +761,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         innerPanel2.add(box);
         saveVideoPanel.add(innerPanel2);
         /*
-         * Create file choosing dialog
+         * Create file and format choosing dialog
          */
         JFileChooser fo = new JFileChooser(videoWFile);
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
@@ -771,7 +771,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         fo.setAccessory(saveVideoPanel);
         int ans = fo.showSaveDialog(this);
         /*
-         * Saving uncompressed avi video
+         * Saving uncompressed avi or QuickTime video
          */
         if (ans == JFileChooser.APPROVE_OPTION) {
             frameRate = (Integer) frameRateField.getValue();
@@ -790,12 +790,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSaveVideoActionPerformed
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
-        // TODO add your handling code here:
+        // Exiting
         System.exit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
-        // TODO add your handling code here:
+        // Displaying filtering numerical options
         Object[] message = {
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
             bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField,
@@ -811,12 +811,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
     private void jCheckBoxNonLinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNonLinearActionPerformed
-        // TODO add your handling code here:
+        // Linear or non-linear
         nonLinearFlag = jCheckBoxNonLinear.isSelected();
     }//GEN-LAST:event_jCheckBoxNonLinearActionPerformed
 
     private void jMenuItemSaveImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageActionPerformed
-        // TODO add your handling code here:
+        // Saving as an image file
         if (imageList.isEmpty()) {
             return;
         }
