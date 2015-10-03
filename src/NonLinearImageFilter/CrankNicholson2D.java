@@ -25,6 +25,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
@@ -76,7 +78,8 @@ public class CrankNicholson2D implements Closeable {
         double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
         double[][] diffCoef = new double[ysize][xsize];
-        CountDownLatch lt = new CountDownLatch(ysize - 2);
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 2; i < ysize - 2; i++) {
             int[] ind = new int[1];
             ind[0] = i;
@@ -101,6 +104,9 @@ public class CrankNicholson2D implements Closeable {
         exc.execute(() -> {
             diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
             diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
+            lt.countDown();
+        });
+        exc.execute(() -> {
             diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
             diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
             lt.countDown();
@@ -108,6 +114,9 @@ public class CrankNicholson2D implements Closeable {
         exc.execute(() -> {
             putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
             putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
+            lt.countDown();
+        });
+        exc.execute(() -> {
             putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
             putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
             lt.countDown();
@@ -242,7 +251,6 @@ public class CrankNicholson2D implements Closeable {
         double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
         CountDownLatch lt;
-        AxThread th;
         /*
          * Saving diffusion coefficients on the row boundaries and filling them in with constants instead
          */
@@ -266,6 +274,7 @@ public class CrankNicholson2D implements Closeable {
         /*
          * Iteration over rows. New thread latch
          */
+        //Synchronization latch
         lt = new CountDownLatch(ysize);
         Future<double[]>[] res = new Future[ysize];
         for (int i = 0; i < ysize; i++) {
@@ -275,8 +284,7 @@ public class CrankNicholson2D implements Closeable {
             double[] bCond = new double[2];
             bCond[0] = bConditions[0][i];
             bCond[1] = bConditions[2][i];
-            th = new AxThread(data[i], bCond, oldDiffCoef[i], newDiffCoef[i], lt);
-            res[i] = exc.submit(th);
+            res[i] = exc.submit(new AxThread(data[i], bCond, oldDiffCoef[i], newDiffCoef[i], lt));
         }
         lt.await();
         for (int i = 0; i < ysize; i++) {
@@ -314,26 +322,31 @@ public class CrankNicholson2D implements Closeable {
         /*
          * Iteration over columns. New Thred latch
          */
-        lt = new CountDownLatch(xsize);
-        res = new Future[xsize];
+        //Synchronization latch
+        CountDownLatch lt1 = new CountDownLatch(2 * xsize);
+        //Array for Futures
+        Future<double[]>[] rs = new Future[xsize];
         for (int i = 0; i < xsize; i++) {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            double[] bCond = new double[2];
-            bCond[0] = bConditions[1][i];
-            bCond[1] = bConditions[3][i];
-            th = new AxThread(getColumn(i, result), bCond, getColumn(i, oldDiffCoef), getColumn(i, newDiffCoef), lt);
-            res[i] = exc.submit(th);
+            int[] ind = new int[1];
+            ind[0] = i;
+            exc.execute(() -> {
+                double[] bCond = new double[2];
+                bCond[0] = bConditions[1][ind[0]];
+                bCond[1] = bConditions[3][ind[0]];
+                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef), getColumn(ind[0], newDiffCoef), lt1));
+                lt1.countDown();
+            });
         }
-        lt.await();
+        lt1.await();
         for (int i = 0; i < xsize; i++) {
             try {
-                putColumn(i, result, res[i].get());
+                putColumn(i, result, rs[i].get());
             } catch (ExecutionException ex) {
                 System.out.println("Error in a thread!");
             }
-
         }
         return result;
     }
@@ -475,7 +488,9 @@ public class CrankNicholson2D implements Closeable {
         @Override
         public double[] call() throws Exception {
             double[] res = iterateLinear1D(arg1, arg2, arg3, arg4);
-            lt.countDown();
+            if (lt != null) {
+                lt.countDown();
+            }
             return res;
         }
 
