@@ -282,7 +282,7 @@ public class CrankNicholson2D implements Closeable {
         for (int i = 0; i < ysize; i++) {
             try {
                 result[i] = res[i].get();
-            } catch (ExecutionException | InterruptedException ex) {
+            } catch (ExecutionException ex) {
                 System.out.println("Error in a thread!");
                 result[i] = data[i];
             }
@@ -330,7 +330,7 @@ public class CrankNicholson2D implements Closeable {
         for (int i = 0; i < xsize; i++) {
             try {
                 putColumn(i, result, res[i].get());
-            } catch (ExecutionException | InterruptedException ex) {
+            } catch (ExecutionException ex) {
                 System.out.println("Error in a thread!");
             }
 

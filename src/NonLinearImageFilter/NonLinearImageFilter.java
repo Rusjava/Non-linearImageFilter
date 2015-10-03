@@ -576,6 +576,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // Defining JComponent
         JComponent component = null;
+        jButtonStart.setEnabled(false);
+        jButtonImage.setEnabled(false);
         /*
          * create a button group to chose the source of initial image
          */
@@ -644,6 +646,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             dataList.add(((ImageComponent) component).getPixelData());
             updateImagePanel(0);
             jButtonStart.setEnabled(true);
+            jButtonImage.setEnabled(true);
         }
     }//GEN-LAST:event_jButtonImageActionPerformed
 
