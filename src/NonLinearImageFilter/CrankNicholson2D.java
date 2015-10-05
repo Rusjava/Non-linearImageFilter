@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.DoubleAdder;
  * @author Ruslan Feshchenko
  * @version 2.0
  */
-public class CrankNicholson2D implements Closeable {
+public class CrankNicholson2D {
 
     private final double[] bConditionCoef;
     private final double diffCoefFactor;
@@ -79,8 +79,7 @@ public class CrankNicholson2D implements Closeable {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 2; i < ysize - 2; i++) {
-            int[] ind = new int[1];
-            ind[0] = i;
+            int[] ind = {i};
             //Creating additional threads to accelerate diffusion coefficient matrix calculation
             exc.execute(() -> {
                 for (int k = 2; k < xsize - 2; k++) {
@@ -183,8 +182,7 @@ public class CrankNicholson2D implements Closeable {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 0; i < ysize; i++) {
-            int[] ind = new int[1];
-            ind[0] = i;
+            int[] ind = {i};
             //Creating additional threads to accelerate summation
             exc.execute(() -> {
                 for (int k = 0; k < xsize; k++) {
@@ -270,9 +268,8 @@ public class CrankNicholson2D implements Closeable {
         putColumn(xsize - 1, oldDiffCoef, column);
 
         /*
-         * Iteration over rows. New thread latch
+         * Iteration over rows. New thread synchronization latch
          */
-        //Synchronization latch
         lt = new CountDownLatch(ysize);
         Future<double[]>[] res = new Future[ysize];
         for (int i = 0; i < ysize; i++) {
@@ -318,9 +315,8 @@ public class CrankNicholson2D implements Closeable {
         Arrays.fill(oldDiffCoef[ysize - 2], diffCoefFactor);
         Arrays.fill(oldDiffCoef[ysize - 1], diffCoefFactor);
         /*
-         * Iteration over columns. New Thred latch
+         * Iteration over columns. New thread synchronization latch
          */
-        //Synchronization latch
         CountDownLatch lt1 = new CountDownLatch(2 * xsize);
         //Array for Futures
         Future<double[]>[] rs = new Future[xsize];
@@ -328,8 +324,7 @@ public class CrankNicholson2D implements Closeable {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            int[] ind = new int[1];
-            ind[0] = i;
+            int[] ind = {i};
             exc.execute(() -> {
                 double[] bCond = new double[2];
                 bCond[0] = bConditions[1][ind[0]];
@@ -459,8 +454,10 @@ public class CrankNicholson2D implements Closeable {
         return iterateLinear2D(data, coef, coef, bCond);
     }
 
-    @Override
-    public void close() {
+    /**
+     * Shutting down threads
+     */
+    public void ShutDown() {
         exc.shutdown();
     }
 
