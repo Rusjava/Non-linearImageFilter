@@ -19,6 +19,8 @@ package NonLinearImageFilter;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.awt.color.ColorSpace;
+import java.awt.Dimension;
+import java.awt.event.ItemEvent;
 
 import java.util.ResourceBundle;
 import java.util.Locale;
@@ -30,6 +32,12 @@ import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
 
+import javax.imageio.ImageIO;
+import TextUtilities.MyTextUtilities;
+
+import java.io.File;
+import java.io.IOException;
+
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
@@ -40,21 +48,10 @@ import javax.swing.SwingWorker;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
-import javax.imageio.ImageIO;
-
-import TextUtilities.MyTextUtilities;
-import java.awt.Dimension;
-import java.awt.event.ItemEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
-
 import javax.media.MediaLocator;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
@@ -588,7 +585,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     if (isCancelled()) {
                         return null;
                     }
-                    /* Linear or non-linear ltering fidepending on user choice */
+                    /* Linear or non-linear filtering depending on user choice */
                     currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1)) 
                             : comp.solveLinear(dataList.get(dataList.size() - 1));
                     SwingUtilities.invokeLater(()-> {
@@ -775,8 +772,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
         // Creating JTextPane for the help
-        //Locale.setDefault(new Locale("en", "US"));
-        //bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         JTextPane textArea = new JTextPane();
         //Reading the HTML help file
         try {
