@@ -44,6 +44,7 @@ import javax.imageio.ImageIO;
 
 import TextUtilities.MyTextUtilities;
 import java.awt.Dimension;
+import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.filechooser.FileFilter;
@@ -56,6 +57,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  *
@@ -104,9 +107,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
             new FileNameExtensionFilter("gif", "gif")};
-
+        
+        UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));   
         initComponents();
         jButtonStart.setEnabled(false);
+        ButtonGroup LFGroup = new ButtonGroup();
+        LFGroup.add(jRadioButtonMenuItemDefault);
+        LFGroup.add(jRadioButtonMenuItemSystem);
+        LFGroup.add(jRadioButtonMenuItemNimbus);
     }
 
     /**
@@ -146,6 +154,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuOptions = new javax.swing.JMenu();
         jMenuItemImageOptions = new javax.swing.JMenuItem();
         jMenuItemFilterOptions = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        jMenuLookAndFeel = new javax.swing.JMenu();
+        jRadioButtonMenuItemDefault = new javax.swing.JRadioButtonMenuItem();
+        jRadioButtonMenuItemSystem = new javax.swing.JRadioButtonMenuItem();
+        jRadioButtonMenuItemNimbus = new javax.swing.JRadioButtonMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -445,6 +458,36 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemFilterOptions);
+        jMenuOptions.add(jSeparator2);
+
+        jMenuLookAndFeel.setText(bundle.getString("NonLinearImageFilter.jMenuLookAndFeel.text")); // NOI18N
+
+        jRadioButtonMenuItemDefault.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemDefault.text")); // NOI18N
+        jRadioButtonMenuItemDefault.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemDefaultItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemDefault);
+
+        jRadioButtonMenuItemSystem.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemSystem.text")); // NOI18N
+        jRadioButtonMenuItemSystem.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemSystemItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemSystem);
+
+        jRadioButtonMenuItemNimbus.setSelected(true);
+        jRadioButtonMenuItemNimbus.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemNimbus.text")); // NOI18N
+        jRadioButtonMenuItemNimbus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemNimbusItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemNimbus);
+
+        jMenuOptions.add(jMenuLookAndFeel);
 
         jMenuBar.add(jMenuOptions);
 
@@ -842,6 +885,39 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemSaveImageActionPerformed
 
+    private void jRadioButtonMenuItemDefaultItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemDefaultItemStateChanged
+        // Switching to the Default Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemDefaultItemStateChanged
+
+    private void jRadioButtonMenuItemSystemItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemSystemItemStateChanged
+        // Switching to the System Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemSystemItemStateChanged
+
+    private void jRadioButtonMenuItemNimbusItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemNimbusItemStateChanged
+        // Switching to the Nimbus Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemNimbusItemStateChanged
+
     /**
      * @param args the command line arguments
      */
@@ -914,6 +990,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemImageOptions;
     private javax.swing.JMenuItem jMenuItemSaveImage;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
+    private javax.swing.JMenu jMenuLookAndFeel;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;
@@ -923,8 +1000,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelResults;
     private javax.swing.JPanel jPanelSpace;
     private javax.swing.JProgressBar jProgressBar;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemDefault;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemNimbus;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemSystem;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JSlider jSliderImages;
     private javax.swing.JTextField jTextFieldDiffCoef;
     private javax.swing.JTextField jTextFieldNSteps;
