@@ -145,6 +145,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
         jSliderImages = new javax.swing.JSlider();
+        jPanelStatus = new javax.swing.JPanel();
+        jLabelThreads = new javax.swing.JLabel();
+        jLabelExcTime = new javax.swing.JLabel();
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveImage = new javax.swing.JMenuItem();
@@ -166,9 +169,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
         setTitle(bundle.getString("NonLinearImageFilter.title")); // NOI18N
+        setPreferredSize(new java.awt.Dimension(785, 660));
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setDoubleBuffered(true);
         jScrollPane1.setPreferredSize(new java.awt.Dimension(100, 539));
+
+        jPanel2.setPreferredSize(new java.awt.Dimension(779, 585));
+        jPanel2.setVerifyInputWhenFocusTarget(false);
 
         jPanelParam.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelParam.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelParam.setMinimumSize(new java.awt.Dimension(100, 116));
@@ -308,7 +316,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 256, Short.MAX_VALUE)
+                    .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
                     .addComponent(jCheckBoxNonLinear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -329,7 +337,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages.setLayout(jPanelImagesLayout);
         jPanelImagesLayout.setHorizontalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 594, Short.MAX_VALUE)
+            .addGap(0, 606, Short.MAX_VALUE)
         );
         jPanelImagesLayout.setVerticalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -380,7 +388,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .addGroup(jPanelResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanelControls, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelImages, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(0, 22, Short.MAX_VALUE))
+                .addGap(0, 55, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -406,11 +414,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     .addComponent(jPanelAction, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelSpace, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelResults, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addComponent(jPanelResults, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
+
+        jPanelStatus.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanelStatus.setPreferredSize(new java.awt.Dimension(769, 22));
+        jPanelStatus.setLayout(new java.awt.GridLayout());
+
+        jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text")); // NOI18N
+        jPanelStatus.add(jLabelThreads);
+
+        jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text")); // NOI18N
+        jPanelStatus.add(jLabelExcTime);
 
         jMenuFile.setText(bundle.getString("NonLinearImageFilter.jMenuFile.text")); // NOI18N
 
@@ -462,6 +479,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuLookAndFeel.setText(bundle.getString("NonLinearImageFilter.jMenuLookAndFeel.text")); // NOI18N
 
+        jRadioButtonMenuItemDefault.setSelected(true);
         jRadioButtonMenuItemDefault.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemDefault.text")); // NOI18N
         jRadioButtonMenuItemDefault.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -517,11 +535,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 769, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 598, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addComponent(jPanelStatus, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -978,8 +1001,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JButton jButtonStart;
     private javax.swing.JCheckBox jCheckBoxNonLinear;
     private javax.swing.JLabel jLabelDiffCoef;
+    private javax.swing.JLabel jLabelExcTime;
     private javax.swing.JLabel jLabelNSteps;
     private javax.swing.JLabel jLabelNonlinear;
+    private javax.swing.JLabel jLabelThreads;
     private javax.swing.JMenuBar jMenuBar;
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenu jMenuHelp;
@@ -999,6 +1024,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelParam;
     private javax.swing.JPanel jPanelResults;
     private javax.swing.JPanel jPanelSpace;
+    private javax.swing.JPanel jPanelStatus;
     private javax.swing.JProgressBar jProgressBar;
     private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemDefault;
     private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemNimbus;
