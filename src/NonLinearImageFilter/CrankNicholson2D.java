@@ -86,11 +86,7 @@ public class CrankNicholson2D {
                     double tm = diffCoefFactor
                             * Math.exp(-(Math.pow(data[ind[0]][k + 1] - data[ind[0]][k - 1], 2) / (1 - anisotropyFactor)
                                     + Math.pow(data[ind[0] + 1][k] - data[ind[0] - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
-                    if ((new Double(tm).isNaN())) {
-                        diffCoef[ind[0]][k] = 0;
-                    } else {
-                        diffCoef[ind[0]][k] = tm;
-                    }
+                    diffCoef[ind[0]][k] = new Double(tm).isNaN() ? 0 : tm;
                 }
                 lt.countDown();
             });
@@ -140,11 +136,7 @@ public class CrankNicholson2D {
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
                         * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor * factor);
-                if ((new Double(tm).isNaN())) {
-                    result[i] = 0;
-                } else {
-                    result[i] = tm;
-                }
+                result[i] = new Double(tm).isNaN() ? 0 : tm;
             }
         } else {
             size = data.length;
@@ -152,11 +144,7 @@ public class CrankNicholson2D {
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
                         * Math.exp(-Math.pow(data[i + 1][index] - data[i - 1][index], 2) * nonLinearFactor * factor);
-                if ((new Double(tm).isNaN())) {
-                    result[i] = 0;
-                } else {
-                    result[i] = tm;
-                }
+                result[i] = new Double(tm).isNaN() ? 0 : tm;
             }
         }
         result[0] = diffCoefFactor;
@@ -276,9 +264,7 @@ public class CrankNicholson2D {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            double[] bCond = new double[2];
-            bCond[0] = bConditions[0][i];
-            bCond[1] = bConditions[2][i];
+            double[] bCond = {bConditions[0][i], bConditions[2][i]};
             res[i] = exc.submit(new AxThread(data[i], bCond, oldDiffCoef[i], newDiffCoef[i], lt));
         }
         lt.await();
@@ -326,9 +312,7 @@ public class CrankNicholson2D {
             }
             int[] ind = {i};
             exc.execute(() -> {
-                double[] bCond = new double[2];
-                bCond[0] = bConditions[1][ind[0]];
-                bCond[1] = bConditions[3][ind[0]];
+                double[] bCond = {bConditions[1][ind[0]], bConditions[3][ind[0]]};
                 rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef), getColumn(ind[0], newDiffCoef), lt1));
                 lt1.countDown();
             });
@@ -457,7 +441,7 @@ public class CrankNicholson2D {
     /**
      * Shutting down threads
      */
-    public void ShutDown() {
+    public void shutDown() {
         exc.shutdown();
     }
 

@@ -47,6 +47,9 @@ import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
@@ -82,7 +85,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField;
-    private final ResourceBundle bundle;
+    private ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
@@ -420,7 +423,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jScrollPane1.setViewportView(jPanel2);
 
-        jPanelStatus.setBorder(javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED, java.awt.Color.darkGray, java.awt.Color.lightGray));
+        jPanelStatus.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         jPanelStatus.setPreferredSize(new java.awt.Dimension(769, 22));
         jPanelStatus.setLayout(new java.awt.GridLayout(1, 0));
 
@@ -578,22 +581,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
             @Override
             protected Void doInBackground() throws Exception {
-                double[][] currentData;
                 JComponent component;
                 long t1 = System.nanoTime();
                 for (int i = 0; i < nSteps; i++) {
+                    double[][] currentData;
                     if (isCancelled()) {
                         return null;
                     }
                     /* Linear or non-linear ltering fidepending on user choice */
-
-                    if (nonLinearFlag) {
-                        currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
-                    } else {
-                        currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
-                    }
-                    component = new ImageComponent(currentData);
-                    imageList.add(component);
+                    currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1)) 
+                            : comp.solveLinear(dataList.get(dataList.size() - 1));
+                    SwingUtilities.invokeLater(()-> {
+                        imageList.add(new ImageComponent(currentData));
+                        updateImagePanel(imageList.size() - 1);
+                    });
                     dataList.add(currentData);
                     setStatusBar((int) (100.0 * (i + 1) / nSteps));
                 }
@@ -623,7 +624,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 working = false;
                 jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.text"));
                 jButtonImage.setEnabled(true);
-                comp.ShutDown();
+                comp.shutDown();
             }
 
             /**
@@ -632,10 +633,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
              * @param status
              */
             public void setStatusBar(final int status) {
-                SwingUtilities.invokeLater(() -> {
-                    updateImagePanel(imageList.size() - 1);
-                    jProgressBar.setValue(status);
-                });
+                SwingUtilities.invokeLater(() -> jProgressBar.setValue(status));
             }
             
             /**
@@ -644,10 +642,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
              * @param time
              */      
             public void execTimeUpdate(final long time) {
-                SwingUtilities.invokeLater(() -> {
+                SwingUtilities.invokeLater(() -> 
                     jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text") + time + 
-                            bundle.getString("NANOSECONDS"));
-                });
+                            " " + bundle.getString("NANOSECONDS")));
             }
         };
         worker.execute();
@@ -778,6 +775,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
         // Creating JTextPane for the help
+        //Locale.setDefault(new Locale("en", "US"));
+        //bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         JTextPane textArea = new JTextPane();
         //Reading the HTML help file
         try {
@@ -972,21 +971,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         /* Setting default locale */
-        Locale.setDefault(new Locale("en", "US"));
-        /* Setting currrent locale */
         if (args.length > 0) {
             Locale.setDefault(new Locale(args[0], "US"));
+        } else {
+            Locale.setDefault(new Locale("en", "US"));
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
