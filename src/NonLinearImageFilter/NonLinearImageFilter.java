@@ -116,6 +116,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         LFGroup.add(jRadioButtonMenuItemSystem);
         LFGroup.add(jRadioButtonMenuItemNimbus);
         jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
+        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text") + Runtime.getRuntime().availableProcessors());
     }
 
     /**
@@ -147,6 +148,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControls = new javax.swing.JPanel();
         jSliderImages = new javax.swing.JSlider();
         jPanelStatus = new javax.swing.JPanel();
+        jLabelProcessors = new javax.swing.JLabel();
         jLabelThreads = new javax.swing.JLabel();
         jLabelExcTime = new javax.swing.JLabel();
         jMenuBar = new javax.swing.JMenuBar();
@@ -424,6 +426,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelStatus.setPreferredSize(new java.awt.Dimension(769, 22));
         jPanelStatus.setLayout(new java.awt.GridLayout(1, 0));
 
+        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text")); // NOI18N
+        jPanelStatus.add(jLabelProcessors);
+
         jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text")); // NOI18N
         jPanelStatus.add(jLabelThreads);
 
@@ -578,7 +583,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
             @Override
             protected Void doInBackground() throws Exception {
-                JComponent component;
                 long t1 = System.nanoTime();
                 for (int i = 0; i < nSteps; i++) {
                     double[][] currentData;
@@ -586,14 +590,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         return null;
                     }
                     /* Linear or non-linear filtering depending on user choice */
-                    currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1)) 
+                    currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1))
                             : comp.solveLinear(dataList.get(dataList.size() - 1));
-                    SwingUtilities.invokeLater(()-> {
-                        imageList.add(new ImageComponent(currentData));
-                        updateImagePanel(imageList.size() - 1);
-                    });
+                    updateUI(currentData);
                     dataList.add(currentData);
-                    setStatusBar((int) (100.0 * (i + 1) / nSteps));
                 }
                 // Updating execution time estimate
                 execTimeUpdate(System.nanoTime() - t1);
@@ -625,23 +625,29 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
 
             /**
-             * Updating progress bar and displaying the last image
+             * Creating the next image in the sequence, updating progress bar
+             * and displaying the last image
              *
-             * @param status
+             * @param data
              */
-            public void setStatusBar(final int status) {
-                SwingUtilities.invokeLater(() -> jProgressBar.setValue(status));
+            public void updateUI(double[][] data) {
+                SwingUtilities.invokeLater(() -> {
+                    imageList.add(new ImageComponent(data));
+                    int i = imageList.size() - 1;
+                    updateImagePanel(i);
+                    jProgressBar.setValue((int) (100.0 * i / nSteps));
+                });
             }
-            
+
             /**
              * Updating execution time
              *
              * @param time
-             */      
+             */
             public void execTimeUpdate(final long time) {
-                SwingUtilities.invokeLater(() -> 
-                    jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text") + time + 
-                            " " + bundle.getString("NANOSECONDS")));
+                SwingUtilities.invokeLater(()
+                        -> jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text") + time
+                                + " " + bundle.getString("NANOSECONDS")));
             }
         };
         worker.execute();
@@ -768,6 +774,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(null,
                 "<html>Non-linear image filter. <br>Version: 2.0 <br>Date: October 2015. <br>Author: Ruslan Feshchenko</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
+        System.out.println(Package.getPackage("TextUtilities").getSpecificationVersion());
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
     private void jMenuItemHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHelpActionPerformed
@@ -809,8 +816,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (option == JOptionPane.OK_OPTION) {
             imageParam.xsize = (Integer) xsizeField.getValue();
             imageParam.ysize = (Integer) ysizeField.getValue();
-            imageParam.noise = (Integer) noiseField.getValue();
-            imageParam.signal = (Integer) signalField.getValue();
+            imageParam.noise = (int) Math.pow(2, (Integer) noiseField.getValue());
+            imageParam.signal = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
@@ -1006,6 +1013,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JLabel jLabelExcTime;
     private javax.swing.JLabel jLabelNSteps;
     private javax.swing.JLabel jLabelNonlinear;
+    private javax.swing.JLabel jLabelProcessors;
     private javax.swing.JLabel jLabelThreads;
     private javax.swing.JMenuBar jMenuBar;
     private javax.swing.JMenu jMenuFile;

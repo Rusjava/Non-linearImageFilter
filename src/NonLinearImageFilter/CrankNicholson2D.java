@@ -16,7 +16,6 @@
  */
 package NonLinearImageFilter;
 
-import java.io.Closeable;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -79,6 +78,9 @@ public class CrankNicholson2D {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 2; i < ysize - 2; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
             int[] ind = {i};
             //Creating additional threads to accelerate diffusion coefficient matrix calculation
             exc.execute(() -> {
@@ -170,6 +172,9 @@ public class CrankNicholson2D {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 0; i < ysize; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
             int[] ind = {i};
             //Creating additional threads to accelerate summation
             exc.execute(() -> {
@@ -208,8 +213,7 @@ public class CrankNicholson2D {
      * @param dataY
      */
     protected void putColumn(int index, double[][] data, double[] dataY) {
-        int size = dataY.length;
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < dataY.length; i++) {
             data[i][index] = dataY[i];
         }
     }
@@ -313,7 +317,8 @@ public class CrankNicholson2D {
             int[] ind = {i};
             exc.execute(() -> {
                 double[] bCond = {bConditions[1][ind[0]], bConditions[3][ind[0]]};
-                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef), getColumn(ind[0], newDiffCoef), lt1));
+                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef), 
+                        getColumn(ind[0], newDiffCoef), lt1));
                 lt1.countDown();
             });
         }
