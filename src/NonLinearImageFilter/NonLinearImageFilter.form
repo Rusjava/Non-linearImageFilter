@@ -83,7 +83,6 @@
               <SubComponents>
                 <MenuItem class="javax.swing.JRadioButtonMenuItem" name="jRadioButtonMenuItemDefault">
                   <Properties>
-                    <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                       <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.jRadioButtonMenuItemDefault.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
                     </Property>
@@ -581,6 +580,7 @@
                     <Component class="javax.swing.JSlider" name="jSliderImages">
                       <Properties>
                         <Property name="orientation" type="int" value="1"/>
+                        <Property name="enabled" type="boolean" value="false"/>
                         <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                           <Dimension value="[100, 32767]"/>
                         </Property>

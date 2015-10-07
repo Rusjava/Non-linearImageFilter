@@ -350,6 +350,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControls.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), bundle.getString("NonLinearImageFilter.jPanelControls.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
 
         jSliderImages.setOrientation(javax.swing.JSlider.VERTICAL);
+        jSliderImages.setEnabled(false);
         jSliderImages.setMaximumSize(new java.awt.Dimension(100, 32767));
         jSliderImages.setMinimumSize(new java.awt.Dimension(30, 36));
         jSliderImages.setPreferredSize(new java.awt.Dimension(30, 200));
@@ -485,7 +486,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuLookAndFeel.setText(bundle.getString("NonLinearImageFilter.jMenuLookAndFeel.text")); // NOI18N
 
-        jRadioButtonMenuItemDefault.setSelected(true);
         jRadioButtonMenuItemDefault.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemDefault.text")); // NOI18N
         jRadioButtonMenuItemDefault.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -727,6 +727,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             updateImagePanel(0);
             jButtonStart.setEnabled(true);
             jButtonImage.setEnabled(true);
+            jSliderImages.setEnabled(true);
         }
     }//GEN-LAST:event_jButtonImageActionPerformed
 
