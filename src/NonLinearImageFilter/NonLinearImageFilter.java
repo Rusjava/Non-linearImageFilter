@@ -37,6 +37,11 @@ import TextUtilities.MyTextUtilities;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.jar.Manifest;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -772,9 +777,28 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
-        String ver = Package.getPackage("NonLinearImageFilter").getImplementationVersion();
+        Package pk = Package.getPackage("NonLinearImageFilter");
+        Enumeration<URL> mfs = null;
+        try {
+            mfs = this.getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+        } catch (IOException ex) {
+            Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Manifest mf = null;
+        while(mfs.hasMoreElements()) {
+            try {
+                mf = new Manifest(mfs.nextElement().openStream());
+            } catch (IOException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (mf.getMainAttributes().getValue("Built-Date") != null ) return;
+        }   
+        
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: " + ver + "<br>Date: October 2015. <br>Author: Ruslan Feshchenko</html>",
+                "<html>Non-linear image filter. <br>Version: " + pk.getImplementationVersion()
+                + "<br>Date: " + mf.getMainAttributes().getValue("Build-Date") //DateFormat.getDateInstance(DateFormat.LONG).format(new Date())
+                + "<br>Author: " + pk.getImplementationVendor()
+                + "</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
