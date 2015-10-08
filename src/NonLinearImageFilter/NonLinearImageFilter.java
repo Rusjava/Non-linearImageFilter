@@ -784,20 +784,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Manifest mf = null;
-        while(mfs.hasMoreElements()) {
+        String datest = "";
+        while (mfs.hasMoreElements()) {
+            Manifest mft;
             try {
-                mf = new Manifest(mfs.nextElement().openStream());
+                mft = new Manifest(mfs.nextElement().openStream());
+                if (mft.getMainAttributes().getValue("Built-Date") != null) {
+                    datest = mft.getMainAttributes().getValue("Built-Date");
+                }
             } catch (IOException ex) {
                 Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            if (mf.getMainAttributes().getValue("Built-Date") != null ) return;
-        }   
-        
+            }  
+        }
+
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: " + pk.getImplementationVersion()
-                + "<br>Date: " + mf.getMainAttributes().getValue("Build-Date") //DateFormat.getDateInstance(DateFormat.LONG).format(new Date())
-                + "<br>Author: " + pk.getImplementationVendor()
+                bundle.getString("ABOUT BEGIN") + pk.getImplementationVersion()
+                + bundle.getString("ABOUT DATE") + datest //DateFormat.getDateInstance(DateFormat.LONG).format(new Date())
+                + bundle.getString("ABOUT AUTHOR") + pk.getImplementationVendor()
                 + "</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
