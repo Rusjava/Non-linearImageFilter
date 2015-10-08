@@ -778,24 +778,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
         // TODO add your handling code here:
         Package pk = Package.getPackage("NonLinearImageFilter");
-        Enumeration<URL> mfs = null;
+        Enumeration<URL> mfs;
+        String datest = "";
         try {
             mfs = this.getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+            while (mfs.hasMoreElements()) {
+                Manifest mft = new Manifest(mfs.nextElement().openStream());
+                if (mft.getMainAttributes().getValue("Built-Date") != null) {
+                    datest = mft.getMainAttributes().getValue("Built-Date");
+                }  
+        }
         } catch (IOException ex) {
             Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        String datest = "";
-        while (mfs.hasMoreElements()) {
-            Manifest mft;
-            try {
-                mft = new Manifest(mfs.nextElement().openStream());
-                if (mft.getMainAttributes().getValue("Built-Date") != null) {
-                    datest = mft.getMainAttributes().getValue("Built-Date");
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
-            }  
-        }
+        
+        
 
         JOptionPane.showMessageDialog(null,
                 bundle.getString("ABOUT BEGIN") + pk.getImplementationVersion()
