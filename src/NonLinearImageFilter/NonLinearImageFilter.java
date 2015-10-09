@@ -79,7 +79,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
-    private int nSteps = 10, threadNumber = 2, sliderposition = 50;
+    private int nSteps = 10, threadNumber, sliderposition = 50;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0;
     private boolean nonLinearFlag = false, working = false;
@@ -89,12 +89,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField;
-    private ResourceBundle bundle;
+    private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
 
     public NonLinearImageFilter() {
+        this.threadNumber = Runtime.getRuntime().availableProcessors();
         this.imageList = new ArrayList<>();
         this.defaults = new HashMap();
         this.imageParam = new ImageParam();
@@ -109,7 +110,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.anisotropyField = MyTextUtilities
                 .getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
-        this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(2, 1, 10);
+        this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -123,7 +124,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         LFGroup.add(jRadioButtonMenuItemSystem);
         LFGroup.add(jRadioButtonMenuItemNimbus);
         jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
-        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text") + Runtime.getRuntime().availableProcessors());
+        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text") + threadNumber);
     }
 
     /**
