@@ -78,10 +78,10 @@ public class CrankNicholson2D {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 2; i < ysize - 2; i++) {
+            int[] ind = {i};
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            int[] ind = {i};
             //Creating additional threads to accelerate diffusion coefficient matrix calculation
             exc.execute(() -> {
                 for (int k = 2; k < xsize - 2; k++) {
@@ -172,10 +172,10 @@ public class CrankNicholson2D {
         //Synchronization latch
         CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 0; i < ysize; i++) {
+            int[] ind = {i};
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            int[] ind = {i};
             //Creating additional threads to accelerate summation
             exc.execute(() -> {
                 for (int k = 0; k < xsize; k++) {
@@ -276,7 +276,6 @@ public class CrankNicholson2D {
             try {
                 result[i] = res[i].get();
             } catch (ExecutionException ex) {
-                System.out.println("Error in a thread!");
                 result[i] = data[i];
             }
         }
@@ -311,13 +310,13 @@ public class CrankNicholson2D {
         //Array for Futures
         Future<double[]>[] rs = new Future[xsize];
         for (int i = 0; i < xsize; i++) {
+            int[] ind = {i};
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            int[] ind = {i};
             exc.execute(() -> {
                 double[] bCond = {bConditions[1][ind[0]], bConditions[3][ind[0]]};
-                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef), 
+                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef),
                         getColumn(ind[0], newDiffCoef), lt1));
                 lt1.countDown();
             });

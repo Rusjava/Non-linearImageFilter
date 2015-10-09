@@ -31,17 +31,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.jar.Manifest;
 
 import javax.imageio.ImageIO;
 import TextUtilities.MyTextUtilities;
+import javax.media.MediaLocator;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.jar.Manifest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -57,7 +60,6 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
-import javax.media.MediaLocator;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
@@ -660,7 +662,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // Defining JComponent
-        JComponent component = null;
+        JComponent component;
         jButtonStart.setEnabled(false);
         jButtonImage.setEnabled(false);
         /*
@@ -776,27 +778,25 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jSliderImagesStateChanged
 
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
-        // TODO add your handling code here:
+        // Extracting the build date from the MANIFEST.MF file
         Package pk = Package.getPackage("NonLinearImageFilter");
-        Enumeration<URL> mfs;
-        String datest = "";
+        Date dt = new Date();
+        DateFormat dtf = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            mfs = this.getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+            Enumeration<URL> mfs = this.getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
             while (mfs.hasMoreElements()) {
                 Manifest mft = new Manifest(mfs.nextElement().openStream());
                 if (mft.getMainAttributes().getValue("Built-Date") != null) {
-                    datest = mft.getMainAttributes().getValue("Built-Date");
-                }  
-        }
-        } catch (IOException ex) {
+                    dt = dtf.parse(mft.getMainAttributes().getValue("Built-Date"));
+                }
+            }
+        } catch (IOException | ParseException ex) {
             Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-
+        // Extracting vendor and version from the MANIFEST.MF file and showing up About popup window
         JOptionPane.showMessageDialog(null,
                 bundle.getString("ABOUT BEGIN") + pk.getImplementationVersion()
-                + bundle.getString("ABOUT DATE") + datest //DateFormat.getDateInstance(DateFormat.LONG).format(new Date())
+                + bundle.getString("ABOUT DATE") + DateFormat.getDateInstance(DateFormat.LONG).format(dt)
                 + bundle.getString("ABOUT AUTHOR") + pk.getImplementationVendor()
                 + "</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
