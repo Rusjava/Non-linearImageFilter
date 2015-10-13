@@ -38,13 +38,13 @@ version: 1.0
                 <p>The linear Gaussian filtering is performed by solving the linear diffusion equation for image brightness <i>b</i> with a constant diffusion 
                     coefficient &eta;:</p>
                 <p style="text-align:center">&part;b/&part;n=&nabla;(&eta;&nabla;b),</p>
-                <p>where <i>n</i> is filtering step and the gradient is in the image coordinates.</p>
+                <p>where <i>n</i> is the filtering step number and the gradient is in the image coordinates.</p>
                 <p>In non-linear Gaussian filter the diffusion coefficient is Gaussian function of the gradient of image brightness <i>b</i>:</p>
-		<p style="text-align:center">&eta;=&eta;<sub>0</sub>&times;<i>exp(&minus;(grad(b)/&sigma;)<sup>2</sup>)</i>,</p>
-		<p>where &sigma; is the non-linear coefficient.</p>
+                <p style="text-align:center">&eta;=&eta;<sub>0</sub>&times;<i>exp(&minus;(&nabla;b<b>&sigma;</b><sup>&minus;1</sup>)<sup>2</sup>)</i>,</p>
+                <p>where <b>&sigma;</b><sup>&minus;1</sup> is the inverse of the 2D matrix of non-linear coefficients.</p>
 		
 		<h2>Filtering procedure</h2>
-		<p>Use <b>Initialize</b> button to either generate a new test image or load a new image from file. Then choose filter parameters: diffusion coefficient, non-linear 
+		<p>Use <b>Initialize</b> button to either generate a new test image (with a square) or load a new image from file. Then choose filter parameters: diffusion coefficient, non-linear 
                     coefficient and number of filtering steps. Tick <em>Non-linear filtering</em> box if non-linear filtering is required. Press <em>Filter</em> button to begin 
                     filtering. Observe as the filtering is going by looking at the <em>Progress bar</em>. The process can be stopped by pressing <em>Stop</em> button. The 
                     filtering can be continued after adjusting parameters. The sequence of filtered images can be viewed by moving the slider in <em>Controls</em> panel. 
@@ -53,7 +53,18 @@ version: 1.0
 		
 		<h2>Options</h2>
 		<p><em>Options->Test image options..</em> allows one to specify: the test image width and height, the signal level outside the square, the noise level and 
-                    the relative scale of the square. <em>Options->Filter options...</em> allows one to enter the relative numerical precision of non-linear filtering.</p>
+                    the relative scale of the square. <em>Options->Filter options...</em> allows one to enter the relative numerical precision of non-linear filtering,
+                    filtering anisotropy (ratio of the main axes of the matrix <b>&sigma;<sup>&minus;1</sup></b>) as well
+                    as the number of threads used to filter the image. The default number of threads equals the number of available processors.</p>
+                
+                <h2>Measuring performance</h2>
+                <p>
+                    After the filtering the time spent is displayed in the right part of the <em>status bar</em>, which also shows the number of available
+                    processors as well as the number of threads used in calculations.
+                </p>
+        </div>
+        <div class="footer">
+            &copy; Copyright Ruslan Feshchenko, October 2015
         </div>
     </body>
 </html>

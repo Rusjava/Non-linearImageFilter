@@ -23,21 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .intro {
     border-style: ridge;
     border-width: 2px;
-    border-color: blue;
+    border-color: gray;
     padding: 10px;
     padding-top: 0px;
     margin-bottom: 10px;
-    background-color: aqua;
+    background-color: #99ffff;
 }
 
 .footer {
     border-top-style: solid;
     border-width: 2px;
-    border-color: blue;
+    border-color: gray;
     text-align: center;
     padding-top: 10px;
     margin-top: 10px;
-    background-color: yellow;
+    background-color: #99ffff;
 }
 
 .content {
@@ -45,7 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     border-color: gray;
     border-width: 2px;
     padding: 10px;
-    background-color: orange;
+    background-color: #ffff66;
 }
 
 .content h2 {
