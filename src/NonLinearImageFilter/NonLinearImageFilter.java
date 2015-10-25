@@ -70,7 +70,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 2.0
+ * @version 2.01
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -593,10 +593,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             protected Void doInBackground() throws Exception {
                 long t1 = System.nanoTime();
                 for (int i = 0; i < nSteps; i++) {
-                    double[][] currentData;
+                    // If canceled interrupt the thread
                     if (isCancelled()) {
                         return null;
                     }
+                    double[][] currentData;
                     /* Linear or non-linear filtering depending on user choice */
                     currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1))
                             : comp.solveLinear(dataList.get(dataList.size() - 1));
@@ -648,7 +649,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
 
             /**
-             * Updating execution time
+             * Updating task execution time
              *
              * @param time
              */

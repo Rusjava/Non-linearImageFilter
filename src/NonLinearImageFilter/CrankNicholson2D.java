@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.DoubleAdder;
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 2.0
+ * @version 2.01
  */
 public class CrankNicholson2D {
 
@@ -82,7 +82,7 @@ public class CrankNicholson2D {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            //Creating additional threads to accelerate diffusion coefficient matrix calculation
+            //Creating multiple threads to accelerate diffusion coefficient matrix calculation
             exc.execute(() -> {
                 for (int k = 2; k < xsize - 2; k++) {
                     double tm = diffCoefFactor
@@ -233,7 +233,7 @@ public class CrankNicholson2D {
      * @throws java.lang.InterruptedException
      */
     protected double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
-            double[][] newDiffCoef, double[][] bConditions) throws InterruptedException {
+            double[][] newDiffCoef, double[][] bConditions) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] result = new double[ysize][xsize];
@@ -280,6 +280,9 @@ public class CrankNicholson2D {
                 result[i] = res[i].get();
             } catch (ExecutionException ex) {
                 result[i] = data[i];
+                if (ex instanceof Exception) {
+                    throw (Exception) ex.getCause();
+                }
             }
         }
 
@@ -329,7 +332,9 @@ public class CrankNicholson2D {
             try {
                 putColumn(i, result, rs[i].get());
             } catch (ExecutionException ex) {
-                System.out.println("Error in a thread!");
+                if (ex instanceof Exception) {
+                    throw (Exception) ex.getCause();
+                }
             }
         }
         return result;
@@ -403,7 +408,7 @@ public class CrankNicholson2D {
      * @return
      * @throws java.lang.InterruptedException
      */
-    public double[][] solveNonLinear(double[][] data) throws InterruptedException {
+    public double[][] solveNonLinear(double[][] data) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
@@ -429,7 +434,7 @@ public class CrankNicholson2D {
      * @return
      * @throws java.lang.InterruptedException
      */
-    public double[][] solveLinear(double[][] data) throws InterruptedException {
+    public double[][] solveLinear(double[][] data) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
@@ -449,7 +454,7 @@ public class CrankNicholson2D {
      * Shutting down threads
      */
     public void shutDown() {
-        exc.shutdown();
+        exc.shutdownNow();
     }
 
     /**
@@ -472,7 +477,7 @@ public class CrankNicholson2D {
         }
 
         @Override
-        public double[] call() throws Exception {
+        public double[] call() throws InterruptedException {
             double[] res = iterateLinear1D(arg1, arg2, arg3, arg4);
             if (lt != null) {
                 lt.countDown();
