@@ -178,10 +178,13 @@ public class CrankNicholson2D {
             }
             //Creating additional threads to accelerate summation
             exc.execute(() -> {
+                double psumDiff = 0, psum = 0;
                 for (int k = 0; k < xsize; k++) {
-                    sumDiff.add(Math.pow(data1[ind[0]][k] - data2[ind[0]][k], 2));
-                    sum.add(Math.pow(data1[ind[0]][k], 2) + Math.pow(data2[ind[0]][k], 2));
+                    psumDiff += Math.pow(data1[ind[0]][k] - data2[ind[0]][k], 2);
+                    psum += Math.pow(data1[ind[0]][k], 2) + Math.pow(data2[ind[0]][k], 2);
                 }
+                sumDiff.add(psumDiff);
+                sum.add(psum);
                 lt.countDown();
             });
         }
