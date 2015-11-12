@@ -41,8 +41,8 @@ public class ImageComponent extends JComponent {
 
     private final BufferedImage image;
     private final int[] pixels;
-    private ColorModel grayColorModel;
-    private int BIT_NUM = 16;
+    private final ColorModel grayColorModel;
+    private final int BIT_NUM = 16;
 
     /*
      * Create a gray-scale ColorSpace and corresponding ColorModel
@@ -145,7 +145,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                data[i][k] = this.pixels[offset + k];
+                data[i][k] = pixels[offset + k];
             }
         }
 
