@@ -98,6 +98,9 @@ public class ImageComponent extends JComponent {
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
         int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
+        if (shift < 0) {
+            shift += BIT_NUM;
+        }
         this.image = image;
         int[] iArray = new int[size];
         pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
