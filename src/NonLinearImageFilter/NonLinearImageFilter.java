@@ -664,7 +664,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // Defining JComponent
-        JComponent component;
+        JComponent component = null;
         jButtonStart.setEnabled(false);
         jButtonImage.setEnabled(false);
         /*
@@ -712,16 +712,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                             JOptionPane.showMessageDialog(null,
                                     bundle.getString("NOTGRAYSCALE DIALOG"),
                                     bundle.getString("NOTGRAYSCALE DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
-                            return;
                         }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
                                 bundle.getString("IO ERROR DIALOG"),
                                 bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
-                        return;
                     }
-                } else {
-                    return;
                 }
             } else {
                 /*
@@ -729,11 +725,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                  */
                 component = new ImageComponent(imageParam);
             }
-            imageList = new ArrayList<>();
-            dataList = new ArrayList<>();
-            imageList.add(component);
-            dataList.add(((ImageComponent) component).getPixelData());
-            updateImagePanel(0);
+            if (component != null) {
+                imageList = new ArrayList<>();
+                dataList = new ArrayList<>();
+                imageList.add(component);
+                dataList.add(((ImageComponent) component).getPixelData());
+                updateImagePanel(0);
+            }
             jButtonStart.setEnabled(true);
             jButtonImage.setEnabled(true);
             jSliderImages.setEnabled(true);
