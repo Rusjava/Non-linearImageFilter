@@ -41,14 +41,14 @@ public class ImageComponent extends JComponent {
     private final BufferedImage image;
     private final int[] pixels;
     private final ColorModel grayColorModel;
-    private final int BIT_NUM = 16;
+    private final int BIT_NUM = 32;
 
     /*
      * Create a gray-scale ColorSpace and corresponding ColorModel
      */
     {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        grayColorModel = new ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+        grayColorModel = new Int32ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
     }
 
     /**
@@ -96,16 +96,24 @@ public class ImageComponent extends JComponent {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
-        int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
-        if (shift < 0) {
-            shift += BIT_NUM;
-        }
-        this.image = image;
         pixels = new int[size];
-        image.getData().getPixels(0, 0, xsize, ysize, pixels);
-        for (int i = 0; i < size; i++) {
-            pixels[i] <<= shift;
+        int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
+        if (shift < BIT_NUM / 2) {
+            double c = Math.pow(2, 24);
+            double[] dpix = new double[size];
+            image.getData().getPixels(0, 0, xsize, ysize, dpix);
+            for (int i = 0; i < size; i++) {
+                pixels[i] = (int) Math.round(c * dpix[i]);
+            }
+            this.image = createImage(pixels, xsize, ysize);
+        } else {
+            image.getData().getPixels(0, 0, xsize, ysize, pixels);
+            for (int i = 0; i < size; i++) {
+                pixels[i] <<= shift;
+            }
+            this.image = image;
         }
+
     }
 
     @Override
@@ -144,7 +152,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                data[i][k] = pixels[offset + k];
+                data[i][k] = pixels[offset + k] & 0xffffffffl;
             }
         }
 
@@ -163,9 +171,9 @@ public class ImageComponent extends JComponent {
                 if (testi && (Math.abs(k - param.xsize / 2 + 1) < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
                 } else {
-                    pixelsArray[offset + k] = param.signal;
+                    pixelsArray[offset + k] = (int) param.signal;
                 }
-                pixelsArray[offset + k] += (int) (Math.random() * param.noise);
+                pixelsArray[offset + k] += (int) Math.round((Math.random() * param.noise));
             }
         }
         return pixelsArray;
@@ -181,7 +189,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixelArray[offset + k] += Math.round(pixelData[i][k]);
+                pixelArray[offset + k] += (int) Math.round(pixelData[i][k]);
             }
         }
         return pixelArray;
@@ -200,5 +208,47 @@ public class ImageComponent extends JComponent {
          * Create a BufferedImage from the raster and color model and return it
          */
         return new BufferedImage(grayColorModel, raster, true, null);
+    }
+
+    /**
+     * Class that fixes the bug with 32-bits per sample images
+     */
+    public static class Int32ComponentColorModel extends ComponentColorModel {
+
+        /**
+         * Calling the superclass constructor
+         * See http://stackoverflow.com/questions/26875429/how-to-create-bufferedimage-for-32-bits-per-sample-3-samples-image-data
+         * @param cs
+         * @param bits
+         * @param b
+         * @param alpha
+         * @param transperancy
+         * @param transfertype
+         */
+        public Int32ComponentColorModel(ColorSpace cs, int[] bits, boolean b, boolean alpha, int transperancy, int transfertype) {
+            super(cs, bits, b, alpha, transperancy, transfertype);
+        }
+
+        @Override
+        public float[] getNormalizedComponents(Object pixel, float[] normComponents, int normOffset) {
+            int numComponents = getNumComponents();
+
+            if (normComponents == null || normComponents.length < numComponents + normOffset) {
+                normComponents = new float[numComponents + normOffset];
+            }
+
+            switch (transferType) {
+                case DataBuffer.TYPE_INT:
+                    int[] ipixel = (int[]) pixel;
+                    for (int c = 0, nc = normOffset; c < numComponents; c++, nc++) {
+                        normComponents[nc] = ipixel[c] / ((float) ((1L << getComponentSize(c)) - 1));
+                    }
+                    break;
+                default: // Calling superclass method
+                    super.getNormalizedComponents(pixel, normComponents, normOffset);
+            }
+
+            return normComponents;
+        }
     }
 }
