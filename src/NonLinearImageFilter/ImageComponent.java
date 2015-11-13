@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package NonLinearImageFilter;
 
 import java.awt.Graphics;
@@ -102,8 +101,8 @@ public class ImageComponent extends JComponent {
             shift += BIT_NUM;
         }
         this.image = image;
-        int[] iArray = new int[size];
-        pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
+        pixels = new int[size];
+        image.getData().getPixels(0, 0, xsize, ysize, pixels);
         for (int i = 0; i < size; i++) {
             pixels[i] <<= shift;
         }

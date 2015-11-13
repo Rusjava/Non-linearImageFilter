@@ -112,9 +112,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
-        filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
+        filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
-            new FileNameExtensionFilter("gif", "gif")};
+            new FileNameExtensionFilter("png", "png"),
+            new FileNameExtensionFilter("gif", "gif")
+        };
 
         UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));
         initComponents();
