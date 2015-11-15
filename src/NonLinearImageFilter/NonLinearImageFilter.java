@@ -70,7 +70,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 2.01
+ * @version 2.1
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -81,14 +81,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<JComponent> imageList;
     private int nSteps = 10, threadNumber, sliderposition = 50;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
-            anisotropy = 0;
+            anisotropy = 0, iterationCoefficient = 1.0;
     private boolean nonLinearFlag = false, working = false;
     private CrankNicholson2D comp;
     private final Map defaults;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField, anisotropyField, frameRateField, threadNumberField;
+            scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
@@ -103,14 +103,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.ysizeField = MyTextUtilities.getIntegerFormattedTextField(200, 2, 10000);
         this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
         this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
-        this.scaleField = MyTextUtilities
-                .getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
-        this.precisionField = MyTextUtilities
-                .getDoubleFormattedTextField(1e-10, 1e-3, 1e-14, true);
-        this.anisotropyField = MyTextUtilities
-                .getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
+        this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
+        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-2, 1e-14, true);
+        this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
+        this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -568,7 +566,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefActionPerformed
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0.0001, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.0, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
     /**
@@ -586,7 +584,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setStringPainted(true);
         working = true;
         comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
-                precision, anisotropy, threadNumber);
+                precision, anisotropy, threadNumber, iterationCoefficient);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -742,7 +740,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "10000", defaults);
+                "100000000", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
@@ -753,14 +751,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefFocusLost
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0.0001, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.0, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefFocusLost
 
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "10000", defaults);
+                "100000000", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost
@@ -842,8 +840,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (option == JOptionPane.OK_OPTION) {
             imageParam.xsize = (Integer) xsizeField.getValue();
             imageParam.ysize = (Integer) ysizeField.getValue();
-            imageParam.noise = (int) Math.pow(2, (Integer) noiseField.getValue());
-            imageParam.signal = (int) Math.pow(2, (Integer) signalField.getValue());
+            imageParam.NOISE = (int) Math.pow(2, (Integer) noiseField.getValue());
+            imageParam.SIGNAL = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
@@ -906,7 +904,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         Object[] message = {
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
             bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField,
-            bundle.getString("NonLinearImageFilter.jTextFieldThreadNumber.text"), threadNumberField
+            bundle.getString("NonLinearImageFilter.jTextFieldThreadNumber.text"), threadNumberField,
+            bundle.getString("NonLinearImageFilter.jTextFieldIterCoef.text"), iterField
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
@@ -914,6 +913,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             precision = (Double) precisionField.getValue();
             anisotropy = (Double) anisotropyField.getValue();
             threadNumber = (Integer) threadNumberField.getValue();
+            iterationCoefficient = (Double) iterField.getValue();
             jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
         }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed

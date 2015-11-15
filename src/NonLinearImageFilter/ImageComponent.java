@@ -34,7 +34,7 @@ import javax.swing.JComponent;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 1.0
+ * @version 1.1
  */
 public class ImageComponent extends JComponent {
 
@@ -98,21 +98,20 @@ public class ImageComponent extends JComponent {
         int size = xsize * ysize;
         pixels = new int[size];
         int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
-        if (shift < BIT_NUM / 2) {
-            double c = Math.pow(2, 24);
-            double[] dpix = new double[size];
+        if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT) {
+            float c = (float) Math.pow(2, 23);
+            float[] dpix = new float[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             for (int i = 0; i < size; i++) {
                 pixels[i] = (int) Math.round(c * dpix[i]);
             }
-            this.image = createImage(pixels, xsize, ysize);
         } else {
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
             for (int i = 0; i < size; i++) {
                 pixels[i] <<= shift;
             }
-            this.image = image;
         }
+        this.image = createImage(pixels, xsize, ysize);
 
     }
 
@@ -152,10 +151,9 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                data[i][k] = pixels[offset + k] & 0xffffffffl;
+                data[i][k] = pixels[offset + k];
             }
         }
-
         return data;
     }
 
@@ -171,9 +169,9 @@ public class ImageComponent extends JComponent {
                 if (testi && (Math.abs(k - param.xsize / 2 + 1) < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
                 } else {
-                    pixelsArray[offset + k] = (int) param.signal;
+                    pixelsArray[offset + k] = (int) ImageParam.SIGNAL;
                 }
-                pixelsArray[offset + k] += (int) Math.round((Math.random() * param.noise));
+                pixelsArray[offset + k] += (int) Math.round((Math.random() * ImageParam.NOISE));
             }
         }
         return pixelsArray;
@@ -211,13 +209,15 @@ public class ImageComponent extends JComponent {
     }
 
     /**
-     * Class that fixes the bug with 32-bits per sample images
+     * Class that fixes the bug with 32-bits per sample images The code was
+     * taken from
+     * http://stackoverflow.com/questions/26875429/how-to-create-bufferedimage-for-32-bits-per-sample-3-samples-image-data
      */
     public static class Int32ComponentColorModel extends ComponentColorModel {
 
         /**
-         * Calling the superclass constructor
-         * See http://stackoverflow.com/questions/26875429/how-to-create-bufferedimage-for-32-bits-per-sample-3-samples-image-data
+         * Calling the superclass constructor.
+         *
          * @param cs
          * @param bits
          * @param b
@@ -241,14 +241,37 @@ public class ImageComponent extends JComponent {
                 case DataBuffer.TYPE_INT:
                     int[] ipixel = (int[]) pixel;
                     for (int c = 0, nc = normOffset; c < numComponents; c++, nc++) {
-                        normComponents[nc] = ipixel[c] / ((float) ((1L << getComponentSize(c)) - 1));
+                        normComponents[nc] = (float) ((ipixel[c] & 0xffffffffl) / ((double) ((1L << getComponentSize(c)) - 1)));
                     }
                     break;
-                default: // Calling superclass method
-                    super.getNormalizedComponents(pixel, normComponents, normOffset);
+                default: // Calling superclass method for other transfer types
+                    normComponents = super.getNormalizedComponents(pixel, normComponents, normOffset);
             }
 
             return normComponents;
+        }
+
+        private int getRGBComponent(Object inData, int idx) {
+            // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
+            float[] norm = getNormalizedComponents(inData, null, 0);
+            // Note that getNormalizedComponents returns non-premultiplied values
+            float[] rgb = this.getColorSpace().toRGB(norm);
+            return (int) (rgb[idx] * 255.0f + 0.5f);
+        }
+
+        @Override
+        public int getRed(Object inData) {
+            return getRGBComponent(inData, 0);
+        }
+
+        @Override
+        public int getGreen(Object inData) {
+            return getRGBComponent(inData, 1);
+        }
+
+        @Override
+        public int getBlue(Object inData) {
+            return getRGBComponent(inData, 2);
         }
     }
 }

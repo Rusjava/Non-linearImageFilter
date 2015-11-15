@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.DoubleAdder;
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 2.01
+ * @version 2.1
  */
 public class CrankNicholson2D {
 
@@ -40,6 +40,7 @@ public class CrankNicholson2D {
     private final double anisotropyFactor;
     protected final double eps;
     private final ExecutorService exc;
+    private final double iterationCoefficient;
 
     /**
      * Constructor
@@ -50,15 +51,17 @@ public class CrankNicholson2D {
      * @param precision precision of numerical solution
      * @param anisotropy
      * @param threadNumber
+     * @param iterationCoefficient
      */
     public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef,
-            double precision, double anisotropy, int threadNumber) {
+            double precision, double anisotropy, int threadNumber, double iterationCoefficient) {
         this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearFactor = 1 / Math.pow(nonLinearCoef, 2);
         this.anisotropyFactor = anisotropy;
         this.eps = precision;
         this.exc = Executors.newFixedThreadPool(threadNumber);
+        this.iterationCoefficient = iterationCoefficient;
     }
 
     /**
@@ -418,10 +421,15 @@ public class CrankNicholson2D {
         bCond[3] = new double[xsize];
         double[][] coef = getDiffCoefficient(data);
         double[][] result = data;
-        double[][] prevResult;
+        double[][] prevResult = data;
+        double[][] prevPrevResult;
+        /*
+         * Iterrating until the requered precision is attained
+         */
         do {
+            prevPrevResult = prevResult;
             prevResult = result;
-            result = iterateLinear2D(data, coef, getDiffCoefficient(prevResult), bCond);
+            result = iterateLinear2D(data, coef, getDiffCoefficient(getWeightedSum(prevResult, prevPrevResult)), bCond);
         } while (calcDifference(result, prevResult) > eps);
         return result;
     }
@@ -485,5 +493,35 @@ public class CrankNicholson2D {
             return res;
         }
 
+    }
+
+    /**
+     * Calculating the weighted sum of two arrays
+     *
+     * @param data1
+     * @param data2
+     * @return
+     */
+    private double[][] getWeightedSum(double[][] data1, double[][] data2) throws InterruptedException {
+        int xsize = data1[0].length;
+        int ysize = data1.length;
+        double[][] data = new double[ysize][xsize];
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
+        for (int i = 0; i < ysize; i++) {
+            int[] ind = {i};
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
+            //Creating additional threads to accelerate calculations
+            exc.execute(() -> {
+                for (int k = 0; k < xsize; k++) {
+                    data[ind[0]][k] = data1[ind[0]][k] + iterationCoefficient * (data1[ind[0]][k] - data2[ind[0]][k]);
+                }
+                lt.countDown();
+            });
+        }
+        lt.await();
+        return data;
     }
 }
