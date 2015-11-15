@@ -256,7 +256,7 @@ public class ImageComponent extends JComponent {
             float[] norm = getNormalizedComponents(inData, null, 0);
             // Note that getNormalizedComponents returns non-premultiplied values
             float[] rgb = this.getColorSpace().toRGB(norm);
-            return (int) (rgb[idx] * 255.0f + 0.5f);
+            return (int) (norm[idx] * 255.0f + 0.5f);
         }
 
         @Override
