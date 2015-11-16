@@ -252,26 +252,43 @@ public class ImageComponent extends JComponent {
         }
 
         private int getRGBComponent(Object inData, int idx) {
-            // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
-            float[] norm = getNormalizedComponents(inData, null, 0);
             // Note that getNormalizedComponents returns non-premultiplied values
-            float[] rgb = this.getColorSpace().toRGB(norm);
-            return (int) (norm[idx] * 255.0f + 0.5f);
+            float[] norm = getNormalizedComponents(inData, null, 0);
+            ColorSpace cs = getColorSpace();
+            if (cs.getType() == ColorSpace.CS_GRAY) {
+                return (int) (norm[idx] * 255.0f + 0.5f);
+            } else {
+                // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
+                float[] rgb = cs.toRGB(norm);
+                return (int) (rgb[idx] * 255.0f + 0.5f);
+            }
         }
 
         @Override
         public int getRed(Object inData) {
-            return getRGBComponent(inData, 0);
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 0);
+            } else {
+                return super.getRed(inData);
+            }
         }
 
         @Override
         public int getGreen(Object inData) {
-            return getRGBComponent(inData, 1);
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 1);
+            } else {
+                return super.getGreen(inData);
+            }
         }
 
         @Override
         public int getBlue(Object inData) {
-            return getRGBComponent(inData, 2);
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 2);
+            } else {
+                return super.getBlue(inData);
+            }
         }
     }
 }

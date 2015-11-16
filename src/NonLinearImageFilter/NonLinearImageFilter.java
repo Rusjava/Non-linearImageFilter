@@ -108,7 +108,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
-        this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
+        this.iterField = MyTextUtilities.getDoubleFormattedTextField(1.0, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
