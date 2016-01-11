@@ -34,11 +34,13 @@ is divided into following sections:
                 ======================
             -->
     <target name="-pre-init">
-        <!-- Empty placeholder for easier customization. -->
-        <!-- You can override this target in the ../build.xml file. -->
         <manifest file="MANIFEST.MF">
-            
-            <attribute name="Implementation-Version" value="2.0"/>
+            <attribute name="Specification-Title" value="Non-linear image filters" />
+            <attribute name="Specification-Version" value="2.0" />
+            <attribute name="Specification-Vendor" value="Ruslan Feshchenko" />
+            <attribute name="Implementation-Title" value="NonLinearImageFilter" />
+            <attribute name="Implementation-Version" value="2.0.3" /> 
+            <attribute name="Implementation-Vendor" value="Ruslan Feshchenko" />  
         </manifest>
     </target>
     <target depends="-pre-init" name="-init-private">
