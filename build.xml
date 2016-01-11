@@ -9,6 +9,17 @@
 <!-- in the project's Project Properties dialog box.-->
 <project name="Non-linearImageFilter" default="default" basedir=".">
     <description>Builds, tests, and runs the project Non-linearImageFilter.</description>
+    <tstamp>
+        <format property="TODAY" pattern="yyyy-MM-dd" />
+    </tstamp>
+    <target name="-pre-init">
+        <manifest file="MANIFEST.MF">
+                <attribute name="Implementation-Vendor" value="Ruslan Feshchenko"/>
+                <attribute name="Implementation-Version" value="2.0.2"/>
+                <attribute name="Implementation-Title" value="Non-linear image filter demostration"/>
+                <attribute name="Built-Date" value="${TODAY}"/>
+        </manifest>
+    </target>
     <import file="nbproject/build-impl.xml"/>
     <!--
 
