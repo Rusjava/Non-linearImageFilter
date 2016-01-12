@@ -19,6 +19,8 @@ package NonLinearImageFilter;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.awt.color.ColorSpace;
+import java.awt.Dimension;
+import java.awt.event.ItemEvent;
 
 import java.util.ResourceBundle;
 import java.util.Locale;
@@ -29,6 +31,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CancellationException;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.jar.Manifest;
+
+import javax.imageio.ImageIO;
+import TextUtilities.MyTextUtilities;
+import javax.media.MediaLocator;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -40,27 +56,21 @@ import javax.swing.SwingWorker;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
-import javax.imageio.ImageIO;
-
-import TextUtilities.MyTextUtilities;
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
-
-import javax.media.MediaLocator;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  *
  * @author Ruslan Feshchenko
- * @version 2.0
+ * @version 2.1
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -69,27 +79,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
-    private int nSteps = 10;
-    private double precision = 1e-10;
-    private int sliderposition = 50;
-    private double diffCoef = 0.01;
-    private double nonLinearCoef = 10000;
-    private boolean nonLinearFlag = false;
+    private int nSteps = 10, threadNumber, sliderposition = 50;
+    private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
+            anisotropy = 0, iterationCoefficient = 1.0;
+    private boolean nonLinearFlag = false, working = false;
     private CrankNicholson2D comp;
     private final Map defaults;
-    private boolean working = false;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField, anisotropyField, frameRateField;
+            scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
-    private int frameRate = 10;
+    private int frameRate = 10, videoFormat = 0;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
-    private int videoFormat = 0;
-    private double anisotropy = 0;
 
     public NonLinearImageFilter() {
+        this.threadNumber = Runtime.getRuntime().availableProcessors();
         this.imageList = new ArrayList<>();
         this.defaults = new HashMap();
         this.imageParam = new ImageParam();
@@ -97,20 +103,28 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.ysizeField = MyTextUtilities.getIntegerFormattedTextField(200, 2, 10000);
         this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
         this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
-        this.scaleField = MyTextUtilities
-                .getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
-        this.precisionField = MyTextUtilities
-                .getDoubleFormattedTextField(1e-10, 1e-3, 1e-14, true);
-        this.anisotropyField = MyTextUtilities
-                .getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
+        this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
+        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-2, 1e-14, true);
+        this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
+        this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
+        this.iterField = MyTextUtilities.getDoubleFormattedTextField(1.0, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
-        filters = new FileFilter[]{new FileNameExtensionFilter("png", "png"),
+        filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
-            new FileNameExtensionFilter("gif", "gif")};
+            new FileNameExtensionFilter("png", "png"),
+            new FileNameExtensionFilter("gif", "gif")
+        };
 
+        UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));
         initComponents();
         jButtonStart.setEnabled(false);
+        ButtonGroup LFGroup = new ButtonGroup();
+        LFGroup.add(jRadioButtonMenuItemDefault);
+        LFGroup.add(jRadioButtonMenuItemSystem);
+        LFGroup.add(jRadioButtonMenuItemNimbus);
+        jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
+        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text") + threadNumber);
     }
 
     /**
@@ -141,6 +155,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
         jSliderImages = new javax.swing.JSlider();
+        jPanelStatus = new javax.swing.JPanel();
+        jLabelProcessors = new javax.swing.JLabel();
+        jLabelThreads = new javax.swing.JLabel();
+        jLabelExcTime = new javax.swing.JLabel();
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveImage = new javax.swing.JMenuItem();
@@ -150,6 +168,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuOptions = new javax.swing.JMenu();
         jMenuItemImageOptions = new javax.swing.JMenuItem();
         jMenuItemFilterOptions = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        jMenuLookAndFeel = new javax.swing.JMenu();
+        jRadioButtonMenuItemDefault = new javax.swing.JRadioButtonMenuItem();
+        jRadioButtonMenuItemSystem = new javax.swing.JRadioButtonMenuItem();
+        jRadioButtonMenuItemNimbus = new javax.swing.JRadioButtonMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -157,9 +180,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
         setTitle(bundle.getString("NonLinearImageFilter.title")); // NOI18N
+        setPreferredSize(new java.awt.Dimension(785, 660));
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setDoubleBuffered(true);
         jScrollPane1.setPreferredSize(new java.awt.Dimension(100, 539));
+
+        jPanel2.setPreferredSize(new java.awt.Dimension(779, 585));
+        jPanel2.setVerifyInputWhenFocusTarget(false);
 
         jPanelParam.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), bundle.getString("NonLinearImageFilter.jPanelParam.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
         jPanelParam.setMinimumSize(new java.awt.Dimension(100, 116));
@@ -180,7 +208,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jLabelNonlinear.setText(bundle.getString("NonLinearImageFilter.jLabelNonlinear.text")); // NOI18N
 
-        jTextFieldNonlinear.setText("10000");
+        jTextFieldNonlinear.setText(bundle.getString("NonLinearImageFilter.jTextFieldNonlinear.text")); // NOI18N
         jTextFieldNonlinear.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jTextFieldNonlinearFocusLost(evt);
@@ -299,7 +327,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 256, Short.MAX_VALUE)
+                    .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
                     .addComponent(jCheckBoxNonLinear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -320,7 +348,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages.setLayout(jPanelImagesLayout);
         jPanelImagesLayout.setHorizontalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 594, Short.MAX_VALUE)
+            .addGap(0, 606, Short.MAX_VALUE)
         );
         jPanelImagesLayout.setVerticalGroup(
             jPanelImagesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -330,6 +358,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControls.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), bundle.getString("NonLinearImageFilter.jPanelControls.border.title"), javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION)); // NOI18N
 
         jSliderImages.setOrientation(javax.swing.JSlider.VERTICAL);
+        jSliderImages.setEnabled(false);
         jSliderImages.setMaximumSize(new java.awt.Dimension(100, 32767));
         jSliderImages.setMinimumSize(new java.awt.Dimension(30, 36));
         jSliderImages.setPreferredSize(new java.awt.Dimension(30, 200));
@@ -371,7 +400,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .addGroup(jPanelResultsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanelControls, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelImages, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(0, 22, Short.MAX_VALUE))
+                .addGap(0, 47, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -397,11 +426,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     .addComponent(jPanelAction, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanelSpace, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelResults, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addComponent(jPanelResults, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
+
+        jPanelStatus.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jPanelStatus.setPreferredSize(new java.awt.Dimension(769, 22));
+        jPanelStatus.setLayout(new java.awt.GridLayout(1, 0));
+
+        jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text")); // NOI18N
+        jPanelStatus.add(jLabelProcessors);
+
+        jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text")); // NOI18N
+        jPanelStatus.add(jLabelThreads);
+
+        jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text")); // NOI18N
+        jPanelStatus.add(jLabelExcTime);
 
         jMenuFile.setText(bundle.getString("NonLinearImageFilter.jMenuFile.text")); // NOI18N
 
@@ -449,6 +490,36 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemFilterOptions);
+        jMenuOptions.add(jSeparator2);
+
+        jMenuLookAndFeel.setText(bundle.getString("NonLinearImageFilter.jMenuLookAndFeel.text")); // NOI18N
+
+        jRadioButtonMenuItemDefault.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemDefault.text")); // NOI18N
+        jRadioButtonMenuItemDefault.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemDefaultItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemDefault);
+
+        jRadioButtonMenuItemSystem.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemSystem.text")); // NOI18N
+        jRadioButtonMenuItemSystem.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemSystemItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemSystem);
+
+        jRadioButtonMenuItemNimbus.setSelected(true);
+        jRadioButtonMenuItemNimbus.setText(bundle.getString("NonLinearImageFilter.jRadioButtonMenuItemNimbus.text")); // NOI18N
+        jRadioButtonMenuItemNimbus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jRadioButtonMenuItemNimbusItemStateChanged(evt);
+            }
+        });
+        jMenuLookAndFeel.add(jRadioButtonMenuItemNimbus);
+
+        jMenuOptions.add(jMenuLookAndFeel);
 
         jMenuBar.add(jMenuOptions);
 
@@ -478,11 +549,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 769, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 599, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 590, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addComponent(jPanelStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();
@@ -490,12 +566,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefActionPerformed
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0.001, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.0, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefActionPerformed
     /**
      * Main code
-     * @param evt 
+     *
+     * @param evt
      */
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
         // TODO add your handling code here:
@@ -506,30 +583,29 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setValue(0);
         jProgressBar.setStringPainted(true);
         working = true;
-        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef, precision, anisotropy);
+        comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
+                precision, anisotropy, threadNumber, iterationCoefficient);
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
 
             @Override
             protected Void doInBackground() throws Exception {
-                double[][] currentData;
-                JComponent component;
+                long t1 = System.nanoTime();
                 for (int i = 0; i < nSteps; i++) {
+                    // If canceled interrupt the thread
                     if (isCancelled()) {
                         return null;
                     }
-                    /* Linear or non-linear ltering fidepending on user choice */
-                    if (nonLinearFlag) {
-                        currentData = comp.solveNonLinear(dataList.get(dataList.size() - 1));
-                    } else {
-                        currentData = comp.solveLinear(dataList.get(dataList.size() - 1));
-                    }
-                    component = new ImageComponent(currentData);
-                    imageList.add(component);
+                    double[][] currentData;
+                    /* Linear or non-linear filtering depending on user choice */
+                    currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1))
+                            : comp.solveLinear(dataList.get(dataList.size() - 1));
+                    updateUI(currentData);
                     dataList.add(currentData);
-                    setStatusBar((int) (100.0 * (i + 1) / nSteps));
                 }
+                // Updating execution time estimate
+                execTimeUpdate(System.nanoTime() - t1);
                 return null;
             }
 
@@ -554,18 +630,33 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 working = false;
                 jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.text"));
                 jButtonImage.setEnabled(true);
+                comp.shutDown();
             }
 
             /**
-             * Updating progress bar and displaying the last image
+             * Creating the next image in the sequence, updating progress bar
+             * and displaying the last image
              *
-             * @param status
+             * @param data
              */
-            public void setStatusBar(final int status) {
+            public void updateUI(double[][] data) {
                 SwingUtilities.invokeLater(() -> {
-                    updateImagePanel(imageList.size() - 1);
-                    jProgressBar.setValue(status);
+                    imageList.add(new ImageComponent(data));
+                    int i = imageList.size() - 1;
+                    updateImagePanel(i);
+                    jProgressBar.setValue((int) (100.0 * i / nSteps));
                 });
+            }
+
+            /**
+             * Updating task execution time
+             *
+             * @param time
+             */
+            public void execTimeUpdate(final long time) {
+                SwingUtilities.invokeLater(()
+                        -> jLabelExcTime.setText(bundle.getString("NonLinearImageFilter.jLabelExcTime.text") + time
+                                + " " + bundle.getString("NANOSECONDS")));
             }
         };
         worker.execute();
@@ -574,6 +665,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jButtonImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonImageActionPerformed
         // Defining JComponent
         JComponent component = null;
+        jButtonStart.setEnabled(false);
+        jButtonImage.setEnabled(false);
         /*
          * create a button group to chose the source of initial image
          */
@@ -612,23 +705,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     try {
                         imageRFile = fo.getSelectedFile();
                         BufferedImage image = ImageIO.read(imageRFile);
-                        if (image.getColorModel().getColorSpace().getType()
-                                == ColorSpace.TYPE_GRAY) {
+                        if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY) {
                             component = new ImageComponent(image);
                         } else {
                             JOptionPane.showMessageDialog(null,
                                     bundle.getString("NOTGRAYSCALE DIALOG"),
                                     bundle.getString("NOTGRAYSCALE DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
-                            return;
                         }
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null,
                                 bundle.getString("IO ERROR DIALOG"),
                                 bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
-                        return;
                     }
-                } else {
-                    return;
                 }
             } else {
                 /*
@@ -636,19 +724,23 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                  */
                 component = new ImageComponent(imageParam);
             }
-            imageList = new ArrayList<>();
-            dataList = new ArrayList<>();
-            imageList.add(component);
-            dataList.add(((ImageComponent) component).getPixelData());
-            updateImagePanel(0);
+            if (component != null) {
+                imageList = new ArrayList<>();
+                dataList = new ArrayList<>();
+                imageList.add(component);
+                dataList.add(((ImageComponent) component).getPixelData());
+                updateImagePanel(0);
+            }
             jButtonStart.setEnabled(true);
+            jButtonImage.setEnabled(true);
+            jSliderImages.setEnabled(true);
         }
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, 1000000, jTextFieldNonlinear,
-                "10000", defaults);
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
+                "1e8", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
@@ -659,14 +751,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jTextFieldDiffCoefFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldDiffCoefFocusLost
         // TODO add your handling code here:
-        diffCoef = MyTextUtilities.TestValueWithMemory(0.001, 10, jTextFieldDiffCoef,
+        diffCoef = MyTextUtilities.TestValueWithMemory(0.0, 10, jTextFieldDiffCoef,
                 "0.3", defaults);
     }//GEN-LAST:event_jTextFieldDiffCoefFocusLost
 
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
-        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, 1000000, jTextFieldNonlinear,
-                "10000", defaults);
+        nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
+                "1e8", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost
@@ -676,7 +768,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldNStepsFocusLost
 
     private void jSliderImagesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSliderImagesStateChanged
-        // TODO add your handling code here:
+        // Going over the image sequence
         JSlider source = (JSlider) evt.getSource();
         if (!source.getValueIsAdjusting()) {
             sliderposition = source.getValue();
@@ -685,9 +777,27 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jSliderImagesStateChanged
 
     private void jMenuItemAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAboutActionPerformed
-        // TODO add your handling code here:
+        // Extracting the build date from the MANIFEST.MF file
+        Package pk = Package.getPackage("NonLinearImageFilter");
+        Date dt = new Date();
+        DateFormat dtf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Enumeration<URL> mfs = this.getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+            while (mfs.hasMoreElements()) {
+                Manifest mft = new Manifest(mfs.nextElement().openStream());
+                if (mft.getMainAttributes().getValue("Built-Date") != null) {
+                    dt = dtf.parse(mft.getMainAttributes().getValue("Built-Date"));
+                }
+            }
+        } catch (IOException | ParseException ex) {
+            Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // Extracting vendor and version from the MANIFEST.MF file and showing up About popup window
         JOptionPane.showMessageDialog(null,
-                "<html>Non-linear image filter. <br>Version: 2.0 <br>Date: August 2015. <br>Author: Ruslan Feshchenko</html>",
+                bundle.getString("ABOUT BEGIN") + pk.getImplementationVersion()
+                + bundle.getString("ABOUT DATE") + DateFormat.getDateInstance(DateFormat.LONG).format(dt)
+                + bundle.getString("ABOUT AUTHOR") + pk.getImplementationVendor()
+                + "</html>",
                 bundle.getString("ABOUT"), JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jMenuItemAboutActionPerformed
 
@@ -697,7 +807,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         //Reading the HTML help file
         try {
             textArea.setPage(NonLinearImageFilter.class.
-                    getResource("/nonlinearimagefilter/NonLinearImageFilterHelp.html"));
+                    getResource("/nonlinearimagefilterhelp/NonLinearImageFilterHelp.html"));
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, bundle.getString("IO HELP NOTEXIST DIALOG"), bundle.getString("IO HELP ERROR DIALOG TITLE"),
                     JOptionPane.ERROR_MESSAGE);
@@ -717,7 +827,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemHelpActionPerformed
 
     private void jMenuItemImageOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImageOptionsActionPerformed
-        // TODO add your handling code here:
+        // Initial image generating options
         Object[] message = {
             bundle.getString("IMAGE WIDTH"), xsizeField,
             bundle.getString("IMAGE HEIGHT"), ysizeField,
@@ -730,14 +840,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (option == JOptionPane.OK_OPTION) {
             imageParam.xsize = (Integer) xsizeField.getValue();
             imageParam.ysize = (Integer) ysizeField.getValue();
-            imageParam.noise = (Integer) noiseField.getValue();
-            imageParam.signal = (Integer) signalField.getValue();
+            imageParam.NOISE = (int) Math.pow(2, (Integer) noiseField.getValue());
+            imageParam.SIGNAL = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
-        // TODO add your handling code here:
+        // Saving the image sequence as an image file
         if (imageList.isEmpty()) {
             return;
         }
@@ -756,7 +866,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         innerPanel2.add(box);
         saveVideoPanel.add(innerPanel2);
         /*
-         * Create file choosing dialog
+         * Create file and format choosing dialog
          */
         JFileChooser fo = new JFileChooser(videoWFile);
         fo.setDialogTitle(bundle.getString("VIDEO SAVE DIALOG TITLE"));
@@ -766,7 +876,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         fo.setAccessory(saveVideoPanel);
         int ans = fo.showSaveDialog(this);
         /*
-         * Saving uncompressed avi video
+         * Saving uncompressed avi or QuickTime video
          */
         if (ans == JFileChooser.APPROVE_OPTION) {
             frameRate = (Integer) frameRateField.getValue();
@@ -785,31 +895,36 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSaveVideoActionPerformed
 
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
-        // TODO add your handling code here:
+        // Exiting
         System.exit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     private void jMenuItemFilterOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFilterOptionsActionPerformed
-        // TODO add your handling code here:
+        // Displaying filtering numerical options
         Object[] message = {
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
-            bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField
+            bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField,
+            bundle.getString("NonLinearImageFilter.jTextFieldThreadNumber.text"), threadNumberField,
+            bundle.getString("NonLinearImageFilter.jTextFieldIterCoef.text"), iterField
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             precision = (Double) precisionField.getValue();
             anisotropy = (Double) anisotropyField.getValue();
+            threadNumber = (Integer) threadNumberField.getValue();
+            iterationCoefficient = (Double) iterField.getValue();
+            jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
         }
     }//GEN-LAST:event_jMenuItemFilterOptionsActionPerformed
 
     private void jCheckBoxNonLinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxNonLinearActionPerformed
-        // TODO add your handling code here:
+        // Linear or non-linear
         nonLinearFlag = jCheckBoxNonLinear.isSelected();
     }//GEN-LAST:event_jCheckBoxNonLinearActionPerformed
 
     private void jMenuItemSaveImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageActionPerformed
-        // TODO add your handling code here:
+        // Saving as an image file
         if (imageList.isEmpty()) {
             return;
         }
@@ -835,6 +950,39 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemSaveImageActionPerformed
 
+    private void jRadioButtonMenuItemDefaultItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemDefaultItemStateChanged
+        // Switching to the Default Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemDefaultItemStateChanged
+
+    private void jRadioButtonMenuItemSystemItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemSystemItemStateChanged
+        // Switching to the System Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemSystemItemStateChanged
+
+    private void jRadioButtonMenuItemNimbusItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemNimbusItemStateChanged
+        // Switching to the Nimbus Look and Feel
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            try {
+                UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jRadioButtonMenuItemNimbusItemStateChanged
+
     /**
      * @param args the command line arguments
      */
@@ -851,22 +999,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(NonLinearImageFilter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-
         /* Setting default locale */
-        Locale.setDefault(new Locale("en", "US"));
-        /* Setting currrent locale */
         if (args.length > 0) {
             Locale.setDefault(new Locale(args[0], "US"));
+        } else {
+            Locale.setDefault(new Locale("en", "US"));
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
@@ -895,8 +1036,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JButton jButtonStart;
     private javax.swing.JCheckBox jCheckBoxNonLinear;
     private javax.swing.JLabel jLabelDiffCoef;
+    private javax.swing.JLabel jLabelExcTime;
     private javax.swing.JLabel jLabelNSteps;
     private javax.swing.JLabel jLabelNonlinear;
+    private javax.swing.JLabel jLabelProcessors;
+    private javax.swing.JLabel jLabelThreads;
     private javax.swing.JMenuBar jMenuBar;
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenu jMenuHelp;
@@ -907,6 +1051,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemImageOptions;
     private javax.swing.JMenuItem jMenuItemSaveImage;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
+    private javax.swing.JMenu jMenuLookAndFeel;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;
@@ -915,9 +1060,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelParam;
     private javax.swing.JPanel jPanelResults;
     private javax.swing.JPanel jPanelSpace;
+    private javax.swing.JPanel jPanelStatus;
     private javax.swing.JProgressBar jProgressBar;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemDefault;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemNimbus;
+    private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItemSystem;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JSlider jSliderImages;
     private javax.swing.JTextField jTextFieldDiffCoef;
     private javax.swing.JTextField jTextFieldNSteps;

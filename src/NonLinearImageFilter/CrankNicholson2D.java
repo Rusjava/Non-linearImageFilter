@@ -17,13 +17,20 @@
 package NonLinearImageFilter;
 
 import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.DoubleAdder;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 2.0
+ * @version 2.1
  */
 public class CrankNicholson2D {
 
@@ -32,6 +39,8 @@ public class CrankNicholson2D {
     private final double nonLinearFactor;
     private final double anisotropyFactor;
     protected final double eps;
+    private final ExecutorService exc;
+    private final double iterationCoefficient;
 
     /**
      * Constructor
@@ -41,60 +50,87 @@ public class CrankNicholson2D {
      * @param nonLinearCoef non-Linear coefficient;
      * @param precision precision of numerical solution
      * @param anisotropy
+     * @param threadNumber
+     * @param iterationCoefficient
      */
-    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef, double precision, double anisotropy) {
+    public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef,
+            double precision, double anisotropy, int threadNumber, double iterationCoefficient) {
         this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearFactor = 1 / Math.pow(nonLinearCoef, 2);
         this.anisotropyFactor = anisotropy;
         this.eps = precision;
+        this.exc = Executors.newFixedThreadPool(threadNumber);
+        this.iterationCoefficient = iterationCoefficient;
     }
 
     /**
-     * Calculating diffusion coefficient as a exponential function of the field gradient
+     * Calculating diffusion coefficient as a exponential function of the field
+     * gradient
+     *
      * @param data
-     * @return 
+     * @return
+     * @throws java.lang.InterruptedException
      */
-    protected double[][] getDiffCoefficient(double[][] data) {
+    protected double[][] getDiffCoefficient(double[][] data) throws InterruptedException {
         int xsize = data[0].length;
         int ysize = data.length;
         double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
         double[][] diffCoef = new double[ysize][xsize];
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 2; i < ysize - 2; i++) {
-            for (int k = 2; k < xsize - 2; k++) {
-                double tm = diffCoefFactor
-                        * Math.exp(-(Math.pow(data[i][k + 1] - data[i][k - 1], 2) / (1 - anisotropyFactor)
-                                + Math.pow(data[i + 1][k] - data[i - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
-                if ((new Double(tm).isNaN())) {
-                    diffCoef[i][k] = 0;
-                } else {
-                    diffCoef[i][k] = tm;
-                }
+            int[] ind = {i};
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
             }
+            //Creating multiple threads to accelerate diffusion coefficient matrix calculation
+            exc.execute(() -> {
+                for (int k = 2; k < xsize - 2; k++) {
+                    double tm = diffCoefFactor
+                            * Math.exp(-(Math.pow(data[ind[0]][k + 1] - data[ind[0]][k - 1], 2) / (1 - anisotropyFactor)
+                                    + Math.pow(data[ind[0] + 1][k] - data[ind[0] - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
+                    diffCoef[ind[0]][k] = new Double(tm).isNaN() ? 0 : tm;
+                }
+                lt.countDown();
+            });
         }
         /*
-         * Treating boundaries differently
+         * Treating boundaries differently - multithreading
          */
-        diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
-        diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
-        diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
-        diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
-        putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
-        putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
-        putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
-        putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
-
+        exc.execute(() -> {
+            diffCoef[0] = getDiffCoefficient1D(data, 0, true, 1 - anisotropyFactor);
+            diffCoef[1] = getDiffCoefficient1D(data, 1, true, 1 - anisotropyFactor);
+            lt.countDown();
+        });
+        exc.execute(() -> {
+            diffCoef[ysize - 2] = getDiffCoefficient1D(data, ysize - 2, true, 1 - anisotropyFactor);
+            diffCoef[ysize - 1] = getDiffCoefficient1D(data, ysize - 1, true, 1 - anisotropyFactor);
+            lt.countDown();
+        });
+        exc.execute(() -> {
+            putColumn(0, diffCoef, getDiffCoefficient1D(data, 0, false, 1 / (1 - anisotropyFactor)));
+            putColumn(1, diffCoef, getDiffCoefficient1D(data, 1, false, 1 / (1 - anisotropyFactor)));
+            lt.countDown();
+        });
+        exc.execute(() -> {
+            putColumn(xsize - 2, diffCoef, getDiffCoefficient1D(data, xsize - 2, false, 1 / (1 - anisotropyFactor)));
+            putColumn(xsize - 1, diffCoef, getDiffCoefficient1D(data, xsize - 1, false, 1 / (1 - anisotropyFactor)));
+            lt.countDown();
+        });
+        lt.await();
         return diffCoef;
     }
-    
+
     /**
      * calculating one column/row of diffusion coefficient
+     *
      * @param data
      * @param index
      * @param ifrow
      * @param factor
-     * @return 
+     * @return
      */
     protected double[] getDiffCoefficient1D(double[][] data, int index, boolean ifrow, double factor) {
         double[] result;
@@ -105,11 +141,7 @@ public class CrankNicholson2D {
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
                         * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor * factor);
-                if ((new Double(tm).isNaN())) {
-                    result[i] = 0;
-                } else {
-                    result[i] = tm;
-                }
+                result[i] = new Double(tm).isNaN() ? 0 : tm;
             }
         } else {
             size = data.length;
@@ -117,11 +149,7 @@ public class CrankNicholson2D {
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
                         * Math.exp(-Math.pow(data[i + 1][index] - data[i - 1][index], 2) * nonLinearFactor * factor);
-                if ((new Double(tm).isNaN())) {
-                    result[i] = 0;
-                } else {
-                    result[i] = tm;
-                }
+                result[i] = new Double(tm).isNaN() ? 0 : tm;
             }
         }
         result[0] = diffCoefFactor;
@@ -130,24 +158,41 @@ public class CrankNicholson2D {
         result[size - 1] = diffCoefFactor;
         return result;
     }
-    
+
     /**
      * Calculating normalized squared difference
+     *
      * @param data1
      * @param data2
-     * @return 
+     * @return
+     * @throws java.lang.InterruptedException
      */
-    protected double calcDifference(double[][] data1, double[][] data2) {
+    protected double calcDifference(double[][] data1, double[][] data2) throws InterruptedException {
         int xsize = data1[0].length;
         int ysize = data1.length;
-        double sumDiff = 0, sum = 0;
+        //Atomic variables for the sums
+        DoubleAdder sumDiff = new DoubleAdder(), sum = new DoubleAdder();
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
         for (int i = 0; i < ysize; i++) {
-            for (int k = 0; k < xsize; k++) {
-                sumDiff += Math.pow(data1[i][k] - data2[i][k], 2);
-                sum += Math.pow(data1[i][k], 2) + Math.pow(data2[i][k], 2);
+            int[] ind = {i};
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
             }
+            //Creating additional threads to accelerate summation
+            exc.execute(() -> {
+                double psumDiff = 0, psum = 0;
+                for (int k = 0; k < xsize; k++) {
+                    psumDiff += Math.pow(data1[ind[0]][k] - data2[ind[0]][k], 2);
+                    psum += Math.pow(data1[ind[0]][k], 2) + Math.pow(data2[ind[0]][k], 2);
+                }
+                sumDiff.add(psumDiff);
+                sum.add(psum);
+                lt.countDown();
+            });
         }
-        return 2 * sumDiff / sum;
+        lt.await();
+        return 2 * sumDiff.sum() / sum.sum();
     }
 
     /**
@@ -168,13 +213,13 @@ public class CrankNicholson2D {
 
     /**
      * Putting a column to 2D array
+     *
      * @param index
      * @param data
-     * @param dataY 
+     * @param dataY
      */
     protected void putColumn(int index, double[][] data, double[] dataY) {
-        int size = dataY.length;
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < dataY.length; i++) {
             data[i][index] = dataY[i];
         }
     }
@@ -191,7 +236,7 @@ public class CrankNicholson2D {
      * @throws java.lang.InterruptedException
      */
     protected double[][] iterateLinear2D(double[][] data, double[][] oldDiffCoef,
-            double[][] newDiffCoef, double[][] bConditions) throws InterruptedException {
+            double[][] newDiffCoef, double[][] bConditions) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] result = new double[ysize][xsize];
@@ -199,6 +244,7 @@ public class CrankNicholson2D {
         double[][] coefOld = new double[4][];
         double[] column = new double[ysize];
         Arrays.fill(column, diffCoefFactor);
+        CountDownLatch lt;
         /*
          * Saving diffusion coefficients on the row boundaries and filling them in with constants instead
          */
@@ -220,16 +266,27 @@ public class CrankNicholson2D {
         putColumn(xsize - 1, oldDiffCoef, column);
 
         /*
-         * Iteration over rows
+         * Iteration over rows. New thread synchronization latch
          */
+        lt = new CountDownLatch(ysize);
+        Future<double[]>[] res = new Future[ysize];
         for (int i = 0; i < ysize; i++) {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            double[] bCond = new double[2];
-            bCond[0] = bConditions[0][i];
-            bCond[1] = bConditions[2][i];
-            result[i] = iterateLinear1D(data[i], bCond, oldDiffCoef[i], newDiffCoef[i]);
+            double[] bCond = {bConditions[0][i], bConditions[2][i]};
+            res[i] = exc.submit(new AxThread(data[i], bCond, oldDiffCoef[i], newDiffCoef[i], lt));
+        }
+        lt.await();
+        for (int i = 0; i < ysize; i++) {
+            try {
+                result[i] = res[i].get();
+            } catch (ExecutionException ex) {
+                result[i] = data[i];
+                if (ex instanceof Exception) {
+                    throw (Exception) ex.getCause();
+                }
+            }
         }
 
         /*
@@ -256,17 +313,32 @@ public class CrankNicholson2D {
         Arrays.fill(oldDiffCoef[ysize - 2], diffCoefFactor);
         Arrays.fill(oldDiffCoef[ysize - 1], diffCoefFactor);
         /*
-         * Iteration over columns
+         * Iteration over columns. New thread synchronization latch
          */
+        CountDownLatch lt1 = new CountDownLatch(2 * xsize);
+        //Array for Futures
+        Future<double[]>[] rs = new Future[xsize];
         for (int i = 0; i < xsize; i++) {
+            int[] ind = {i};
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            double[] bCond = new double[2];
-            bCond[0] = bConditions[1][i];
-            bCond[1] = bConditions[3][i];
-            double[] dataY = iterateLinear1D(getColumn(i, result), bCond, getColumn(i, oldDiffCoef), getColumn(i, newDiffCoef));
-            putColumn(i, result, dataY);
+            exc.execute(() -> {
+                double[] bCond = {bConditions[1][ind[0]], bConditions[3][ind[0]]};
+                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef),
+                        getColumn(ind[0], newDiffCoef), lt1));
+                lt1.countDown();
+            });
+        }
+        lt1.await();
+        for (int i = 0; i < xsize; i++) {
+            try {
+                putColumn(i, result, rs[i].get());
+            } catch (ExecutionException ex) {
+                if (ex instanceof Exception) {
+                    throw (Exception) ex.getCause();
+                }
+            }
         }
         return result;
     }
@@ -280,12 +352,17 @@ public class CrankNicholson2D {
      * @param coefOld the values of diffusion coefficient from the previous step
      * @param coef the iterated values of diffusion coefficient
      * @return
+     * @throws java.lang.InterruptedException
      */
-    protected double[] iterateLinear1D(double[] data, double[] bSum, double[] coefOld, double[] coef) {
+    protected double[] iterateLinear1D(double[] data, double[] bSum, double[] coefOld,
+            double[] coef) throws InterruptedException {
         int size = data.length;
         double[] result = new double[size];
         double[] p = new double[size - 1];
         double[] q = new double[size - 1];
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
         /*
          * The step zero - calculationg p0 and q0 based on the lower boundary condition 
          */
@@ -334,7 +411,7 @@ public class CrankNicholson2D {
      * @return
      * @throws java.lang.InterruptedException
      */
-    public double[][] solveNonLinear(double[][] data) throws InterruptedException {
+    public double[][] solveNonLinear(double[][] data) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
@@ -344,10 +421,15 @@ public class CrankNicholson2D {
         bCond[3] = new double[xsize];
         double[][] coef = getDiffCoefficient(data);
         double[][] result = data;
-        double[][] prevResult;
+        double[][] prevResult = data;
+        double[][] prevPrevResult;
+        /*
+         * Iterrating until the requered precision is attained
+         */
         do {
+            prevPrevResult = prevResult;
             prevResult = result;
-            result = iterateLinear2D(data, coef, getDiffCoefficient(prevResult), bCond);
+            result = iterateLinear2D(data, coef, getDiffCoefficient(getWeightedSum(prevResult, prevPrevResult)), bCond);
         } while (calcDifference(result, prevResult) > eps);
         return result;
     }
@@ -360,7 +442,7 @@ public class CrankNicholson2D {
      * @return
      * @throws java.lang.InterruptedException
      */
-    public double[][] solveLinear(double[][] data) throws InterruptedException {
+    public double[][] solveLinear(double[][] data) throws InterruptedException, Exception {
         int xsize = data[0].length;
         int ysize = data.length;
         double[][] bCond = new double[4][];
@@ -374,5 +456,72 @@ public class CrankNicholson2D {
             Arrays.fill(coef[k], diffCoefFactor);
         }
         return iterateLinear2D(data, coef, coef, bCond);
+    }
+
+    /**
+     * Shutting down threads
+     */
+    public void shutDown() {
+        exc.shutdownNow();
+    }
+
+    /**
+     * An inner class for Callable object wrappers for iterateLinear1D
+     */
+    private class AxThread implements Callable<double[]> {
+
+        private final double[] arg1, arg2, arg3, arg4;
+        private final CountDownLatch lt;
+
+        /**
+         * Constructor
+         */
+        AxThread(double[] data, double[] bSum, double[] coefOld, double[] coef, CountDownLatch lt) {
+            this.arg1 = data;
+            this.arg2 = bSum;
+            this.arg3 = coefOld;
+            this.arg4 = coef;
+            this.lt = lt;
+        }
+
+        @Override
+        public double[] call() throws InterruptedException {
+            double[] res = iterateLinear1D(arg1, arg2, arg3, arg4);
+            if (lt != null) {
+                lt.countDown();
+            }
+            return res;
+        }
+
+    }
+
+    /**
+     * Calculating the weighted sum of two arrays
+     *
+     * @param data1
+     * @param data2
+     * @return
+     */
+    private double[][] getWeightedSum(double[][] data1, double[][] data2) throws InterruptedException {
+        int xsize = data1[0].length;
+        int ysize = data1.length;
+        double[][] data = new double[ysize][xsize];
+        //Synchronization latch
+        CountDownLatch lt = new CountDownLatch(ysize);
+        for (int i = 0; i < ysize; i++) {
+            int[] ind = {i};
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
+            //Creating additional threads to accelerate calculations
+            exc.execute(() -> {
+                for (int k = 0; k < xsize; k++) {
+                    data[ind[0]][k] = data1[ind[0]][k] + iterationCoefficient * (data1[ind[0]][k] - data2[ind[0]][k]);
+                }
+                lt.countDown();
+            });
+        }
+        lt.await();
+        return data;
     }
 }

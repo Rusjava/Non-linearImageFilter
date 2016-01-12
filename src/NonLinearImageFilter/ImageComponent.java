@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package NonLinearImageFilter;
 
 import java.awt.Graphics;
@@ -35,21 +34,21 @@ import javax.swing.JComponent;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 1.0
+ * @version 1.1
  */
 public class ImageComponent extends JComponent {
 
     private final BufferedImage image;
     private final int[] pixels;
-    private ColorModel grayColorModel;
-    private int BIT_NUM = 16;
+    private final ColorModel grayColorModel;
+    private final int BIT_NUM = 32;
 
     /*
      * Create a gray-scale ColorSpace and corresponding ColorModel
      */
     {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        grayColorModel = new ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+        grayColorModel = new Int32ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
     }
 
     /**
@@ -97,13 +96,23 @@ public class ImageComponent extends JComponent {
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
+        pixels = new int[size];
         int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
-        this.image = image;
-        int[] iArray = new int[size];
-        pixels = image.getData().getPixels(0, 0, xsize, ysize, iArray);
-        for (int i = 0; i < size; i++) {
-            pixels[i] <<= shift;
+        if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT) {
+            float c = (float) Math.pow(2, 23);
+            float[] dpix = new float[size];
+            image.getData().getPixels(0, 0, xsize, ysize, dpix);
+            for (int i = 0; i < size; i++) {
+                pixels[i] = (int) Math.round(c * dpix[i]);
+            }
+        } else {
+            image.getData().getPixels(0, 0, xsize, ysize, pixels);
+            for (int i = 0; i < size; i++) {
+                pixels[i] <<= shift;
+            }
         }
+        this.image = createImage(pixels, xsize, ysize);
+
     }
 
     @Override
@@ -142,10 +151,9 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                data[i][k] = this.pixels[offset + k];
+                data[i][k] = pixels[offset + k];
             }
         }
-
         return data;
     }
 
@@ -161,9 +169,9 @@ public class ImageComponent extends JComponent {
                 if (testi && (Math.abs(k - param.xsize / 2 + 1) < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
                 } else {
-                    pixelsArray[offset + k] = param.signal;
+                    pixelsArray[offset + k] = (int) ImageParam.SIGNAL;
                 }
-                pixelsArray[offset + k] += (int) (Math.random() * param.noise);
+                pixelsArray[offset + k] += (int) Math.round((Math.random() * ImageParam.NOISE));
             }
         }
         return pixelsArray;
@@ -179,7 +187,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixelArray[offset + k] += Math.round(pixelData[i][k]);
+                pixelArray[offset + k] += (int) Math.round(pixelData[i][k]);
             }
         }
         return pixelArray;
@@ -198,5 +206,89 @@ public class ImageComponent extends JComponent {
          * Create a BufferedImage from the raster and color model and return it
          */
         return new BufferedImage(grayColorModel, raster, true, null);
+    }
+
+    /**
+     * Class that fixes the bug with 32-bits per sample images The code was
+     * taken from
+     * http://stackoverflow.com/questions/26875429/how-to-create-bufferedimage-for-32-bits-per-sample-3-samples-image-data
+     */
+    public static class Int32ComponentColorModel extends ComponentColorModel {
+
+        /**
+         * Calling the superclass constructor.
+         *
+         * @param cs
+         * @param bits
+         * @param b
+         * @param alpha
+         * @param transperancy
+         * @param transfertype
+         */
+        public Int32ComponentColorModel(ColorSpace cs, int[] bits, boolean b, boolean alpha, int transperancy, int transfertype) {
+            super(cs, bits, b, alpha, transperancy, transfertype);
+        }
+
+        @Override
+        public float[] getNormalizedComponents(Object pixel, float[] normComponents, int normOffset) {
+            int numComponents = getNumComponents();
+
+            if (normComponents == null || normComponents.length < numComponents + normOffset) {
+                normComponents = new float[numComponents + normOffset];
+            }
+
+            switch (transferType) {
+                case DataBuffer.TYPE_INT:
+                    int[] ipixel = (int[]) pixel;
+                    for (int c = 0, nc = normOffset; c < numComponents; c++, nc++) {
+                        normComponents[nc] = (float) ((ipixel[c] & 0xffffffffl) / ((double) ((1L << getComponentSize(c)) - 1)));
+                    }
+                    break;
+                default: // Calling superclass method for other transfer types
+                    normComponents = super.getNormalizedComponents(pixel, normComponents, normOffset);
+            }
+
+            return normComponents;
+        }
+
+        private int getRGBComponent(Object inData, int idx) {
+            // Note that getNormalizedComponents returns non-premultiplied values
+            float[] norm = getNormalizedComponents(inData, null, 0);
+            ColorSpace cs = getColorSpace();
+            if (cs.getType() == ColorSpace.CS_GRAY) {
+                return (int) (norm[idx] * 255.0f + 0.5f);
+            } else {
+                // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
+                float[] rgb = cs.toRGB(norm);
+                return (int) (rgb[idx] * 255.0f + 0.5f);
+            }
+        }
+
+        @Override
+        public int getRed(Object inData) {
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 0);
+            } else {
+                return super.getRed(inData);
+            }
+        }
+
+        @Override
+        public int getGreen(Object inData) {
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 1);
+            } else {
+                return super.getGreen(inData);
+            }
+        }
+
+        @Override
+        public int getBlue(Object inData) {
+            if (transferType == DataBuffer.TYPE_INT) {
+                return getRGBComponent(inData, 2);
+            } else {
+                return super.getBlue(inData);
+            }
+        }
     }
 }
