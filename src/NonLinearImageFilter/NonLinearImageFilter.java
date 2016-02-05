@@ -81,7 +81,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<JComponent> imageList;
     private int nSteps = 10, threadNumber, sliderposition = 50;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
-            anisotropy = 0, iterationCoefficient = 1.0;
+            anisotropy = 0, iterationCoefficient = 0.5;
     private boolean nonLinearFlag = false, working = false;
     private CrankNicholson2D comp;
     private final Map defaults;
@@ -108,7 +108,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
-        this.iterField = MyTextUtilities.getDoubleFormattedTextField(1.0, 0.0, 1.0, false);
+        this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -641,7 +641,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
              */
             public void updateUI(double[][] data) {
                 SwingUtilities.invokeLater(() -> {
-                    imageList.add(new ImageComponent(data));
+                    imageList.add(new ImageComponent(data, ((ImageComponent) imageList.get(0)).getImage().getColorModel()));
                     int i = imageList.size() - 1;
                     updateImagePanel(i);
                     jProgressBar.setValue((int) (100.0 * i / nSteps));
@@ -758,7 +758,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "1e8", defaults);
+                "1e4", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost

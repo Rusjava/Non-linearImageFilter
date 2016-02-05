@@ -40,15 +40,16 @@ public class ImageComponent extends JComponent {
 
     private final BufferedImage image;
     private final int[] pixels;
-    private final ColorModel grayColorModel;
-    private final int BIT_NUM = 32;
+    private ColorModel grayColorModel;
+    private final ColorSpace cs;
+    private final int BIT_NUM = 16;
 
     /*
      * Create a gray-scale ColorSpace and corresponding ColorModel
      */
     {
-        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        grayColorModel = new Int32ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+        cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        grayColorModel = new Int32ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
     }
 
     /**
@@ -72,8 +73,9 @@ public class ImageComponent extends JComponent {
      * Constructor generating image from real data
      *
      * @param pixelData real pixel data
+     * @param cm color model
      */
-    public ImageComponent(double[][] pixelData) {
+    public ImageComponent(double[][] pixelData, ColorModel cm) {
         super();
         /*
          * Generate image pixelArray from real matrix
@@ -83,6 +85,9 @@ public class ImageComponent extends JComponent {
         /*
          * Create buffered image
          */
+        if (cm != null) {
+            grayColorModel = cm;
+        }
         this.image = createImage(pixels, pixelData[0].length, pixelData.length);
     }
 
@@ -97,8 +102,8 @@ public class ImageComponent extends JComponent {
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
         pixels = new int[size];
-        int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT) {
+            grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
             float c = (float) Math.pow(2, 23);
             float[] dpix = new float[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
@@ -106,6 +111,7 @@ public class ImageComponent extends JComponent {
                 pixels[i] = (int) Math.round(c * dpix[i]);
             }
         } else {
+            int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
             for (int i = 0; i < size; i++) {
                 pixels[i] <<= shift;
@@ -193,12 +199,12 @@ public class ImageComponent extends JComponent {
         return pixelArray;
     }
 
-    /*
+    /**
      * Creating image from an integer 2D array
      */
     private BufferedImage createImage(int[] pixels, int xsize, int ysize) {
         /*
-         * Create an Writableraster from existing color model and fill it with pixels
+         * Create an Writableraster from the existing color model and fill it with pixels
          */
         WritableRaster raster = grayColorModel.createCompatibleWritableRaster(xsize, ysize);
         raster.setPixels(0, 0, xsize, ysize, pixels);
@@ -251,7 +257,7 @@ public class ImageComponent extends JComponent {
             return normComponents;
         }
 
-        private int getRGBComponent(Object inData, int idx) {
+        private int getRGBComponentMod(Object inData, int idx) {
             // Note that getNormalizedComponents returns non-premultiplied values
             float[] norm = getNormalizedComponents(inData, null, 0);
             ColorSpace cs = getColorSpace();
@@ -267,7 +273,7 @@ public class ImageComponent extends JComponent {
         @Override
         public int getRed(Object inData) {
             if (transferType == DataBuffer.TYPE_INT) {
-                return getRGBComponent(inData, 0);
+                return getRGBComponentMod(inData, 0);
             } else {
                 return super.getRed(inData);
             }
@@ -276,7 +282,7 @@ public class ImageComponent extends JComponent {
         @Override
         public int getGreen(Object inData) {
             if (transferType == DataBuffer.TYPE_INT) {
-                return getRGBComponent(inData, 1);
+                return getRGBComponentMod(inData, 1);
             } else {
                 return super.getGreen(inData);
             }
@@ -285,7 +291,7 @@ public class ImageComponent extends JComponent {
         @Override
         public int getBlue(Object inData) {
             if (transferType == DataBuffer.TYPE_INT) {
-                return getRGBComponent(inData, 2);
+                return getRGBComponentMod(inData, 2);
             } else {
                 return super.getBlue(inData);
             }
