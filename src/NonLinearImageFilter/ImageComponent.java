@@ -28,7 +28,10 @@ import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
+import java.util.Arrays;
+import java.util.Collections;
 import javax.swing.JComponent;
+import java.util.stream.Collectors;
 
 /**
  * A component object for images
@@ -104,11 +107,13 @@ public class ImageComponent extends JComponent {
         pixels = new int[size];
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT) {
             grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            float c = (float) Math.pow(2, 23);
-            float[] dpix = new float[size];
+            double c = (double) (Math.pow(2, 32) - 1);
+            double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
+            double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
+            c = c / (1 - min);
             for (int i = 0; i < size; i++) {
-                pixels[i] = (int) Math.round(c * dpix[i]);
+                pixels[i] = (int) (Math.round(c * (dpix[i] - min) + 0.5));
             }
         } else {
             int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
@@ -261,11 +266,11 @@ public class ImageComponent extends JComponent {
             // Note that getNormalizedComponents returns non-premultiplied values
             float[] norm = getNormalizedComponents(inData, null, 0);
             ColorSpace cs = getColorSpace();
-            if (cs.getType() == ColorSpace.CS_GRAY) {
-                return (int) (norm[idx] * 255.0f + 0.5f);
+            float[] rgb = cs.toRGB(norm);
+            if (cs.getType() == ColorSpace.TYPE_GRAY) {
+                return (int) (norm[idx] * 255.0f);
             } else {
                 // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
-                float[] rgb = cs.toRGB(norm);
                 return (int) (rgb[idx] * 255.0f + 0.5f);
             }
         }
