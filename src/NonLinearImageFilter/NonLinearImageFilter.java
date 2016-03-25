@@ -667,6 +667,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JComponent component = null;
         jButtonStart.setEnabled(false);
         jButtonImage.setEnabled(false);
+        jSliderImages.setEnabled(false);
         /*
          * create a button group to chose the source of initial image
          */
@@ -731,10 +732,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 dataList.add(((ImageComponent) component).getPixelData());
                 updateImagePanel(0);
             }
+        }
+        if (imageList.size() > 0) {
             jButtonStart.setEnabled(true);
-            jButtonImage.setEnabled(true);
             jSliderImages.setEnabled(true);
         }
+        jButtonImage.setEnabled(true);
+
     }//GEN-LAST:event_jButtonImageActionPerformed
 
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed

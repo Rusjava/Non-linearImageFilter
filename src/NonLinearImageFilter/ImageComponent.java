@@ -111,7 +111,8 @@ public class ImageComponent extends JComponent {
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
-            c = c / (1 - min);
+            double max = Collections.max(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
+            c = c / (max - min);
             for (int i = 0; i < size; i++) {
                 pixels[i] = (int) (Math.round(c * (dpix[i] - min) + 0.5));
             }
@@ -162,7 +163,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                data[i][k] = pixels[offset + k];
+                data[i][k] = (double) (pixels[offset + k] & 0xffffffffl);
             }
         }
         return data;
@@ -268,7 +269,7 @@ public class ImageComponent extends JComponent {
             ColorSpace cs = getColorSpace();
             float[] rgb = cs.toRGB(norm);
             if (cs.getType() == ColorSpace.TYPE_GRAY) {
-                return (int) (norm[idx] * 255.0f);
+                return (int) (norm[idx] * 255.0f + 0.5f);
             } else {
                 // Not CS_sRGB, CS_LINEAR_RGB, or any TYPE_GRAY ICC_ColorSpace
                 return (int) (rgb[idx] * 255.0f + 0.5f);
