@@ -105,16 +105,20 @@ public class ImageComponent extends JComponent {
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
         pixels = new int[size];
-        if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT) {
+        /*
+        If 32-bit image, treat differently
+        */
+        if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
+                | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
             grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            double c = (double) (Math.pow(2, 32) - 1);
+            double c = (double) (Math.pow(2, 31) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
             double max = Collections.max(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
             c = c / (max - min);
             for (int i = 0; i < size; i++) {
-                pixels[i] = (int) (Math.round(c * (dpix[i] - min) + 0.5));
+                pixels[i] = (int) Math.round(c * (dpix[i] - min));
             }
         } else {
             int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
@@ -133,8 +137,8 @@ public class ImageComponent extends JComponent {
         /*
          * Scaling image before drawing to the size of container
          */
-        double xscale = 1.0 * getWidth() / image.getWidth(null);
-        double yscale = 1.0 * getHeight() / image.getHeight(null);
+        double xscale = (double) getWidth() / image.getWidth(null);
+        double yscale = (double) getHeight() / image.getHeight(null);
         BufferedImageOp imgop = new AffineTransformOp(AffineTransform.getScaleInstance(xscale, yscale), AffineTransformOp.TYPE_BICUBIC);
         /*
          * Draw image
