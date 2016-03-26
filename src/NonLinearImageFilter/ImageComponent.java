@@ -106,12 +106,12 @@ public class ImageComponent extends JComponent {
         int size = xsize * ysize;
         pixels = new int[size];
         /*
-        If 32-bit image, treat differently
-        */
+         If 32-bit image, treat differently
+         */
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
             grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            double c = (double) (Math.pow(2, 31) - 1);
+            double c = (double) (Math.pow(2, 32) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
@@ -248,11 +248,12 @@ public class ImageComponent extends JComponent {
         @Override
         public float[] getNormalizedComponents(Object pixel, float[] normComponents, int normOffset) {
             int numComponents = getNumComponents();
-
             if (normComponents == null || normComponents.length < numComponents + normOffset) {
                 normComponents = new float[numComponents + normOffset];
             }
-
+            /*
+             Overriding only for the TYPE_INT
+             */
             switch (transferType) {
                 case DataBuffer.TYPE_INT:
                     int[] ipixel = (int[]) pixel;
@@ -263,8 +264,81 @@ public class ImageComponent extends JComponent {
                 default: // Calling superclass method for other transfer types
                     normComponents = super.getNormalizedComponents(pixel, normComponents, normOffset);
             }
-
             return normComponents;
+        }
+
+        @Override
+        public int[] getUnnormalizedComponents(float[] normComponents,
+                int normOffset,
+                int[] components, int offset) {
+            // Make sure that someone isn't using a custom color model
+            // that called the super(bits) constructor.
+            int numComponents = getNumComponents();
+            if (components == null) {
+                components = new int[offset + numComponents];
+            }
+            /*
+             Overriding only for the TYPE_INT
+             */
+            switch (transferType) {
+                case DataBuffer.TYPE_INT:
+                    if (hasAlpha() && isAlphaPremultiplied()) {
+                        double normAlpha = normComponents[normOffset + getNumColorComponents()];
+                        for (int i = 0; i < getNumColorComponents(); i++) {
+                            components[offset + i] = (int) (normComponents[normOffset + i]
+                                    * ((1L << getComponentSize(i)) - 1) * normAlpha + 0.5);
+                        }
+                        components[offset + getNumColorComponents()] = (int) (normAlpha
+                                * ((1L << getComponentSize(getNumColorComponents())) - 1) + 0.5);
+                    } else {
+                        for (int i = 0; i < numComponents; i++) {
+                            components[offset + i] = (int) (normComponents[normOffset + i]
+                                    * ((1L << getComponentSize(i)) - 1) + 0.5);
+                        }
+                    }
+                    break;
+                default: // Calling superclass method for other transfer types
+                    components = super.getUnnormalizedComponents(normComponents, normOffset, components, offset);
+            }
+            return components;
+        }
+
+        @Override
+        public Object getDataElements(float[] normComponents, int normOffset,
+                Object obj) {
+            boolean needAlpha = hasAlpha() && isAlphaPremultiplied();
+            /*
+             Overriding only for the TYPE_INT
+             */
+            switch (transferType) {
+                case DataBuffer.TYPE_INT:
+                    int[] ipixel;
+                    if (obj == null) {
+                        ipixel = new int[getNumComponents()];
+                    } else {
+                        ipixel = (int[]) obj;
+                    }
+                    if (needAlpha) {
+                        double alpha
+                                = normComponents[getNumColorComponents() + normOffset];
+                        for (int c = 0, nc = normOffset; c < getNumColorComponents();
+                                c++, nc++) {
+                            ipixel[c] = (int) ((normComponents[nc] * alpha)
+                                    * ((1L << getComponentSize(c)) - 1) + 0.5);
+                        }
+                        ipixel[getNumColorComponents()] = (int) (alpha
+                                * ((1L << getComponentSize(getNumColorComponents())) - 1) + 0.5);
+                    } else {
+                        for (int c = 0, nc = normOffset; c < getNumComponents();
+                                c++, nc++) {
+                            ipixel[c] = (int) (normComponents[nc]
+                                    * ((1L << getComponentSize(c)) - 1) + 0.5);
+                        }
+                    }
+                    return ipixel;
+                default:
+                    return super.getDataElements(normComponents, normOffset, obj);
+            }
         }
 
         private int getRGBComponentMod(Object inData, int idx) {
