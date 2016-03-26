@@ -108,10 +108,11 @@ public class ImageComponent extends JComponent {
         /*
          If 32-bit image, treat differently
          */
+        int shift = image.getColorModel().getComponentSize(0);
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
             grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            double c = (double) (Math.pow(2, 32) - 1);
+            double c = (double) ((1L << shift) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
@@ -121,14 +122,12 @@ public class ImageComponent extends JComponent {
                 pixels[i] = (int) Math.round(c * (dpix[i] - min));
             }
         } else {
-            int shift = BIT_NUM - image.getColorModel().getComponentSize(0);
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
             for (int i = 0; i < size; i++) {
-                pixels[i] <<= shift;
+                pixels[i] <<= BIT_NUM - shift;
             }
         }
         this.image = createImage(pixels, xsize, ysize);
-
     }
 
     @Override
