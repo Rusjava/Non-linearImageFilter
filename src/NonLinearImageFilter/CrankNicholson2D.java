@@ -43,6 +43,11 @@ public class CrankNicholson2D {
     private final double iterationCoefficient;
 
     /**
+     * The maximal number of iterations
+     */
+    public static final int MAX_ITER = 100;
+
+    /**
      * Constructor
      *
      * @param bConditionCoef coefficients in boundary condition
@@ -423,14 +428,16 @@ public class CrankNicholson2D {
         double[][] result = data;
         double[][] prevResult = data;
         double[][] prevPrevResult;
+        int iterCounter = 0;
         /*
          * Iterrating until the requered precision is attained
          */
         do {
+            iterCounter++;
             prevPrevResult = prevResult;
             prevResult = result;
             result = iterateLinear2D(data, coef, getDiffCoefficient(getWeightedSum(prevResult, prevPrevResult)), bCond);
-        } while (calcDifference(result, prevResult) > eps);
+        } while (calcDifference(result, prevResult) > eps && iterCounter < MAX_ITER);
         return result;
     }
 

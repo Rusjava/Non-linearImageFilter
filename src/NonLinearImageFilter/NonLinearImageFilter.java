@@ -21,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.awt.color.ColorSpace;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
+import java.awt.image.ColorModel;
 
 import java.util.ResourceBundle;
 import java.util.Locale;
@@ -37,6 +38,9 @@ import java.util.jar.Manifest;
 
 import javax.imageio.ImageIO;
 import TextUtilities.MyTextUtilities;
+import java.awt.Transparency;
+import java.awt.image.DataBuffer;
+import java.awt.image.WritableRaster;
 import javax.media.MediaLocator;
 
 import java.io.File;
@@ -104,7 +108,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
         this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
         this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
-        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-2, 1e-14, true);
+        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-14, 1e-2, true);
         this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
@@ -945,7 +949,29 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 imageWFile = fo.getSelectedFile();
                 int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
                 String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
-                ImageIO.write(((ImageComponent) imageList.get(index)).getImage(), type, imageWFile);
+                BufferedImage image = ((ImageComponent) imageList.get(index)).getImage();
+                if (image.getColorModel().getComponentSize(0) == 32) {
+                    int xsize = image.getWidth(null);
+                    int ysize = image.getHeight(null);
+                    double[] pixels = new double[xsize * ysize];
+                    //Creating a new color model for the float transfer type for TYPE_INT
+                    ColorModel cm = new ImageComponent.Int32ComponentColorModel(image.getColorModel().getColorSpace(),
+                            new int[]{32}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_FLOAT);
+                    /*
+                     * Create an Writableraster from the existing color model and fill it with pixels
+                     */
+                    double[][] ar = dataList.get(index);
+                    for (int i = 0; i < ysize - 1; i++) {
+                        System.arraycopy(ar[i], 0, pixels, i * xsize, xsize);
+                    }
+                    WritableRaster raster = cm.createCompatibleWritableRaster(xsize, ysize);
+                    raster.setPixels(0, 0, xsize, ysize, pixels);
+                    /*
+                     * Create a BufferedImage from the raster and color model and return it
+                     */
+                    image = new BufferedImage(cm, raster, true, null);
+                }
+                ImageIO.write(image, type, imageWFile);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO SAVE ERROR DIALOG TITLE"),
