@@ -588,7 +588,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jProgressBar.setStringPainted(true);
         working = true;
         comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
-                precision, anisotropy, threadNumber, iterationCoefficient);
+                precision, anisotropy, threadNumber, iterationCoefficient,
+                p -> 1 / (1 + p));
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -605,7 +606,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     /* Linear or non-linear filtering depending on user choice */
                     currentData = nonLinearFlag ? comp.solveNonLinear(dataList.get(dataList.size() - 1))
                             : comp.solveLinear(dataList.get(dataList.size() - 1));
-                    updateUI(currentData);
+                    updateUI(currentData, i);
                     dataList.add(currentData);
                 }
                 // Updating execution time estimate
@@ -643,12 +644,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
              *
              * @param data
              */
-            public void updateUI(double[][] data) {
+            public void updateUI(double[][] data, int i) {
                 SwingUtilities.invokeLater(() -> {
                     imageList.add(new ImageComponent(data, ((ImageComponent) imageList.get(0)).getImage().getColorModel()));
-                    int i = imageList.size() - 1;
-                    updateImagePanel(i);
-                    jProgressBar.setValue((int) (100.0 * i / nSteps));
+                    updateImagePanel(imageList.size() - 1);
+                    jProgressBar.setValue((int) (100.0 * (i + 1) / nSteps));
                 });
             }
 

@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.function.DoubleFunction;
 
 /**
  * Class for 2D finite-difference algorithms for 2D diffusion equation with
@@ -41,6 +42,7 @@ public class CrankNicholson2D {
     protected final double eps;
     private final ExecutorService exc;
     private final double iterationCoefficient;
+    private final DoubleFunction<Double> f;
 
     /**
      * The maximal number of iterations
@@ -57,9 +59,11 @@ public class CrankNicholson2D {
      * @param anisotropy
      * @param threadNumber
      * @param iterationCoefficient
+     * @param f non-linear function
      */
     public CrankNicholson2D(double[] bConditionCoef, double diffCoef, double nonLinearCoef,
-            double precision, double anisotropy, int threadNumber, double iterationCoefficient) {
+            double precision, double anisotropy, int threadNumber,
+            double iterationCoefficient, DoubleFunction<Double> f) {
         this.bConditionCoef = Arrays.copyOfRange(bConditionCoef, 0, 3);
         this.diffCoefFactor = diffCoef;
         this.nonLinearFactor = 1 / Math.pow(nonLinearCoef, 2);
@@ -67,6 +71,7 @@ public class CrankNicholson2D {
         this.eps = precision;
         this.exc = Executors.newFixedThreadPool(threadNumber);
         this.iterationCoefficient = iterationCoefficient;
+        this.f = f;
     }
 
     /**
@@ -94,7 +99,7 @@ public class CrankNicholson2D {
             exc.execute(() -> {
                 for (int k = 2; k < xsize - 2; k++) {
                     double tm = diffCoefFactor
-                            * Math.exp(-(Math.pow(data[ind[0]][k + 1] - data[ind[0]][k - 1], 2) / (1 - anisotropyFactor)
+                            * f.apply((Math.pow(data[ind[0]][k + 1] - data[ind[0]][k - 1], 2) / (1 - anisotropyFactor)
                                     + Math.pow(data[ind[0] + 1][k] - data[ind[0] - 1][k], 2) * (1 - anisotropyFactor)) * nonLinearFactor);
                     diffCoef[ind[0]][k] = new Double(tm).isNaN() ? 0 : tm;
                 }
@@ -145,7 +150,7 @@ public class CrankNicholson2D {
             result = new double[data[0].length];
             for (int i = 2; i < size - 2; i++) {
                 double tm = diffCoefFactor
-                        * Math.exp(-Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor * factor);
+                        * f.apply(Math.pow(data[index][i + 1] - data[index][i - 1], 2) * nonLinearFactor * factor);
                 result[i] = new Double(tm).isNaN() ? 0 : tm;
             }
         } else {
