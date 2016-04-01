@@ -950,7 +950,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
                 String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
                 BufferedImage image = ((ImageComponent) imageList.get(index)).getImage();
-                if (image.getColorModel().getComponentSize(0) == 32) {
+                if (image.getData().getTransferType() == DataBuffer.TYPE_INT) {
                     int xsize = image.getWidth(null);
                     int ysize = image.getHeight(null);
                     double[] pixels = new double[xsize * ysize];

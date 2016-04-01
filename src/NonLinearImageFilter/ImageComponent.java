@@ -44,15 +44,18 @@ public class ImageComponent extends JComponent {
     private final BufferedImage image;
     private final int[] pixels;
     private ColorModel grayColorModel;
-    private final ColorSpace cs;
+
+    /**
+     * Gray color model
+     */
+    public static final ColorSpace CS= ColorSpace.getInstance(ColorSpace.CS_GRAY);
     private final int BIT_NUM = 16;
 
     /*
-     * Create a gray-scale ColorSpace and corresponding ColorModel
+     * Create a gray ColorModel
      */
     {
-        cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        grayColorModel = new Int32ComponentColorModel(cs, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+        grayColorModel = new Int32ComponentColorModel(CS, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
     }
 
     /**
@@ -108,11 +111,11 @@ public class ImageComponent extends JComponent {
         /*
          If 32-bit image, treat differently
          */
-        int shift = image.getColorModel().getComponentSize(0);
+        int[] shift = {image.getColorModel().getComponentSize(0)};
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
-            grayColorModel = new Int32ComponentColorModel(cs, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            double c = (double) ((1L << shift) - 1);
+            grayColorModel = new Int32ComponentColorModel(CS, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+            double c = (double) ((1L << shift[0]) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
             double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
@@ -122,10 +125,11 @@ public class ImageComponent extends JComponent {
                 pixels[i] = (int) Math.round(c * (dpix[i] - min));
             }
         } else {
+            shift[0] = BIT_NUM - shift[0];
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
-            for (int i = 0; i < size; i++) {
-                pixels[i] <<= BIT_NUM - shift;
-            }
+            Arrays.stream(pixels).forEach(p -> {
+                p <<= shift[0];
+            });
         }
         this.image = createImage(pixels, xsize, ysize);
     }
@@ -202,7 +206,7 @@ public class ImageComponent extends JComponent {
         for (int i = 0; i < ysize; i++) {
             int offset = i * xsize;
             for (int k = 0; k < xsize; k++) {
-                pixelArray[offset + k] += (int) Math.round(pixelData[i][k]);
+                pixelArray[offset + k] = (int) Math.round(pixelData[i][k]);
             }
         }
         return pixelArray;
