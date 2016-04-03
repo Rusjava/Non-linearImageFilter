@@ -35,6 +35,7 @@ import java.util.concurrent.CancellationException;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.jar.Manifest;
+import java.util.function.DoubleFunction;
 
 import javax.imageio.ImageIO;
 import TextUtilities.MyTextUtilities;
@@ -93,10 +94,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
+    private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
     private File imageRFile = null, imageWFile = null, videoWFile = null;
+    private final DoubleFunction[] funcs;
 
     public NonLinearImageFilter() {
         this.threadNumber = Runtime.getRuntime().availableProcessors();
@@ -108,17 +111,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
         this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
         this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
-        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-10, 1e-14, 1e-2, true);
+        this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-06, 1e-10, 1e-2, true);
         this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
-        this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.0, 1.0, false);
+        this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.3, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         filters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
             new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("gif", "gif")
         };
+        this.funcs = new DoubleFunction[]{p -> 1 / (1 + p), p -> Math.exp(-p)};
+        funcBox = new JComboBox<>();
+        funcBox.addItem(bundle.getString("FUNCTION 1"));
+        funcBox.addItem(bundle.getString("FUNCTION 2"));
 
         UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));
         initComponents();
@@ -589,7 +596,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         working = true;
         comp = new CrankNicholson2D(new double[]{-1, 0, 1}, diffCoef, nonLinearCoef,
                 precision, anisotropy, threadNumber, iterationCoefficient,
-                p -> 1 / (1 + p));
+                funcs[funcBox.getSelectedIndex()]);
+        System.out.println(funcBox.getSelectedIndex());
         jButtonStart.setText(bundle.getString("NonLinearImageFilter.jButtonStart.alttext"));
         jButtonImage.setEnabled(false);
         worker = new SwingWorker<Void, Void>() {
@@ -913,7 +921,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             bundle.getString("NonLinearImageFilter.jTextFieldPrecision.text"), precisionField,
             bundle.getString("NonLinearImageFilter.jTextFieldAnisotropy.text"), anisotropyField,
             bundle.getString("NonLinearImageFilter.jTextFieldThreadNumber.text"), threadNumberField,
-            bundle.getString("NonLinearImageFilter.jTextFieldIterCoef.text"), iterField
+            bundle.getString("NonLinearImageFilter.jTextFieldIterCoef.text"), iterField,
+            bundle.getString("NonLinearImageFilter.jComboBoxFunc.text"), funcBox
         };
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.FilterOptions.title"), JOptionPane.OK_CANCEL_OPTION);
