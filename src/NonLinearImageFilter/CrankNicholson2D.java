@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.function.DoubleFunction;
 
@@ -335,8 +336,12 @@ public class CrankNicholson2D {
             }
             exc.execute(() -> {
                 double[] bCond = {bConditions[1][ind[0]], bConditions[3][ind[0]]};
-                rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef),
-                        getColumn(ind[0], newDiffCoef), lt1));
+                try {
+                    rs[ind[0]] = exc.submit(new AxThread(getColumn(ind[0], result), bCond, getColumn(ind[0], oldDiffCoef),
+                            getColumn(ind[0], newDiffCoef), lt1));
+                } catch (RejectedExecutionException ex) {
+                    return;
+                }
                 lt1.countDown();
             });
         }
