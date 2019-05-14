@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 1.1
+ * @version 1.11
  */
 public class ImageComponent extends JComponent {
 
