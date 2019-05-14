@@ -111,8 +111,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.imageParam = new ImageParam();
         this.xsizeField = MyTextUtilities.getIntegerFormattedTextField(300, 2, 10000);
         this.ysizeField = MyTextUtilities.getIntegerFormattedTextField(200, 2, 10000);
-        this.noiseField = MyTextUtilities.getIntegerFormattedTextField(14, 1, 15);
-        this.signalField = MyTextUtilities.getIntegerFormattedTextField(15, 1, 16);
+        this.noiseField = MyTextUtilities.getIntegerFormattedTextField(imageParam.bitNumber - 2, 1, imageParam.bitNumber - 1);
+        this.signalField = MyTextUtilities.getIntegerFormattedTextField(imageParam.bitNumber - 1, 1, imageParam.bitNumber);
         this.scaleField = MyTextUtilities.getDoubleFormattedTextField(0.5, 0.1, 1.0, false);
         this.precisionField = MyTextUtilities.getDoubleFormattedTextField(1e-06, 1e-10, 1e-2, true);
         this.anisotropyField = MyTextUtilities.getDoubleFormattedTextField(0.0, 0.0, 1.0, false);
@@ -1042,7 +1042,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // Processing actions from image bitness combobox
         if (evt.getStateChange() == ItemEvent.SELECTED) {
             int bitness = bitnesses[bitNumberMenu.getSelectedIndex()];
-            MyTextUtilities.changeIntegerFormattedTextField(noiseField, bitness - 2, 1, bitness);
+            MyTextUtilities.changeIntegerFormattedTextField(noiseField, bitness - 2, 1, bitness - 1);
             MyTextUtilities.changeIntegerFormattedTextField(signalField, bitness - 1, 1, bitness);
             jTextFieldNonlinear.setText(Double.toString(nonLinearCoefs[bitNumberMenu.getSelectedIndex()]));
         }
