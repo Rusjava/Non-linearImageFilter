@@ -75,7 +75,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 2.1
+ * @version 2.2
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -94,10 +94,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
+    private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
+    private final int[] bitnesses = new int[]{8, 16, 32};
+    private final double[] nonLinearCoefs = new double[]{50, 1e4, 1e8};
     private File imageRFile = null, imageWFile = null, videoWFile = null;
     private final DoubleFunction[] funcs;
 
@@ -127,6 +130,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         funcBox.addItem(bundle.getString("FUNCTION 1"));
         funcBox.addItem(bundle.getString("FUNCTION 2"));
 
+        this.bitNumberMenu = new JComboBox(new String[]{"8 bit", "16 bit", "32 bit"});
+        bitNumberMenu.setSelectedIndex(1);
+        bitNumberMenu.addItemListener((java.awt.event.ItemEvent evt) -> {
+            jComboBoxBitNumberActionPerformed(evt);
+        });
+
         UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));
         initComponents();
         jButtonStart.setEnabled(false);
@@ -136,6 +145,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         LFGroup.add(jRadioButtonMenuItemNimbus);
         jLabelThreads.setText(bundle.getString("NonLinearImageFilter.jLabelThreads.text") + threadNumber);
         jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text") + threadNumber);
+        jLabelBitNumber.setText(bundle.getString("NonLinearImageFilter.jLabelBitNumber.text") + imageParam.bitNumber);
     }
 
     /**
@@ -167,6 +177,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelControls = new javax.swing.JPanel();
         jSliderImages = new javax.swing.JSlider();
         jPanelStatus = new javax.swing.JPanel();
+        jLabelBitNumber = new javax.swing.JLabel();
         jLabelProcessors = new javax.swing.JLabel();
         jLabelThreads = new javax.swing.JLabel();
         jLabelExcTime = new javax.swing.JLabel();
@@ -446,6 +457,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelStatus.setPreferredSize(new java.awt.Dimension(769, 22));
         jPanelStatus.setLayout(new java.awt.GridLayout(1, 0));
 
+        jLabelBitNumber.setText(bundle.getString("NonLinearImageFilter.jLabelBitNumber.text")); // NOI18N
+        jPanelStatus.add(jLabelBitNumber);
+
         jLabelProcessors.setText(bundle.getString("NonLinearImageFilter.jLabelProcessors.text")); // NOI18N
         jPanelStatus.add(jLabelProcessors);
 
@@ -718,7 +732,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         imageRFile = fo.getSelectedFile();
                         BufferedImage image = ImageIO.read(imageRFile);
                         if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY) {
-                            component = new ImageComponent(image);
+                            component = new ImageComponent(image, imageParam.bitNumber);
                         } else {
                             JOptionPane.showMessageDialog(null,
                                     bundle.getString("NOTGRAYSCALE DIALOG"),
@@ -755,7 +769,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "1e8", defaults);
+                "1e4", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
@@ -848,7 +862,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             bundle.getString("IMAGE HEIGHT"), ysizeField,
             bundle.getString("NOISE"), noiseField,
             bundle.getString("SIGNAL"), signalField,
-            bundle.getString("SCALE"), scaleField
+            bundle.getString("SCALE"), scaleField,
+            bundle.getString("BIT_NUMBER"), bitNumberMenu
         };
         int option = JOptionPane.showConfirmDialog(null, message, bundle.getString("IMAGE GENERATOR PARAMETERS DIALOG"),
                 JOptionPane.OK_CANCEL_OPTION);
@@ -858,7 +873,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             imageParam.noise = (int) Math.pow(2, (Integer) noiseField.getValue());
             imageParam.signal = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
+            imageParam.bitNumber = bitnesses[bitNumberMenu.getSelectedIndex()];
         }
+        jLabelBitNumber.setText(bundle.getString("NonLinearImageFilter.jLabelBitNumber.text") + imageParam.bitNumber);
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
@@ -1021,6 +1038,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jRadioButtonMenuItemNimbusItemStateChanged
 
+    private void jComboBoxBitNumberActionPerformed(java.awt.event.ItemEvent evt) {
+        // Processing actions from image bitness combobox
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            int bitness = bitnesses[bitNumberMenu.getSelectedIndex()];
+            MyTextUtilities.changeIntegerFormattedTextField(noiseField, bitness - 2, 1, bitness);
+            MyTextUtilities.changeIntegerFormattedTextField(signalField, bitness - 1, 1, bitness);
+            jTextFieldNonlinear.setText(Double.toString(nonLinearCoefs[bitNumberMenu.getSelectedIndex()]));
+        }
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -1073,6 +1100,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JButton jButtonImage;
     private javax.swing.JButton jButtonStart;
     private javax.swing.JCheckBox jCheckBoxNonLinear;
+    private javax.swing.JLabel jLabelBitNumber;
     private javax.swing.JLabel jLabelDiffCoef;
     private javax.swing.JLabel jLabelExcTime;
     private javax.swing.JLabel jLabelNSteps;

@@ -622,6 +622,13 @@
         <Property name="rows" type="int" value="1"/>
       </Layout>
       <SubComponents>
+        <Component class="javax.swing.JLabel" name="jLabelBitNumber">
+          <Properties>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.jLabelBitNumber.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+        </Component>
         <Component class="javax.swing.JLabel" name="jLabelProcessors">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">

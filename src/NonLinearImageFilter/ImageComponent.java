@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 1.11
+ * @version 1.2
  */
 public class ImageComponent extends JComponent {
 
@@ -46,17 +46,9 @@ public class ImageComponent extends JComponent {
     private ColorModel grayColorModel;
 
     /**
-     * Gray color model
+     * Gray color space
      */
-    public static final ColorSpace CS= ColorSpace.getInstance(ColorSpace.CS_GRAY);
-    private final int BIT_NUM = 16;
-
-    /*
-     * Create a gray ColorModel
-     */
-    {
-        grayColorModel = new Int32ComponentColorModel(CS, new int[]{BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
-    }
+    public static final ColorSpace CS = ColorSpace.getInstance(ColorSpace.CS_GRAY);
 
     /**
      * Constructor generating sample image
@@ -65,6 +57,25 @@ public class ImageComponent extends JComponent {
      */
     public ImageComponent(ImageParam imageParam) {
         super();
+        int dataBufferType;
+        switch (imageParam.bitNumber) {
+            case 8:
+                dataBufferType = DataBuffer.TYPE_BYTE;
+                break;
+            case 16:
+                dataBufferType = DataBuffer.TYPE_USHORT;
+                break;
+            case 32:
+                dataBufferType = DataBuffer.TYPE_INT;
+                break;
+            default:
+                dataBufferType = DataBuffer.TYPE_USHORT;
+        }
+        /*
+         * Create a gray ColorModel
+         */
+        grayColorModel = new Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber}, false, true,
+                Transparency.OPAQUE, dataBufferType);
         /*
          * Generate image pixelArray for model image
          */
@@ -100,21 +111,27 @@ public class ImageComponent extends JComponent {
     /**
      * Constructor importing existing image
      *
-     * @param image
+     * @param image - the image
+     * @param bitnum - the number of bits in pixels
      */
-    public ImageComponent(BufferedImage image) {
+    public ImageComponent(BufferedImage image, int bitnum) {
         super();
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
         int size = xsize * ysize;
         pixels = new int[size];
+
+        int[] shift = {image.getColorModel().getComponentSize(0)};
+
+        // If specified bitness is smaller that the real bitness of the image, use the latter
+        bitnum = bitnum < shift[0] ? shift[0] : bitnum;
+
         /*
          If 32-bit image, treat differently
          */
-        int[] shift = {image.getColorModel().getComponentSize(0)};
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
-            grayColorModel = new Int32ComponentColorModel(CS, new int[]{2 * BIT_NUM}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
             double c = (double) ((1L << shift[0]) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
@@ -125,7 +142,7 @@ public class ImageComponent extends JComponent {
                 pixels[i] = (int) Math.round(c * (dpix[i] - min));
             }
         } else {
-            shift[0] = BIT_NUM - shift[0];
+            shift[0] = bitnum - shift[0];
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
             Arrays.stream(pixels).forEach(p -> {
                 p <<= shift[0];

@@ -34,9 +34,14 @@ public class ImageParam implements Cloneable {
     public int ysize = 200;
 
     /**
+     * The bitness of images
+     */
+    public int bitNumber = 16;
+
+    /**
      * noise range in pixels
      */
-    public long noise = (int) Math.pow(2, 14);
+    public long noise = (int) Math.pow(2, bitNumber - 2);
 
     /**
      * the default relative size of the square
@@ -46,7 +51,7 @@ public class ImageParam implements Cloneable {
     /**
      * signal level in pixels
      */
-    public long signal = (int) Math.pow(2, 15);
+    public long signal = (int) Math.pow(2, bitNumber - 1);
 
     @Override
     public Object clone() throws CloneNotSupportedException {
