@@ -188,9 +188,9 @@ public class ImageComponent extends JComponent {
                 if (testi && (Math.abs(k - param.xsize / 2 + 1) < param.scale * param.xsize / 2)) {
                     pixelsArray[offset + k] = 0;
                 } else {
-                    pixelsArray[offset + k] = (int) ImageParam.SIGNAL;
+                    pixelsArray[offset + k] = (int) param.signal;
                 }
-                pixelsArray[offset + k] += (int) Math.round((Math.random() * ImageParam.NOISE));
+                pixelsArray[offset + k] += (int) Math.round((Math.random() * (int) param.noise));
             }
         }
         return pixelsArray;

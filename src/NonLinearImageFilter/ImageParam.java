@@ -19,7 +19,7 @@ package NonLinearImageFilter;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 1.0
+ * @version 1.1
  */
 public class ImageParam implements Cloneable {
 
@@ -34,9 +34,9 @@ public class ImageParam implements Cloneable {
     public int ysize = 200;
 
     /**
-     * NOISE range in pixels
+     * noise range in pixels
      */
-    public static long NOISE = (int) Math.pow(2, 14);
+    public long noise = (int) Math.pow(2, 14);
 
     /**
      * the default relative size of the square
@@ -44,9 +44,9 @@ public class ImageParam implements Cloneable {
     public double scale = 0.5;
 
     /**
-     * SIGNAL level in pixels
+     * signal level in pixels
      */
-    public static long SIGNAL = (int) Math.pow(2, 15);
+    public long signal = (int) Math.pow(2, 15);
 
     @Override
     public Object clone() throws CloneNotSupportedException {

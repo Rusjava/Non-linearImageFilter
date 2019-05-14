@@ -855,8 +855,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (option == JOptionPane.OK_OPTION) {
             imageParam.xsize = (Integer) xsizeField.getValue();
             imageParam.ysize = (Integer) ysizeField.getValue();
-            imageParam.NOISE = (int) Math.pow(2, (Integer) noiseField.getValue());
-            imageParam.SIGNAL = (int) Math.pow(2, (Integer) signalField.getValue());
+            imageParam.noise = (int) Math.pow(2, (Integer) noiseField.getValue());
+            imageParam.signal = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
         }
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
