@@ -154,7 +154,7 @@
       <ResourceString bundle="NonLinearImageFilter/Bundle.properties" key="NonLinearImageFilter.title" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
     </Property>
     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[785, 660]"/>
+      <Dimension value="[900, 660]"/>
     </Property>
   </Properties>
   <SyntheticProperties>

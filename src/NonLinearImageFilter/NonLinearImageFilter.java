@@ -100,7 +100,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final FileFilter[] filters;
     private int frameRate = 10, videoFormat = 0;
     private final int[] bitnesses = new int[]{8, 16, 32};
-    private final double[] nonLinearCoefs = new double[]{50, 1e4, 1e8};
+    private final double[] nonLinearCoefs = new double[]{30, 1e4, 1e8};
     private File imageRFile = null, imageWFile = null, videoWFile = null;
     private final DoubleFunction[] funcs;
 
@@ -202,7 +202,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("NonLinearImageFilter/Bundle"); // NOI18N
         setTitle(bundle.getString("NonLinearImageFilter.title")); // NOI18N
-        setPreferredSize(new java.awt.Dimension(785, 660));
+        setPreferredSize(new java.awt.Dimension(900, 660));
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setDoubleBuffered(true);

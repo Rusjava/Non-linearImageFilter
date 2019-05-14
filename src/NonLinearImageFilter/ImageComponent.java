@@ -44,6 +44,7 @@ public class ImageComponent extends JComponent {
     private final BufferedImage image;
     private final int[] pixels;
     private ColorModel grayColorModel;
+    private int dataBufferType;
 
     /**
      * Gray color space
@@ -57,20 +58,8 @@ public class ImageComponent extends JComponent {
      */
     public ImageComponent(ImageParam imageParam) {
         super();
-        int dataBufferType;
-        switch (imageParam.bitNumber) {
-            case 8:
-                dataBufferType = DataBuffer.TYPE_BYTE;
-                break;
-            case 16:
-                dataBufferType = DataBuffer.TYPE_USHORT;
-                break;
-            case 32:
-                dataBufferType = DataBuffer.TYPE_INT;
-                break;
-            default:
-                dataBufferType = DataBuffer.TYPE_USHORT;
-        }
+        
+        initializeDataBufferType(imageParam.bitNumber);
         /*
          * Create a gray ColorModel
          */
@@ -125,13 +114,15 @@ public class ImageComponent extends JComponent {
 
         // If specified bitness is smaller that the real bitness of the image, use the latter
         bitnum = bitnum < shift[0] ? shift[0] : bitnum;
+        initializeDataBufferType(bitnum);
 
         /*
          If 32-bit image, treat differently
          */
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
-            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
+            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, 
+                    false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
             double c = (double) ((1L << shift[0]) - 1);
             double[] dpix = new double[size];
             image.getData().getPixels(0, 0, xsize, ysize, dpix);
@@ -142,6 +133,8 @@ public class ImageComponent extends JComponent {
                 pixels[i] = (int) Math.round(c * (dpix[i] - min));
             }
         } else {
+            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, false, true,
+                Transparency.OPAQUE, dataBufferType);
             shift[0] = bitnum - shift[0];
             image.getData().getPixels(0, 0, xsize, ysize, pixels);
             Arrays.stream(pixels).forEach(p -> {
@@ -400,5 +393,21 @@ public class ImageComponent extends JComponent {
                 return super.getBlue(inData);
             }
         }
+    }
+    
+    private void initializeDataBufferType (int bitNum) {
+       switch (bitNum) {
+            case 8:
+                dataBufferType = DataBuffer.TYPE_BYTE;
+                break;
+            case 16:
+                dataBufferType = DataBuffer.TYPE_USHORT;
+                break;
+            case 32:
+                dataBufferType = DataBuffer.TYPE_INT;
+                break;
+            default:
+                dataBufferType = DataBuffer.TYPE_USHORT;
+        } 
     }
 }
