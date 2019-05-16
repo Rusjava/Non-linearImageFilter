@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import javax.swing.JComponent;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A component object for images
@@ -44,7 +45,6 @@ public class ImageComponent extends JComponent {
     private final BufferedImage image;
     private final int[] pixels;
     private ColorModel grayColorModel;
-    private int dataBufferType;
 
     /**
      * Gray color space
@@ -58,13 +58,12 @@ public class ImageComponent extends JComponent {
      */
     public ImageComponent(ImageParam imageParam) {
         super();
-        
-        initializeDataBufferType(imageParam.bitNumber);
+
         /*
          * Create a gray ColorModel
          */
         grayColorModel = new Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber}, false, true,
-                Transparency.OPAQUE, dataBufferType);
+                Transparency.OPAQUE, initializeDataBufferType(imageParam.bitNumber));
         /*
          * Generate image pixelArray for model image
          */
@@ -107,39 +106,59 @@ public class ImageComponent extends JComponent {
         super();
         int xsize = image.getWidth(null);
         int ysize = image.getHeight(null);
+        int[] sampleSizes = image.getSampleModel().getSampleSize();
+        int numSamples = sampleSizes.length;
+        int numColorComp = image.getColorModel().getNumColorComponents();
         int size = xsize * ysize;
+        int shift;
         pixels = new int[size];
 
-        int[] shift = {image.getColorModel().getComponentSize(0)};
+        // If specified bitness is smaller that the real bitness of the image samples, use the latter
+        for (int i = 0; i < numColorComp; i++) {
+            bitnum = bitnum < sampleSizes[i] ? sampleSizes[i] : bitnum;
+        }
 
-        // If specified bitness is smaller that the real bitness of the image, use the latter
-        bitnum = bitnum < shift[0] ? shift[0] : bitnum;
-        initializeDataBufferType(bitnum);
+        //The normalization shift
+        shift = bitnum - Collections.max(Arrays.stream(sampleSizes).boxed().collect(Collectors.toList()));
+        // Initializing the gray color model
+        grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, false, true,
+                Transparency.OPAQUE, initializeDataBufferType(bitnum));
+
+        //Getting all image samples
+        double[] dpix = new double[size * numSamples];
+        image.getData().getPixels(0, 0, xsize, ysize, dpix);
 
         /*
          If 32-bit image, treat differently
          */
         if (image.getColorModel().getTransferType() == DataBuffer.TYPE_FLOAT
                 | image.getColorModel().getTransferType() == DataBuffer.TYPE_INT) {
-            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, 
-                    false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT);
-            double c = (double) ((1L << shift[0]) - 1);
-            double[] dpix = new double[size];
-            image.getData().getPixels(0, 0, xsize, ysize, dpix);
-            double min = Collections.min(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
-            double max = Collections.max(Arrays.stream(dpix).boxed().collect(Collectors.toList()));
-            c = c / (max - min);
+
+            //Normalization parameters
+            double[] c = new double[numColorComp], min = new double[numColorComp], max = new double[numColorComp];
+            int[] ia = new int[1];
+            for (ia[0] = 0; ia[0] < numColorComp; ia[0]++) {
+                c[ia[0]] = (double) ((1L << sampleSizes[ia[0]]) - 1);
+                min[ia[0]] = Collections.min(IntStream.range(0, dpix.length).filter(n -> n % numSamples == 0)
+                        .mapToObj(n -> dpix[n + ia[0]]).collect(Collectors.toList()));
+                max[ia[0]] = Collections.max(IntStream.range(0, dpix.length).filter(n -> n % numSamples == 0)
+                        .mapToObj(n -> dpix[n + ia[0]]).collect(Collectors.toList()));
+                c[ia[0]] = c[ia[0]] / (max[ia[0]] - min[ia[0]]);
+            }
             for (int i = 0; i < size; i++) {
-                pixels[i] = (int) Math.round(c * (dpix[i] - min));
+                for (int j = 0; j < numColorComp; j++) {
+                    pixels[i] += (int) Math.round(c[j] * (dpix[i * numSamples + j] - min[j]));
+                }
+                pixels[i] = Integer.divideUnsigned(pixels[i], numColorComp);
             }
         } else {
-            grayColorModel = new Int32ComponentColorModel(CS, new int[]{bitnum}, false, true,
-                Transparency.OPAQUE, dataBufferType);
-            shift[0] = bitnum - shift[0];
-            image.getData().getPixels(0, 0, xsize, ysize, pixels);
-            Arrays.stream(pixels).forEach(p -> {
-                p <<= shift[0];
-            });
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < numColorComp; j++) {
+                    pixels[i] = (int) dpix[i * numSamples + j];
+                }
+                pixels[i] /= numColorComp;
+                pixels[i] <<= shift;
+            }
         }
         this.image = createImage(pixels, xsize, ysize);
     }
@@ -394,9 +413,13 @@ public class ImageComponent extends JComponent {
             }
         }
     }
-    
-    private void initializeDataBufferType (int bitNum) {
-       switch (bitNum) {
+
+    /**
+     * Return data buffer type based on image bitness
+     */
+    private int initializeDataBufferType(int bitNum) {
+        int dataBufferType;
+        switch (bitNum) {
             case 8:
                 dataBufferType = DataBuffer.TYPE_BYTE;
                 break;
@@ -408,6 +431,7 @@ public class ImageComponent extends JComponent {
                 break;
             default:
                 dataBufferType = DataBuffer.TYPE_USHORT;
-        } 
+        }
+        return dataBufferType;
     }
 }

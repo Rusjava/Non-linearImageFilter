@@ -731,7 +731,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     try {
                         imageRFile = fo.getSelectedFile();
                         BufferedImage image = ImageIO.read(imageRFile);
-                        if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY) {
+                        if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY || 
+                                image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_RGB) {
                             component = new ImageComponent(image, imageParam.bitNumber);
                         } else {
                             JOptionPane.showMessageDialog(null,
