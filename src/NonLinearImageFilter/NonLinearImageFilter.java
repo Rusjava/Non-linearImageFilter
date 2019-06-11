@@ -102,7 +102,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int frameRate = 10, videoFormat = 0;
     private final int[] bitnesses = new int[]{8, 16, 32};
     private final double[] nonLinearCoefs = new double[]{30, 1e4, 1e8};
-    private File imageRFile = null, imageWFile = null, videoWFile = null;
+    private File imageRFile = null, imageWFile = null, videoWFile = null, textWFile = null;
     private final DoubleFunction[] funcs;
 
     public NonLinearImageFilter() {
@@ -185,6 +185,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuBar = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveImage = new javax.swing.JMenuItem();
+        jMenuItemSaveImageText = new javax.swing.JMenuItem();
         jMenuItemSaveVideo = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItemExit = new javax.swing.JMenuItem();
@@ -480,6 +481,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
         jMenuFile.add(jMenuItemSaveImage);
 
+        jMenuItemSaveImageText.setText(bundle.getString("NonLinearImageFilter.jMenuItemSaveImageText.text")); // NOI18N
+        jMenuItemSaveImageText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveImageTextActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemSaveImageText);
+
         jMenuItemSaveVideo.setText(bundle.getString("NonLinearImageFilter.jMenuItemSaveVideo.text")); // NOI18N
         jMenuItemSaveVideo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -732,8 +741,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     try {
                         imageRFile = fo.getSelectedFile();
                         BufferedImage image = ImageIO.read(imageRFile);
-                        if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY || 
-                                image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_RGB) {
+                        if (image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_GRAY
+                                || image.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_RGB) {
                             component = new ImageComponent(image, imageParam.bitNumber);
                         } else {
                             JOptionPane.showMessageDialog(null,
@@ -881,7 +890,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
 
     private void jMenuItemSaveVideoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveVideoActionPerformed
-        // Saving the image sequence as an image file
+        // Saving the image sequence as a video file
         if (imageList.isEmpty()) {
             return;
         }
@@ -1040,6 +1049,27 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jRadioButtonMenuItemNimbusItemStateChanged
 
+    private void jMenuItemSaveImageTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageTextActionPerformed
+        // Saving the current image as a text file:
+        /*
+         * Create text file and format choosing dialog
+         */
+        JFileChooser fo = new JFileChooser(textWFile);
+        fo.setDialogTitle(bundle.getString("TEXT SAVE DIALOG TITLE"));
+        fo.addChoosableFileFilter(new FileNameExtensionFilter("text", "txt"));
+        fo.addChoosableFileFilter(new FileNameExtensionFilter("data", "dat"));
+        fo.setAcceptAllFileFilterUsed(false);
+        fo.setAccessory(null);
+        int ans = fo.showSaveDialog(this);
+        /*
+         * Saving uncompressed avi or QuickTime video
+         */
+        if (ans == JFileChooser.APPROVE_OPTION) {
+            textWFile = fo.getSelectedFile();
+
+        }
+    }//GEN-LAST:event_jMenuItemSaveImageTextActionPerformed
+
     private void jComboBoxBitNumberActionPerformed(java.awt.event.ItemEvent evt) {
         // Processing actions from image bitness combobox
         if (evt.getStateChange() == ItemEvent.SELECTED) {
@@ -1084,8 +1114,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     /**
      * Updating image panel if the image has been changed
-     * 
-     * @param index 
+     *
+     * @param index
      */
     private void updateImagePanel(int index) {
         JComponent component = imageList.get(index);
@@ -1123,6 +1153,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemHelp;
     private javax.swing.JMenuItem jMenuItemImageOptions;
     private javax.swing.JMenuItem jMenuItemSaveImage;
+    private javax.swing.JMenuItem jMenuItemSaveImageText;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
     private javax.swing.JMenu jMenuLookAndFeel;
     private javax.swing.JMenu jMenuOptions;
