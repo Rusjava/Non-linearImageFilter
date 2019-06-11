@@ -16,6 +16,7 @@
  */
 package NonLinearImageFilter;
 
+import CrankNicholson2D.CrankNicholson2D;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.awt.color.ColorSpace;
@@ -1081,6 +1082,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         });
     }
 
+    /**
+     * Updating image panel if the image has been changed
+     * 
+     * @param index 
+     */
     private void updateImagePanel(int index) {
         JComponent component = imageList.get(index);
         if (jPanelImages.getComponentCount() == 0) {

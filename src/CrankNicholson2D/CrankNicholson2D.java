@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package NonLinearImageFilter;
+package CrankNicholson2D;
 
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -32,7 +32,7 @@ import java.util.function.DoubleFunction;
  * variable diffusion coefficient
  *
  * @author Ruslan Feshchenko
- * @version 2.1
+ * @version 2.2
  */
 public class CrankNicholson2D {
 
