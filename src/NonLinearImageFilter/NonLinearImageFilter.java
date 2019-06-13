@@ -46,11 +46,14 @@ import java.awt.image.WritableRaster;
 import javax.media.MediaLocator;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Formatter;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -1054,18 +1057,36 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         /*
          * Create text file and format choosing dialog
          */
-        JFileChooser fo = new JFileChooser(textWFile);
+        JFileChooser fo = new JFileChooser(textWFile != null ? textWFile.getAbsolutePath():null);
         fo.setDialogTitle(bundle.getString("TEXT SAVE DIALOG TITLE"));
         fo.addChoosableFileFilter(new FileNameExtensionFilter("text", "txt"));
         fo.addChoosableFileFilter(new FileNameExtensionFilter("data", "dat"));
-        fo.setAcceptAllFileFilterUsed(false);
+        fo.setAcceptAllFileFilterUsed(true);
         fo.setAccessory(null);
+        fo.setSelectedFile(new File(String.format("%s_%d_%d", "image_", imageParam.xsize, imageParam.ysize)));
         int ans = fo.showSaveDialog(this);
         /*
          * Saving uncompressed avi or QuickTime video
          */
         if (ans == JFileChooser.APPROVE_OPTION) {
-            textWFile = fo.getSelectedFile();
+            textWFile = fo.getSelectedFile(); //Getting the text file handle
+            Formatter fm = new Formatter(); //Creating a formater for text output
+            PrintWriter stream;
+            double[][] data = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0));
+            try {
+                stream = new PrintWriter(new FileWriter(textWFile, false));
+                for (int i = 0; i < imageParam.ysize; i++) {
+                    for (int j = 0; j < imageParam.xsize; j++) {
+                        fm.format("%.10f ", data[i][j]);
+                    }
+                }
+                ((PrintWriter) stream).println(fm);
+                stream.close();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,
+                        bundle.getString("IO ERROR DIALOG"),
+                        bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
+            }
 
         }
     }//GEN-LAST:event_jMenuItemSaveImageTextActionPerformed
