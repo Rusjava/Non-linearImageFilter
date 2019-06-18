@@ -58,7 +58,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Formatter;
-import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -95,7 +94,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
-    private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 1;
+    private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0, iterationCoefficient = 0.5;
     private boolean nonLinearFlag = false, working = false;
@@ -1103,17 +1102,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         if (ans == JFileChooser.APPROVE_OPTION) {
             textWFile = fo.getSelectedFile(); //Getting the text file handle
             Formatter fm = new Formatter(); //Creating a formater for text output
-            PrintWriter stream;
             double[][] data = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0));
-            try {
-                stream = new PrintWriter(new FileWriter(textWFile, false));
+            try (PrintWriter stream
+                    = new PrintWriter(new FileWriter(textWFile, false))) {
                 for (int i = 0; i < imageParam.ysize; i++) {
                     for (int j = 0; j < imageParam.xsize; j++) {
-                        fm.format(Locale.US, "%.10f%n", data[i][j]);
+                        fm.format(Locale.US, "%d %d %.10f%n", i, j, data[i][j]);
                     }
                 }
                 ((PrintWriter) stream).println(fm);
-                stream.close();
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG"),
@@ -1125,6 +1122,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemLoadImageTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadImageTextActionPerformed
         // Loading an image from a text file
+        jButtonStart.setEnabled(false);
+        jButtonImage.setEnabled(false);
+        jSliderImages.setEnabled(false);
+        jMenuItemSaveImage.setEnabled(false);
+        jMenuItemSaveImageText.setEnabled(false);
+        jMenuItemSaveVideo.setEnabled(false);
         /*
          * Create text file and format choosing dialog
          */
@@ -1141,39 +1144,47 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             //Creating the data array
             double[][] pixelData = new double[imageParam.ysize][imageParam.xsize];
             //Reading from the file
-            try {
-                textRFile = fo.getSelectedFile();
-                Scanner scan;
-                String line;
-                try ( //Openning the text stream for read operations
-                        BufferedReader stream = new BufferedReader(new FileReader(textRFile))) {
-                    //Reading the first line
-                    line = stream.readLine();
-                    //If the first lines  is empty than the file is empty
-                    if (line == null) {
-                        throw new EOFException();
-                    }
-                    //Reading the data from the file with prespecified image dimensions
-                    for (int i = 0; i < imageParam.ysize; i++) {
-                        for (int j = 0; j < imageParam.xsize; j++) {
-                            line = stream.readLine();
-                            //If no more lines than the file has ended prematurely
-                            if (line == null) {
-                                throw new EOFException();
-                            }
-                            try {
-                                scan = new Scanner(line);
-                                //Reading the columnNumber-th column
-                                for (int k = 0; k < columnNumber + 2; k++) {
-                                    pixelData[j][i] = scan.nextDouble();
-                                }
-                            } catch (NoSuchElementException e) {
-                                throw new IOException(e);
-                            }
 
+            textRFile = fo.getSelectedFile();
+            Scanner scan;
+            String line;
+            int maxrow = 0, maxcolumn = 0, tmp;
+            try ( //Openning the text stream for read operations
+                    BufferedReader stream = new BufferedReader(new FileReader(textRFile))) {
+                //Reading the first line
+                line = stream.readLine();
+                //If the first lines  is empty than the file is empty
+                if (line == null) {
+                    throw new EOFException();
+                }
+                //Reading the data from the file with prespecified image dimensions
+                for (int i = 0; i < imageParam.ysize; i++) {
+                    for (int j = 0; j < imageParam.xsize; j++) {
+                        line = stream.readLine();
+                        //If no more lines than the file has ended prematurely
+                        if (line == null) {
+                            throw new EOFException();
                         }
+                        try {
+                            scan = new Scanner(line);
+                            scan.useLocale(Locale.US);
+                            //Reading column and raw numbers
+                            tmp = scan.nextInt();
+                            maxrow = tmp > maxrow ? tmp : maxrow;
+                            tmp = scan.nextInt();
+                            maxcolumn = tmp > maxcolumn ? tmp : maxcolumn;
+                            //Reading the pre-specified column
+                            for (int k = 0; k < columnNumber; k++) {
+                                pixelData[i][j] = scan.nextDouble();
+                            }
+                        } catch (NoSuchElementException e) {
+                            throw new IOException(e);
+                        }
+
                     }
                 }
+            } catch (EOFException ex) {
+
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
                         bundle.getString("IO ERROR DIALOG"),
@@ -1182,12 +1193,22 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             //Creating an image from loaded data
             ImageComponent ic = new ImageComponent(pixelData,
                     new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
-                            false, true, Transparency.OPAQUE, DataBuffer.TYPE_INT));
+                            false, true, Transparency.OPAQUE,
+                            ImageComponent.initializeDataBufferType(imageParam.bitNumber)));
             imageList = new ArrayList<>();
             dataList = new ArrayList<>();
             imageList.add(ic);
             dataList.add(pixelData);
             updateImagePanel(0);
+            //Enabling buttons and menu items
+            if (imageList.size() > 0) {
+                jButtonStart.setEnabled(true);
+                jSliderImages.setEnabled(true);
+                jMenuItemSaveImage.setEnabled(true);
+                jMenuItemSaveImageText.setEnabled(true);
+                jMenuItemSaveVideo.setEnabled(true);
+            }
+            jButtonImage.setEnabled(true);
         }
     }//GEN-LAST:event_jMenuItemLoadImageTextActionPerformed
 

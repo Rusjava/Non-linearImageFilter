@@ -416,8 +416,10 @@ public class ImageComponent extends JComponent {
 
     /**
      * Return data buffer type based on image bitness
+     * @param bitNum
+     * @return 
      */
-    private int initializeDataBufferType(int bitNum) {
+    public static int initializeDataBufferType(int bitNum) {
         int dataBufferType;
         switch (bitNum) {
             case 8:
