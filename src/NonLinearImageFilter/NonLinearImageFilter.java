@@ -1142,53 +1142,74 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         int ans = fo.showOpenDialog(this);
         if (ans == JFileChooser.APPROVE_OPTION) {
             //Creating the data array
-            double[][] pixelData = new double[imageParam.ysize][imageParam.xsize];
-            //Reading from the file
-
+            double[][] pixelData = null;
+            //Getting selected file
             textRFile = fo.getSelectedFile();
             Scanner scan;
             String line;
             int maxrow = 0, maxcolumn = 0, tmp;
-            try ( //Openning the text stream for read operations
-                    BufferedReader stream = new BufferedReader(new FileReader(textRFile))) {
-                //Reading the first line
-                line = stream.readLine();
-                //If the first lines  is empty than the file is empty
-                if (line == null) {
-                    throw new EOFException();
-                }
-                //Reading the data from the file with prespecified image dimensions
-                for (int i = 0; i < imageParam.ysize; i++) {
-                    for (int j = 0; j < imageParam.xsize; j++) {
-                        line = stream.readLine();
-                        //If no more lines than the file has ended prematurely
-                        if (line == null) {
-                            throw new EOFException();
-                        }
-                        try {
-                            scan = new Scanner(line);
-                            scan.useLocale(Locale.US);
-                            //Reading column and raw numbers
-                            tmp = scan.nextInt();
-                            maxrow = tmp > maxrow ? tmp : maxrow;
-                            tmp = scan.nextInt();
-                            maxcolumn = tmp > maxcolumn ? tmp : maxcolumn;
-                            //Reading the pre-specified column
-                            for (int k = 0; k < columnNumber; k++) {
-                                pixelData[i][j] = scan.nextDouble();
-                            }
-                        } catch (NoSuchElementException e) {
-                            throw new IOException(e);
-                        }
+            boolean success = false;
 
+            //Cycling until reading is succesful
+            while (!success) {
+                success = true;
+                //Creating the data array
+                pixelData = new double[imageParam.ysize][imageParam.xsize];
+
+                //Reading from the file
+                try ( //Openning the text stream for read operations
+                        BufferedReader stream = new BufferedReader(new FileReader(textRFile))) {
+                    //Reading the first line
+                    line = stream.readLine();
+                    //If the first lines  is empty than the file is empty
+                    if (line == null | line.isEmpty()) {
+                        throw new EOFException("The line is empty or null");
                     }
-                }
-            } catch (EOFException ex) {
+                    //Reading the data from the file with prespecified image dimensions
+                    for (int i = 0; i < imageParam.ysize; i++) {
+                        for (int j = 0; j < imageParam.xsize; j++) {
+                            line = stream.readLine();
+                            //If no more lines than the file has ended prematurely
+                            if (line == null | line.isEmpty()) {
+                                throw new EOFException("The line is empty or null");
+                            }
+                            try {
+                                scan = new Scanner(line);
+                                scan.useLocale(Locale.US);
+                                //Reading column and raw numbers
+                                tmp = scan.nextInt();
+                                maxrow = tmp > maxrow ? tmp : maxrow;
+                                tmp = scan.nextInt();
+                                maxcolumn = tmp > maxcolumn ? tmp : maxcolumn;
+                                //Reading the pre-specified column
+                                for (int k = 0; k < columnNumber; k++) {
+                                    pixelData[i][j] = scan.nextDouble();
+                                }
+                            } catch (NoSuchElementException e) {
+                                throw new IOException(e);
+                            }
 
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null,
-                        bundle.getString("IO ERROR DIALOG"),
-                        bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    if (maxrow + 1 > imageParam.ysize || maxcolumn + 1 > imageParam.xsize) {
+                        throw new EOFException("The image size is large than specified");
+                    }
+                } catch (EOFException ex) {
+                    int answer = JOptionPane.showConfirmDialog(null,
+                            bundle.getString("EOF ERROR DIALOG"),
+                            bundle.getString("EOF ERROR DIALOG TITLE"), JOptionPane.YES_NO_OPTION);
+                    success = (answer != JOptionPane.YES_OPTION);
+                    if (!success) {
+                        imageParam.ysize = maxrow + 1;
+                        imageParam.xsize = maxcolumn + 1;
+                        xsizeField.setValue(imageParam.xsize);
+                        ysizeField.setValue(imageParam.ysize);
+                    }
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null,
+                            bundle.getString("IO ERROR DIALOG"),
+                            bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
+                }
             }
             //Creating an image from loaded data
             ImageComponent ic = new ImageComponent(pixelData,
