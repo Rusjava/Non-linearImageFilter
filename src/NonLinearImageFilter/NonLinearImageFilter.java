@@ -104,6 +104,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
+    private final JSlider maskSlider;
     private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
@@ -130,19 +131,21 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
         this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.3, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
-        imagefilters = new FileFilter[]{
+        this.maskSlider=new JSlider(JSlider.HORIZONTAL, 0, 65535, 1000);
+      
+        this.imagefilters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
             new FileNameExtensionFilter("png", "png"),
             new FileNameExtensionFilter("gif", "gif")
         };
-        textfilters = new FileFilter[]{
+        this.textfilters = new FileFilter[]{
             new FileNameExtensionFilter("dat/data", "dat", "data"),
             new FileNameExtensionFilter("txt/text", "txt", "text")
         };
         this.funcs = new DoubleFunction[]{p -> 1 / (1 + p), p -> Math.exp(-p)};
-        funcBox = new JComboBox<>();
-        funcBox.addItem(bundle.getString("FUNCTION 1"));
-        funcBox.addItem(bundle.getString("FUNCTION 2"));
+        this.funcBox = new JComboBox<>();
+        this.funcBox.addItem(bundle.getString("FUNCTION 1"));
+        this.funcBox.addItem(bundle.getString("FUNCTION 2"));
 
         this.bitNumberMenu = new JComboBox(new String[]{"8 bit", "16 bit", "32 bit"});
         bitNumberMenu.setSelectedIndex(1);
@@ -193,6 +196,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelSpace = new javax.swing.JPanel();
         jProgressBar = new javax.swing.JProgressBar();
         jCheckBoxNonLinear = new javax.swing.JCheckBox();
+        jButtonSegment = new javax.swing.JButton();
         jPanelResults = new javax.swing.JPanel();
         jPanelImages = new javax.swing.JPanel();
         jPanelControls = new javax.swing.JPanel();
@@ -219,6 +223,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jRadioButtonMenuItemDefault = new javax.swing.JRadioButtonMenuItem();
         jRadioButtonMenuItemSystem = new javax.swing.JRadioButtonMenuItem();
         jRadioButtonMenuItemNimbus = new javax.swing.JRadioButtonMenuItem();
+        jMenuTools = new javax.swing.JMenu();
+        jMenuItemSegment = new javax.swing.JMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -366,6 +372,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
 
+        jButtonSegment.setText(bundle.getString("NonLinearImageFilter.jButtonSegment.text")); // NOI18N
+        jButtonSegment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSegmentActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelSpaceLayout = new javax.swing.GroupLayout(jPanelSpace);
         jPanelSpace.setLayout(jPanelSpaceLayout);
         jPanelSpaceLayout.setHorizontalGroup(
@@ -374,15 +387,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
-                    .addComponent(jCheckBoxNonLinear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanelSpaceLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxNonLinear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSegment, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanelSpaceLayout.setVerticalGroup(
             jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSpaceLayout.createSequentialGroup()
                 .addComponent(jProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jCheckBoxNonLinear)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanelSpaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonSegment, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxNonLinear))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -589,6 +607,18 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         jMenuBar.add(jMenuOptions);
 
+        jMenuTools.setText(bundle.getString("NonLinearImageFilter.jMenuTools.text")); // NOI18N
+
+        jMenuItemSegment.setText(bundle.getString("NonLinearImageFilter.jMenuItemSegment.text")); // NOI18N
+        jMenuItemSegment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSegmentActionPerformed(evt);
+            }
+        });
+        jMenuTools.add(jMenuItemSegment);
+
+        jMenuBar.add(jMenuTools);
+
         jMenuHelp.setText(bundle.getString("NonLinearImageFilter.jMenuHelp.text")); // NOI18N
 
         jMenuItemHelp.setText(bundle.getString("NonLinearImageFilter.jMenuItemHelp.text")); // NOI18N
@@ -745,11 +775,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         JRadioButton button1 = new JRadioButton(bundle.getString("GENERATE OPTION"));
         button1.setSelected(true);
         JRadioButton button2 = new JRadioButton(bundle.getString("FROM FILE OPTION"));
+        JRadioButton button3 = new JRadioButton(bundle.getString("FROM TEXT FILE OPTION"));
         buttonGroup.add(button1);
         buttonGroup.add(button2);
+        buttonGroup.add(button3);
         JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
         panel.add(button1);
         panel.add(button2);
+        panel.add(button3);
         /*
          * Display option window
          */
@@ -790,6 +824,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                                 bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
                     }
                 }
+            } else if (button3.isSelected()) {
+                //If the third choice then get the image from a text file
+                jMenuItemLoadImageTextActionPerformed(evt);
             } else {
                 /*
                  * if the first choice, generate image
@@ -1145,72 +1182,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             double[][] pixelData = null;
             //Getting selected file
             textRFile = fo.getSelectedFile();
-            Scanner scan;
-            String line;
-            int maxrow = 0, maxcolumn = 0, tmp;
-            boolean success = false;
-
-            //Cycling until reading is succesful
-            while (!success) {
-                success = true;
-                //Creating the data array
-                pixelData = new double[imageParam.ysize][imageParam.xsize];
-
-                //Reading from the file
-                try ( //Openning the text stream for read operations
-                        BufferedReader stream = new BufferedReader(new FileReader(textRFile))) {
-                    //Reading the first line
-                    line = stream.readLine();
-                    //If the first lines  is empty than the file is empty
-                    if (line == null | line.isEmpty()) {
-                        throw new EOFException("The line is empty or null");
-                    }
-                    //Reading the data from the file with prespecified image dimensions
-                    for (int i = 0; i < imageParam.ysize; i++) {
-                        for (int j = 0; j < imageParam.xsize; j++) {
-                            line = stream.readLine();
-                            //If no more lines than the file has ended prematurely
-                            if (line == null | line.isEmpty()) {
-                                throw new EOFException("The line is empty or null");
-                            }
-                            try {
-                                scan = new Scanner(line);
-                                scan.useLocale(Locale.US);
-                                //Reading column and raw numbers
-                                tmp = scan.nextInt();
-                                maxrow = tmp > maxrow ? tmp : maxrow;
-                                tmp = scan.nextInt();
-                                maxcolumn = tmp > maxcolumn ? tmp : maxcolumn;
-                                //Reading the pre-specified column
-                                for (int k = 0; k < columnNumber; k++) {
-                                    pixelData[i][j] = scan.nextDouble();
-                                }
-                            } catch (NoSuchElementException e) {
-                                throw new IOException(e);
-                            }
-
-                        }
-                    }
-                    if (maxrow + 1 > imageParam.ysize || maxcolumn + 1 > imageParam.xsize) {
-                        throw new EOFException("The image size is large than specified");
-                    }
-                } catch (EOFException ex) {
-                    int answer = JOptionPane.showConfirmDialog(null,
-                            bundle.getString("EOF ERROR DIALOG"),
-                            bundle.getString("EOF ERROR DIALOG TITLE"), JOptionPane.YES_NO_OPTION);
-                    success = (answer != JOptionPane.YES_OPTION);
-                    if (!success) {
-                        imageParam.ysize = maxrow + 1;
-                        imageParam.xsize = maxcolumn + 1;
-                        xsizeField.setValue(imageParam.xsize);
-                        ysizeField.setValue(imageParam.ysize);
-                    }
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null,
-                            bundle.getString("IO ERROR DIALOG"),
-                            bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
-                }
-            }
+            //Calling the image reading function
+            pixelData = readTextImageFile(textRFile, columnNumber, imageParam);
             //Creating an image from loaded data
             ImageComponent ic = new ImageComponent(pixelData,
                     new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
@@ -1232,6 +1205,20 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             jButtonImage.setEnabled(true);
         }
     }//GEN-LAST:event_jMenuItemLoadImageTextActionPerformed
+
+    private void jButtonSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSegmentActionPerformed
+        // TODO add your handling code here:
+        Object[] message = {
+            bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider
+        };
+        int option = JOptionPane.showConfirmDialog(null, message,
+                bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION);
+    }//GEN-LAST:event_jButtonSegmentActionPerformed
+
+    private void jMenuItemSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSegmentActionPerformed
+        // TODO add your handling code here:
+        jButtonSegmentActionPerformed(evt);
+    }//GEN-LAST:event_jMenuItemSegmentActionPerformed
 
     private void jComboBoxBitNumberActionPerformed(java.awt.event.ItemEvent evt) {
         // Processing actions from image bitness combobox
@@ -1296,8 +1283,88 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jPanelImages.repaint();
     }
 
+    /**
+     * Reading the text image file produced by MICA
+     *
+     * @param file
+     * @param column
+     * @param ipar
+     * @return
+     */
+    private double[][] readTextImageFile(File file, int column, ImageParam ipar) {
+        Scanner scan;
+        String line;
+        int maxrow = 0, maxcolumn = 0, tmp;
+        boolean success = false;
+        double[][] pixelData = null;
+
+        //Cycling until reading is succesful
+        while (!success) {
+            success = true;
+            //Creating the data array
+            pixelData = new double[ipar.ysize][ipar.xsize];
+
+            //Reading from the file
+            try ( //Openning the text stream for read operations
+                    BufferedReader stream = new BufferedReader(new FileReader(file))) {
+                //Reading the first line
+                line = stream.readLine();
+                //If the first lines  is empty than the file is empty
+                if (line == null | line.isEmpty()) {
+                    throw new EOFException("The line is empty or null");
+                }
+                //Reading the data from the file with prespecified image dimensions
+                for (int i = 0; i < ipar.ysize; i++) {
+                    for (int j = 0; j < ipar.xsize; j++) {
+                        line = stream.readLine();
+                        //If no more lines than the file has ended prematurely
+                        if (line == null | line.isEmpty()) {
+                            throw new EOFException("The line is empty or null");
+                        }
+                        try {
+                            scan = new Scanner(line);
+                            scan.useLocale(Locale.US);
+                            //Reading column and raw numbers
+                            tmp = scan.nextInt();
+                            maxrow = tmp > maxrow ? tmp : maxrow;
+                            tmp = scan.nextInt();
+                            maxcolumn = tmp > maxcolumn ? tmp : maxcolumn;
+                            //Reading the pre-specified column
+                            for (int k = 0; k < column; k++) {
+                                pixelData[i][j] = scan.nextDouble();
+                            }
+                        } catch (NoSuchElementException e) {
+                            throw new IOException(e);
+                        }
+
+                    }
+                }
+                if (maxrow + 1 > ipar.ysize || maxcolumn + 1 > ipar.xsize) {
+                    throw new EOFException("The image size is large than specified");
+                }
+            } catch (EOFException ex) {
+                int answer = JOptionPane.showConfirmDialog(null,
+                        bundle.getString("EOF ERROR DIALOG"),
+                        bundle.getString("EOF ERROR DIALOG TITLE"), JOptionPane.YES_NO_OPTION);
+                success = (answer != JOptionPane.YES_OPTION);
+                if (!success) {
+                    ipar.ysize = maxrow + 1;
+                    ipar.xsize = maxcolumn + 1;
+                    xsizeField.setValue(ipar.xsize);
+                    ysizeField.setValue(ipar.ysize);
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,
+                        bundle.getString("IO ERROR DIALOG"),
+                        bundle.getString("IO ERROR DIALOG TITLE"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return pixelData;
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
+    private javax.swing.JButton jButtonSegment;
     private javax.swing.JButton jButtonStart;
     private javax.swing.JCheckBox jCheckBoxNonLinear;
     private javax.swing.JLabel jLabelBitNumber;
@@ -1319,8 +1386,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSaveImage;
     private javax.swing.JMenuItem jMenuItemSaveImageText;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
+    private javax.swing.JMenuItem jMenuItemSegment;
     private javax.swing.JMenu jMenuLookAndFeel;
     private javax.swing.JMenu jMenuOptions;
+    private javax.swing.JMenu jMenuTools;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelAction;
     private javax.swing.JPanel jPanelControls;
