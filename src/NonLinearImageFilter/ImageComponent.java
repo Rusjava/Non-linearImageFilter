@@ -169,13 +169,13 @@ public class ImageComponent extends JComponent {
         /*
          * Scaling image before drawing to the size of container
          */
-        double xscale = (double) getWidth() / image.getWidth(null);
-        double yscale = (double) getHeight() / image.getHeight(null);
+        double xscale = (double) this.getWidth() / image.getWidth(null);
+        double yscale = (double) this.getHeight() / image.getHeight(null);
         BufferedImageOp imgop = new AffineTransformOp(AffineTransform.getScaleInstance(xscale, yscale), AffineTransformOp.TYPE_BICUBIC);
         /*
          * Draw image
          */
-        ((Graphics2D) g).drawImage(image, imgop, 0, 0);
+        ((Graphics2D) g).drawImage(image, imgop, -this.getX(), 0);
     }
 
     /**
@@ -416,8 +416,9 @@ public class ImageComponent extends JComponent {
 
     /**
      * Return data buffer type based on image bitness
+     *
      * @param bitNum
-     * @return 
+     * @return
      */
     public static int initializeDataBufferType(int bitNum) {
         int dataBufferType;
@@ -435,5 +436,14 @@ public class ImageComponent extends JComponent {
                 dataBufferType = DataBuffer.TYPE_USHORT;
         }
         return dataBufferType;
+    }
+
+    /**
+     * Return the maximum pixel value
+     *
+     * @return
+     */
+    public int getMaxValue() {
+        return Arrays.stream(pixels).max().getAsInt();
     }
 }

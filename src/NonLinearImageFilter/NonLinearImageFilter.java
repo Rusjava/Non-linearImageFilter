@@ -81,6 +81,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
 
 /**
  *
@@ -102,9 +103,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final Map defaults;
     private SwingWorker<Void, Void> worker;
     private ArrayList<double[][]> dataList;
+    private double[][] maskdata;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
             scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
     private final JSlider maskSlider;
+    private JPanel maskpanel, maskpanel1, maskpanel2;
     private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
@@ -131,8 +134,12 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
         this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.3, 0.0, 1.0, false);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
-        this.maskSlider=new JSlider(JSlider.HORIZONTAL, 0, 65535, 1000);
-      
+        //Elements of the mask tool box
+        this.maskSlider = new JSlider(JSlider.HORIZONTAL, 0, 65535, 1000);
+        this.maskpanel = new JPanel();
+        this.maskpanel1 = new JPanel();
+        this.maskpanel2 = new JPanel();
+
         this.imagefilters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
             new FileNameExtensionFilter("png", "png"),
@@ -155,10 +162,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         initComponents();
         //Disabling saving image commands and start until the images are created
-        jMenuItemSaveImage.setEnabled(false);
-        jMenuItemSaveImageText.setEnabled(false);
-        jMenuItemSaveVideo.setEnabled(false);
-        jButtonStart.setEnabled(false);
+        disableElemtnts();
+        jButtonImage.setEnabled(true);
         //Setting a listerner for style changes
         UIManager.addPropertyChangeListener(e -> SwingUtilities.updateComponentTreeUI(this));
         //Setting radio buttons for style selection
@@ -762,12 +767,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         // Defining JComponent
         JComponent component = null;
         //Disabling menus and buttons
-        jButtonStart.setEnabled(false);
-        jButtonImage.setEnabled(false);
-        jSliderImages.setEnabled(false);
-        jMenuItemSaveImage.setEnabled(false);
-        jMenuItemSaveImageText.setEnabled(false);
-        jMenuItemSaveVideo.setEnabled(false);
+        disableElemtnts();
         /*
          * create a button group to chose the source of initial image
          */
@@ -842,14 +842,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         }
         //Enabling buttons and menu items
-        if (imageList.size() > 0) {
-            jButtonStart.setEnabled(true);
-            jSliderImages.setEnabled(true);
-            jMenuItemSaveImage.setEnabled(true);
-            jMenuItemSaveImageText.setEnabled(true);
-            jMenuItemSaveVideo.setEnabled(true);
-        }
-        jButtonImage.setEnabled(true);
+        enableElemtnts();
 
     }//GEN-LAST:event_jButtonImageActionPerformed
 
@@ -1159,12 +1152,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemLoadImageTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadImageTextActionPerformed
         // Loading an image from a text file
-        jButtonStart.setEnabled(false);
-        jButtonImage.setEnabled(false);
-        jSliderImages.setEnabled(false);
-        jMenuItemSaveImage.setEnabled(false);
-        jMenuItemSaveImageText.setEnabled(false);
-        jMenuItemSaveVideo.setEnabled(false);
+        //Disabling menus and buttons
+        disableElemtnts();
         /*
          * Create text file and format choosing dialog
          */
@@ -1195,24 +1184,36 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             dataList.add(pixelData);
             updateImagePanel(0);
             //Enabling buttons and menu items
-            if (imageList.size() > 0) {
-                jButtonStart.setEnabled(true);
-                jSliderImages.setEnabled(true);
-                jMenuItemSaveImage.setEnabled(true);
-                jMenuItemSaveImageText.setEnabled(true);
-                jMenuItemSaveVideo.setEnabled(true);
-            }
-            jButtonImage.setEnabled(true);
+            enableElemtnts();
         }
     }//GEN-LAST:event_jMenuItemLoadImageTextActionPerformed
 
     private void jButtonSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSegmentActionPerformed
-        // TODO add your handling code here:
+        // Displaying mask selection box:
+        //Getting the maximum pixel value
+        int maxImageValue = ((ImageComponent) imageList
+                .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
+        //Setting up the mask slider
+        maskSlider.setMaximum((int) Math.pow(10, (int) Math.log10(maxImageValue) + 1));
+        maskSlider.setMajorTickSpacing(((int) Math.pow(10, (int) Math.log10(maxImageValue))) * 5);
+        maskSlider.setPaintTicks(true);
+        maskSlider.setPaintLabels(true);
+        maskSlider.setValue(maxImageValue / 2);
+        maskSlider.addChangeListener(this::maskSliderChanged);
+
+        //Setting up images
+        updateMaskPanel();
+
         Object[] message = {
-            bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider
-        };
+            bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
+            bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
+            bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
+            bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,};
+
         int option = JOptionPane.showConfirmDialog(null, message,
                 bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION);
+        //Removing change listerner from the mask slider
+        maskSlider.removeChangeListener(this::maskSliderChanged);
     }//GEN-LAST:event_jButtonSegmentActionPerformed
 
     private void jMenuItemSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSegmentActionPerformed
@@ -1340,7 +1341,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     }
                 }
                 if (maxrow + 1 > ipar.ysize || maxcolumn + 1 > ipar.xsize) {
-                    throw new EOFException("The image size is large than specified");
+                    throw new EOFException("The image size is larger than specified");
                 }
             } catch (EOFException ex) {
                 int answer = JOptionPane.showConfirmDialog(null,
@@ -1361,6 +1362,93 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
         return pixelData;
     }
+
+    /**
+     * Enabling buttons and menu items to handle images
+     */
+    private void enableElemtnts() {
+        if (imageList.size() > 0) {
+            jButtonStart.setEnabled(true);
+            jSliderImages.setEnabled(true);
+            jMenuItemSaveImage.setEnabled(true);
+            jMenuItemSaveImageText.setEnabled(true);
+            jMenuItemSaveVideo.setEnabled(true);
+            jMenuItemSegment.setEnabled(true);
+            jButtonSegment.setEnabled(true);
+        }
+        jButtonImage.setEnabled(true);
+    }
+
+    /**
+     * Disabling buttons and menu items to handle images
+     */
+    private void disableElemtnts() {
+        jButtonStart.setEnabled(false);
+        jButtonImage.setEnabled(false);
+        jSliderImages.setEnabled(false);
+        jMenuItemSaveImage.setEnabled(false);
+        jMenuItemSaveImageText.setEnabled(false);
+        jMenuItemSaveVideo.setEnabled(false);
+        jMenuItemSegment.setEnabled(false);
+        jButtonSegment.setEnabled(false);
+    }
+
+    /**
+     * The listener for the mask slider
+     */
+    private void maskSliderChanged(ChangeEvent e) {
+        // Calling mask panel updating function
+        if (!maskSlider.getValueIsAdjusting()) {
+            updateMaskPanel();
+        }
+    }
+
+    /**
+     * Updating mask panel
+     *
+     * @param pos
+     */
+    private void updateMaskPanel() {
+        //Setting up images
+        maskpanel.removeAll();
+        maskpanel1.removeAll();
+        maskpanel2.removeAll();
+        int pos = maskSlider.getValue();
+        double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),  
+                data1 = new double[data0.length][data0[0].length],
+                data2 = new double[data0.length][data0[0].length];
+        int maxImageValue = ((ImageComponent) imageList
+                .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
+        maskdata = new double[data0.length][data0[0].length];
+        for (int i = 0; i < data0.length; i++) {
+            for (int j = 0; j < data0[0].length; j++) {
+                maskdata[i][j] = data0[i][j] > pos ? maxImageValue : 0;
+                data1[i][j] = data0[i][j] > pos ? data0[i][j] : 0;
+                data2[i][j] = data0[i][j] > pos ? maxImageValue : data0[i][j];
+            }
+        }
+        //Color model
+        ColorModel cm = new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
+                false, true, Transparency.OPAQUE,
+                ImageComponent.initializeDataBufferType(imageParam.bitNumber));
+        //Creating and adding three image: mask, intracellular and intercellular
+        JComponent iImage = new ImageComponent(maskdata, cm);
+        JComponent intraImage = new ImageComponent(data1, cm);
+        JComponent interImage = new ImageComponent(data2, cm);
+        iImage.setPreferredSize(new Dimension(300, 200));
+        intraImage.setPreferredSize(new Dimension(300, 200));
+        interImage.setPreferredSize(new Dimension(300, 200));
+        maskpanel.add(iImage);
+        maskpanel1.add(intraImage);
+        maskpanel2.add(interImage);
+        maskpanel.revalidate();
+        maskpanel.repaint();
+        maskpanel1.revalidate();
+        maskpanel1.repaint();
+        maskpanel2.revalidate();
+        maskpanel2.repaint();
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonImage;
