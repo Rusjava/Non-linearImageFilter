@@ -57,6 +57,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -86,7 +87,7 @@ import javax.swing.event.ChangeEvent;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 2.2
+ * @version 3.0b
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -95,6 +96,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      */
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
+    private ImageComponent iImage = null;
     private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0, iterationCoefficient = 0.5;
@@ -105,9 +107,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<double[][]> dataList;
     private double[][] maskdata;
     private final JFormattedTextField xsizeField, ysizeField, noiseField, signalField,
-            scaleField, precisionField, anisotropyField, frameRateField, threadNumberField, iterField;
+            scaleField, precisionField, anisotropyField, frameRateField,
+            threadNumberField, iterField, columnFiled;
     private final JSlider maskSlider;
-    private JPanel maskpanel, maskpanel1, maskpanel2;
+    private final JPanel maskpanel, maskpanel1, maskpanel2;
+    private JLabel maskstatlabel1, maskstatlabel2;
     private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
@@ -133,12 +137,15 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.frameRateField = MyTextUtilities.getIntegerFormattedTextField(10, 1, 100);
         this.threadNumberField = MyTextUtilities.getIntegerFormattedTextField(threadNumber, 1, 10);
         this.iterField = MyTextUtilities.getDoubleFormattedTextField(0.3, 0.0, 1.0, false);
+        this.columnFiled = MyTextUtilities.getIntegerFormattedTextField(7, 1, 15);
         this.bundle = ResourceBundle.getBundle("NonLinearImageFilter/Bundle");
         //Elements of the mask tool box
         this.maskSlider = new JSlider(JSlider.HORIZONTAL, 0, 65535, 1000);
         this.maskpanel = new JPanel();
         this.maskpanel1 = new JPanel();
         this.maskpanel2 = new JPanel();
+        this.maskstatlabel1 = new JLabel();
+        this.maskstatlabel2 = new JLabel();
 
         this.imagefilters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -943,7 +950,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             bundle.getString("NOISE"), noiseField,
             bundle.getString("SIGNAL"), signalField,
             bundle.getString("SCALE"), scaleField,
-            bundle.getString("BIT_NUMBER"), bitNumberMenu
+            bundle.getString("BIT_NUMBER"), bitNumberMenu,
+            bundle.getString("COLUMN_NUMBER"), columnFiled
         };
         int option = JOptionPane.showConfirmDialog(null, message, bundle.getString("IMAGE GENERATOR PARAMETERS DIALOG"),
                 JOptionPane.OK_CANCEL_OPTION);
@@ -954,6 +962,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             imageParam.signal = (int) Math.pow(2, (Integer) signalField.getValue());
             imageParam.scale = (Double) scaleField.getValue();
             imageParam.bitNumber = bitnesses[bitNumberMenu.getSelectedIndex()];
+            columnNumber = (Integer) columnFiled.getValue();
         }
         jLabelBitNumber.setText(bundle.getString("NonLinearImageFilter.jLabelBitNumber.text") + imageParam.bitNumber);
     }//GEN-LAST:event_jMenuItemImageOptionsActionPerformed
@@ -1035,48 +1044,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     private void jMenuItemSaveImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveImageActionPerformed
         // Saving as an image file
-        JFileChooser fo = new JFileChooser(imageWFile);
-        fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
-        for (FileFilter filter : imagefilters) {
-            fo.addChoosableFileFilter(filter);
-        }
-        fo.setAcceptAllFileFilterUsed(false);
-        int ans = fo.showSaveDialog(this);
-
-        if (ans == JFileChooser.APPROVE_OPTION) {
-            try {
-                imageWFile = fo.getSelectedFile();
-                int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
-                String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
-                BufferedImage image = ((ImageComponent) imageList.get(index)).getImage();
-                if (image.getData().getTransferType() == DataBuffer.TYPE_INT) {
-                    int xsize = image.getWidth(null);
-                    int ysize = image.getHeight(null);
-                    double[] pixels = new double[xsize * ysize];
-                    //Creating a new color model for the float transfer type for TYPE_INT
-                    ColorModel cm = new ImageComponent.Int32ComponentColorModel(image.getColorModel().getColorSpace(),
-                            new int[]{32}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_FLOAT);
-                    /*
-                     * Create an Writableraster from the existing color model and fill it with pixels
-                     */
-                    double[][] ar = dataList.get(index);
-                    for (int i = 0; i < ysize - 1; i++) {
-                        System.arraycopy(ar[i], 0, pixels, i * xsize, xsize);
-                    }
-                    WritableRaster raster = cm.createCompatibleWritableRaster(xsize, ysize);
-                    raster.setPixels(0, 0, xsize, ysize, pixels);
-                    /*
-                     * Create a BufferedImage from the raster and color model and return it
-                     */
-                    image = new BufferedImage(cm, raster, true, null);
-                }
-                ImageIO.write(image, type, imageWFile);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null,
-                        bundle.getString("IO SAVE ERROR DIALOG TITLE"),
-                        bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        int index = (int) (sliderposition * (imageList.size() - 1) / 100.0);
+        BufferedImage image = ((ImageComponent) imageList.get(index)).getImage();
+        double[][] ar = dataList.get(index);
+        saveImageFile(image, ar);
     }//GEN-LAST:event_jMenuItemSaveImageActionPerformed
 
     private void jRadioButtonMenuItemDefaultItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemDefaultItemStateChanged
@@ -1208,10 +1179,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
             bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
             bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
-            bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,};
+            bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
+            bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
+            bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
 
         int option = JOptionPane.showConfirmDialog(null, message,
-                bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION);
+                bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE);
+        if (option == JOptionPane.OK_OPTION) {
+            saveImageFile(iImage.getImage(), maskdata);
+        }
         //Removing change listerner from the mask slider
         maskSlider.removeChangeListener(this::maskSliderChanged);
     }//GEN-LAST:event_jButtonSegmentActionPerformed
@@ -1413,26 +1390,44 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskpanel.removeAll();
         maskpanel1.removeAll();
         maskpanel2.removeAll();
-        int pos = maskSlider.getValue();
-        double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),  
+        double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp = 0;
+        int pos = maskSlider.getValue(), counter = 0;
+        double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),
                 data1 = new double[data0.length][data0[0].length],
                 data2 = new double[data0.length][data0[0].length];
         int maxImageValue = ((ImageComponent) imageList
                 .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
+        int size = data0.length * data0[0].length;
         maskdata = new double[data0.length][data0[0].length];
         for (int i = 0; i < data0.length; i++) {
             for (int j = 0; j < data0[0].length; j++) {
-                maskdata[i][j] = data0[i][j] > pos ? maxImageValue : 0;
-                data1[i][j] = data0[i][j] > pos ? data0[i][j] : 0;
-                data2[i][j] = data0[i][j] > pos ? maxImageValue : data0[i][j];
+                tmp = data0[i][j];
+                if (data0[i][j] > pos) {
+                    maskdata[i][j] = maxImageValue;
+                    data1[i][j] = tmp;
+                    data2[i][j] = maxImageValue;
+                    average1 += tmp;
+                    averagesq1 += tmp * tmp;
+                    counter++;
+                } else {
+                    maskdata[i][j] = 0;
+                    data1[i][j] = 0;
+                    data2[i][j] = tmp;
+                    average2 += tmp;
+                    averagesq2 += tmp * tmp;
+                }
             }
         }
+        average1 /= counter;
+        average2 /= size - counter;
+        averagesq1 /= counter;
+        averagesq2 /= size - counter;
         //Color model
         ColorModel cm = new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
                 false, true, Transparency.OPAQUE,
                 ImageComponent.initializeDataBufferType(imageParam.bitNumber));
         //Creating and adding three image: mask, intracellular and intercellular
-        JComponent iImage = new ImageComponent(maskdata, cm);
+        iImage = new ImageComponent(maskdata, cm);
         JComponent intraImage = new ImageComponent(data1, cm);
         JComponent interImage = new ImageComponent(data2, cm);
         iImage.setPreferredSize(new Dimension(300, 200));
@@ -1447,6 +1442,99 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskpanel1.repaint();
         maskpanel2.revalidate();
         maskpanel2.repaint();
+        maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 "
+                + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
+        maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
+                + (int) Math.round(Math.sqrt(averagesq1 - average1 * average1)));
+    }
+
+    /**
+     * Looking for the optimal segmentation treshold
+     *
+     * @param data0
+     * @param pos
+     * @return
+     */
+    private double findOptimalThreshold(double[][] data0, double pos) {
+        int NUMPOINTS = 100;
+        double average1 = 0, average2 = 0,
+                averagesq1 = 0, averagesq2 = 0, tmp = 0;
+        int counter = 0;
+        int size = data0.length * data0[0].length;
+        maskdata = new double[data0.length][data0[0].length];
+        double[] results = new double[NUMPOINTS];
+        for (int k = 0; k < NUMPOINTS; k++) {
+            for (int i = 0; i < data0.length; i++) {
+                for (int j = 0; j < data0[0].length; j++) {
+                    tmp = data0[i][j];
+                    if (data0[i][j] > pos) {
+                        average1 += tmp;
+                        averagesq1 += tmp * tmp;
+                        counter++;
+                    } else {
+                        average2 += tmp;
+                        averagesq2 += tmp * tmp;
+                    }
+                }
+            }
+            average1 /= counter;
+            average2 /= size - counter;
+            averagesq1 /= counter;
+            averagesq2 /= size - counter;
+            results[k] = average1 * average2 / Math.sqrt(averagesq1 * averagesq2);
+        }
+
+        return Arrays.stream(results).min().getAsDouble();
+    }
+
+    /**
+     * Saving the image into a file
+     *
+     */
+    private int saveImageFile(BufferedImage image, double[][] ar) {
+        int res = 1;
+        JFileChooser fo = new JFileChooser(imageWFile);
+        fo.setDialogTitle(bundle.getString("IMAGE SAVE DIALOG TITLE"));
+        for (FileFilter filter : imagefilters) {
+            fo.addChoosableFileFilter(filter);
+        }
+        fo.setAcceptAllFileFilterUsed(false);
+        int ans = fo.showSaveDialog(this);
+
+        if (ans == JFileChooser.APPROVE_OPTION) {
+            res = 0;
+            try {
+                imageWFile = fo.getSelectedFile();
+                String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
+                if (image.getData().getTransferType() == DataBuffer.TYPE_INT) {
+                    int xsize = image.getWidth(null);
+                    int ysize = image.getHeight(null);
+                    double[] pixels = new double[xsize * ysize];
+                    //Creating a new color model for the float transfer type for TYPE_INT
+                    ColorModel cm = new ImageComponent.Int32ComponentColorModel(image.getColorModel().getColorSpace(),
+                            new int[]{32}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_FLOAT);
+                    /*
+                     * Create an Writableraster from the existing color model and fill it with pixels
+                     */
+                    for (int i = 0; i < ysize - 1; i++) {
+                        System.arraycopy(ar[i], 0, pixels, i * xsize, xsize);
+                    }
+                    WritableRaster raster = cm.createCompatibleWritableRaster(xsize, ysize);
+                    raster.setPixels(0, 0, xsize, ysize, pixels);
+                    /*
+                     * Create a BufferedImage from the raster and color model and return it
+                     */
+                    image = new BufferedImage(cm, raster, true, null);
+                }
+                ImageIO.write(image, type, imageWFile);
+            } catch (IOException ex) {
+                res = 1;
+                JOptionPane.showMessageDialog(null,
+                        bundle.getString("IO SAVE ERROR DIALOG TITLE"),
+                        bundle.getString("IO ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return res;
     }
 
 

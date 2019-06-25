@@ -38,7 +38,7 @@ import java.util.stream.IntStream;
  * A component object for images
  *
  * @author Ruslan Feshchenko
- * @version 1.2
+ * @version 1.3
  */
 public class ImageComponent extends JComponent {
 
