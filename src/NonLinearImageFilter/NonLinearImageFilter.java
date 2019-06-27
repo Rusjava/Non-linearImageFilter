@@ -100,7 +100,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0, iterationCoefficient = 0.5;
-    private boolean nonLinearFlag = false, working = false;
+    private boolean nonLinearFlag = false, working = false, maskworking = false;
     private CrankNicholson2D comp;
     private final Map defaults;
     private SwingWorker<Void, Void> worker;
@@ -111,7 +111,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             threadNumberField, iterField, columnFiled;
     private final JSlider maskSlider;
     private final JPanel maskpanel, maskpanel1, maskpanel2;
-    private JLabel maskstatlabel1, maskstatlabel2;
+    private final JLabel maskstatlabel1, maskstatlabel2;
     private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
@@ -1386,15 +1386,51 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      * @param pos
      */
     private void updateMaskPanel() {
+        //Disabling segmentation buttonand menu
+        jMenuItemSegment.setEnabled(false);
+        jButtonSegment.setEnabled(false);
         //Setting up images
         maskpanel.removeAll();
         maskpanel1.removeAll();
         maskpanel2.removeAll();
+        maskworking = true;
         double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp = 0;
-        int pos = maskSlider.getValue(), counter = 0;
         double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),
                 data1 = new double[data0.length][data0[0].length],
                 data2 = new double[data0.length][data0[0].length];
+        int pos = maskSlider.getValue(), counter = 0;
+        double[] retpos = new double[1];
+        retpos[0] = pos;
+
+        //Calculating the optimal value in a separate thread
+        SwingWorker<Double, Void> maskworker = new SwingWorker<Double, Void>() {
+
+            @Override
+            protected Double doInBackground() throws Exception {
+                return findOptimalThreshold(data0, retpos[0]);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    retpos[0] = get();
+                } catch (InterruptedException | CancellationException e) {
+
+                } catch (ExecutionException e) {
+                    JOptionPane.showMessageDialog(null, bundle.getString("ERROR DIALOG"), bundle.getString("ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+                    Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
+                    return;
+                }
+                maskworking = false;
+                //Enabling segmentation buttonand menu
+                jButtonSegment.setEnabled(true);
+                jMenuItemSegment.setEnabled(true);
+            }
+        };
+
+        //Rounding position
+        pos = (int) Math.round(retpos[0]);
+        //Claculating the maxal pixel value of the current image
         int maxImageValue = ((ImageComponent) imageList
                 .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
         int size = data0.length * data0[0].length;
@@ -1449,7 +1485,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     }
 
     /**
-     * Looking for the optimal segmentation treshold
+     * Looking for the optimal segmentation threshold
      *
      * @param data0
      * @param pos
@@ -1458,7 +1494,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private double findOptimalThreshold(double[][] data0, double pos) {
         int NUMPOINTS = 100;
         double average1 = 0, average2 = 0,
-                averagesq1 = 0, averagesq2 = 0, tmp = 0;
+                averagesq1 = 0, averagesq2 = 0, tmp;
         int counter = 0;
         int size = data0.length * data0[0].length;
         maskdata = new double[data0.length][data0[0].length];
