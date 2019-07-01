@@ -1172,12 +1172,52 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskSlider.setValue(maxImageValue / 2);
         maskSlider.addChangeListener(this::maskSliderChanged);
 
+        //Disabling segmentation button and menu
+        jMenuItemSegment.setEnabled(false);
+        jButtonSegment.setEnabled(false);
+
+        //Setting up parameters
+        maskworking = true;
+        double[] retpos = new double[1];
+        retpos[0] = maskSlider.getMaximum() - 1;
+        double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0));
+
+        //Calculating the optimal value in a separate thread
+        SwingWorker<Double, Void> maskworker = new SwingWorker<Double, Void>() {
+
+            @Override
+            protected Double doInBackground() throws Exception {
+                return findOptimalThreshold(data0, retpos[0]);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    retpos[0] = get();
+                } catch (InterruptedException | CancellationException e) {
+
+                } catch (ExecutionException e) {
+                    JOptionPane.showMessageDialog(null, bundle.getString("ERROR DIALOG"), bundle.getString("ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
+                    Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
+                    return;
+                }
+                maskworking = false;
+                //Enabling segmentation buttonand menu
+                jButtonSegment.setEnabled(true);
+                jMenuItemSegment.setEnabled(true);
+            }
+        };
+
+        //Starting optimization
+        maskworker.execute();
+
         //Setting up images
-        updateMaskPanel();
+        updateMaskPanel((int) Math.round(retpos[0]));
 
         Object[] message = {
             bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
-            bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
+            bundle.getString("NonLinearImageFilter.jMaskPanel.text")
+            + ": " + (int) Math.round(retpos[0]), maskpanel,
             bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
             bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
             bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
@@ -1376,7 +1416,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void maskSliderChanged(ChangeEvent e) {
         // Calling mask panel updating function
         if (!maskSlider.getValueIsAdjusting()) {
-            updateMaskPanel();
+            updateMaskPanel(maskSlider.getValue());
         }
     }
 
@@ -1385,52 +1425,19 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      *
      * @param pos
      */
-    private void updateMaskPanel() {
-        //Disabling segmentation buttonand menu
-        jMenuItemSegment.setEnabled(false);
-        jButtonSegment.setEnabled(false);
+    private void updateMaskPanel(double pos) {
         //Setting up images
         maskpanel.removeAll();
         maskpanel1.removeAll();
         maskpanel2.removeAll();
-        maskworking = true;
+
         double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp = 0;
         double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),
                 data1 = new double[data0.length][data0[0].length],
                 data2 = new double[data0.length][data0[0].length];
-        int pos = maskSlider.getValue(), counter = 0;
-        double[] retpos = new double[1];
-        retpos[0] = pos;
+        int counter = 0;
 
-        //Calculating the optimal value in a separate thread
-        SwingWorker<Double, Void> maskworker = new SwingWorker<Double, Void>() {
-
-            @Override
-            protected Double doInBackground() throws Exception {
-                return findOptimalThreshold(data0, retpos[0]);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    retpos[0] = get();
-                } catch (InterruptedException | CancellationException e) {
-
-                } catch (ExecutionException e) {
-                    JOptionPane.showMessageDialog(null, bundle.getString("ERROR DIALOG"), bundle.getString("ERROR DIALOG"), JOptionPane.ERROR_MESSAGE);
-                    Logger.getLogger(NonLinearImageFilter.class.getName()).log(Level.SEVERE, null, e);
-                    return;
-                }
-                maskworking = false;
-                //Enabling segmentation buttonand menu
-                jButtonSegment.setEnabled(true);
-                jMenuItemSegment.setEnabled(true);
-            }
-        };
-
-        //Rounding position
-        pos = (int) Math.round(retpos[0]);
-        //Claculating the maxal pixel value of the current image
+        //Calculating the maxal pixel value of the current image
         int maxImageValue = ((ImageComponent) imageList
                 .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
         int size = data0.length * data0[0].length;
@@ -1491,15 +1498,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      * @param pos
      * @return
      */
-    private double findOptimalThreshold(double[][] data0, double pos) {
+    private double findOptimalThreshold(double[][] data0, double posmax) {
         int NUMPOINTS = 100;
         double average1 = 0, average2 = 0,
-                averagesq1 = 0, averagesq2 = 0, tmp;
+                averagesq1 = 0, averagesq2 = 0, tmp, pos, delta = posmax / (NUMPOINTS - 1);
         int counter = 0;
         int size = data0.length * data0[0].length;
         maskdata = new double[data0.length][data0[0].length];
         double[] results = new double[NUMPOINTS];
         for (int k = 0; k < NUMPOINTS; k++) {
+            pos = k * delta;
             for (int i = 0; i < data0.length; i++) {
                 for (int j = 0; j < data0[0].length; j++) {
                     tmp = data0[i][j];
@@ -1517,7 +1525,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             average2 /= size - counter;
             averagesq1 /= counter;
             averagesq2 /= size - counter;
-            results[k] = average1 * average2 / Math.sqrt(averagesq1 * averagesq2);
+            results[k] = average1 * average2
+                    / Math.sqrt((averagesq1 - average1 * average1) * (averagesq2 - average2 * average2));
         }
 
         return Arrays.stream(results).min().getAsDouble();
