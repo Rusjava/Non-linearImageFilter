@@ -57,10 +57,11 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Formatter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.stream.IntStream;
+import static java.util.Comparator.comparingDouble;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -111,7 +112,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             threadNumberField, iterField, columnFiled;
     private final JSlider maskSlider;
     private final JPanel maskpanel, maskpanel1, maskpanel2;
-    private final JLabel maskstatlabel1, maskstatlabel2;
+    private final JLabel maskstatlabel1, maskstatlabel2, thresholdlabel;
     private final JComboBox bitNumberMenu;
     private final JComboBox<String> funcBox;
     private final ResourceBundle bundle;
@@ -121,6 +122,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final double[] nonLinearCoefs = new double[]{30, 1e4, 1e8};
     private File imageRFile = null, imageWFile = null, videoWFile = null, textWFile = null, textRFile = null;
     private final DoubleFunction[] funcs;
+    private static final int NUMPOINTS = 100;
 
     public NonLinearImageFilter() {
         this.threadNumber = Runtime.getRuntime().availableProcessors();
@@ -146,6 +148,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         this.maskpanel2 = new JPanel();
         this.maskstatlabel1 = new JLabel();
         this.maskstatlabel2 = new JLabel();
+        this.thresholdlabel = new JLabel();
 
         this.imagefilters = new FileFilter[]{
             new FileNameExtensionFilter("tif/tiff", "tif", "tiff"),
@@ -237,6 +240,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jRadioButtonMenuItemNimbus = new javax.swing.JRadioButtonMenuItem();
         jMenuTools = new javax.swing.JMenu();
         jMenuItemSegment = new javax.swing.JMenuItem();
+        jMenuItemLoadSegment = new javax.swing.JMenuItem();
         jMenuHelp = new javax.swing.JMenu();
         jMenuItemHelp = new javax.swing.JMenuItem();
         jMenuItemAbout = new javax.swing.JMenuItem();
@@ -628,6 +632,14 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             }
         });
         jMenuTools.add(jMenuItemSegment);
+
+        jMenuItemLoadSegment.setText(bundle.getString("NonLinearImageFilter.jMenuItemLoadSegment.text")); // NOI18N
+        jMenuItemLoadSegment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadSegmentActionPerformed(evt);
+            }
+        });
+        jMenuTools.add(jMenuItemLoadSegment);
 
         jMenuBar.add(jMenuTools);
 
@@ -1173,13 +1185,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskSlider.addChangeListener(this::maskSliderChanged);
 
         //Disabling segmentation button and menu
+        maskSlider.setEnabled(false);
         jMenuItemSegment.setEnabled(false);
         jButtonSegment.setEnabled(false);
 
         //Setting up parameters
         maskworking = true;
-        double[] retpos = new double[1];
-        retpos[0] = maskSlider.getMaximum() - 1;
+        int[] retpos = {maskSlider.getMaximum() - 1};
         double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0));
 
         //Calculating the optimal value in a separate thread
@@ -1193,7 +1205,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             @Override
             protected void done() {
                 try {
-                    retpos[0] = get();
+                    retpos[0] = (int) Math.round(get());
                 } catch (InterruptedException | CancellationException e) {
 
                 } catch (ExecutionException e) {
@@ -1205,38 +1217,84 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 //Enabling segmentation buttonand menu
                 jButtonSegment.setEnabled(true);
                 jMenuItemSegment.setEnabled(true);
-            }
-        };
+                maskSlider.setValue(retpos[0]);
+                maskSlider.setEnabled(true);
 
+                //Setting up images
+                updateMaskPanel(retpos[0]);
+
+                Object[] message = {
+                    bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
+                    bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
+                    bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
+                    bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
+                    bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel, 
+                    bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
+                    bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
+
+                int option = JOptionPane.showConfirmDialog(null, message,
+                        bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE);
+                if (option == JOptionPane.OK_OPTION) {
+                    saveImageFile(iImage.getImage(), maskdata);
+                }
+                //Removing change listerner from the mask slider
+                maskSlider.removeChangeListener(maskSlider.getChangeListeners()[0]);
+            }
+
+        };
         //Starting optimization
         maskworker.execute();
-
-        //Setting up images
-        updateMaskPanel((int) Math.round(retpos[0]));
-
-        Object[] message = {
-            bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
-            bundle.getString("NonLinearImageFilter.jMaskPanel.text")
-            + ": " + (int) Math.round(retpos[0]), maskpanel,
-            bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
-            bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
-            bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
-            bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
-
-        int option = JOptionPane.showConfirmDialog(null, message,
-                bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.INFORMATION_MESSAGE);
-        if (option == JOptionPane.OK_OPTION) {
-            saveImageFile(iImage.getImage(), maskdata);
-        }
-        //Removing change listerner from the mask slider
-        maskSlider.removeChangeListener(this::maskSliderChanged);
     }//GEN-LAST:event_jButtonSegmentActionPerformed
 
     private void jMenuItemSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSegmentActionPerformed
-        // TODO add your handling code here:
+        // Segment the current image:
         jButtonSegmentActionPerformed(evt);
     }//GEN-LAST:event_jMenuItemSegmentActionPerformed
+
+    private void jMenuItemLoadSegmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadSegmentActionPerformed
+        // Load and segment the image:
+        /*
+         * Create text file and format choosing dialog
+         */
+        JFileChooser fo = new JFileChooser(textRFile);
+        fo.setDialogTitle(bundle.getString("IMAGE TEXT LOAD DIALOG TITLE"));
+        //Adding text file imagefilters
+        for (FileFilter filter : textfilters) {
+            fo.addChoosableFileFilter(filter);
+        }
+        fo.setAcceptAllFileFilterUsed(true);
+
+        int ans = fo.showOpenDialog(this);
+        if (ans == JFileChooser.APPROVE_OPTION) {
+            //Creating the data array
+            double[][] pixelData = null;
+            //Getting selected file
+            textRFile = fo.getSelectedFile();
+            //Calling the image reading function
+            pixelData = readTextImageFile(textRFile, columnNumber, imageParam);
+            //Creating an image from loaded data
+            ImageComponent ic = new ImageComponent(pixelData,
+                    new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
+                            false, true, Transparency.OPAQUE,
+                            ImageComponent.initializeDataBufferType(imageParam.bitNumber)));
+            
+            Object[] message = {
+                    bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
+                    bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
+                    bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
+                    bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel, 
+                    bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
+                    bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
+
+                int option = JOptionPane.showConfirmDialog(null, message,
+                        bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE);
+                if (option == JOptionPane.OK_OPTION) {
+                    saveImageFile(iImage.getImage(), maskdata);
+                }
+        }
+    }//GEN-LAST:event_jMenuItemLoadSegmentActionPerformed
 
     private void jComboBoxBitNumberActionPerformed(java.awt.event.ItemEvent evt) {
         // Processing actions from image bitness combobox
@@ -1485,6 +1543,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskpanel1.repaint();
         maskpanel2.revalidate();
         maskpanel2.repaint();
+        thresholdlabel.setText(Double.toString(pos));
         maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 "
                 + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
         maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
@@ -1499,15 +1558,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      * @return
      */
     private double findOptimalThreshold(double[][] data0, double posmax) {
-        int NUMPOINTS = 100;
-        double average1 = 0, average2 = 0,
-                averagesq1 = 0, averagesq2 = 0, tmp, pos, delta = posmax / (NUMPOINTS - 1);
-        int counter = 0;
+        double average1, average2, averagesq1, averagesq2, tmp, pos = 0, delta = posmax / (NUMPOINTS - 1);
+        int counter;
         int size = data0.length * data0[0].length;
-        maskdata = new double[data0.length][data0[0].length];
         double[] results = new double[NUMPOINTS];
         for (int k = 0; k < NUMPOINTS; k++) {
-            pos = k * delta;
+            counter = 0;
+            average1 = 0;
+            average2 = 0;
+            averagesq1 = 0;
+            averagesq2 = 0;
             for (int i = 0; i < data0.length; i++) {
                 for (int j = 0; j < data0[0].length; j++) {
                     tmp = data0[i][j];
@@ -1521,15 +1581,19 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     }
                 }
             }
+            pos += delta;
             average1 /= counter;
             average2 /= size - counter;
             averagesq1 /= counter;
             averagesq2 /= size - counter;
-            results[k] = average1 * average2
-                    / Math.sqrt((averagesq1 - average1 * average1) * (averagesq2 - average2 * average2));
+            tmp = Math.sqrt(averagesq1 - average1 * average1)
+                    + Math.sqrt(averagesq2 - average2 * average2);
+            results[k] = Double.isNaN(tmp) ? 1e32 : tmp;
         }
-
-        return Arrays.stream(results).min().getAsDouble();
+        //Looking for the index corresponding to the minimal relative error
+        int minIndex = IntStream.range(0, NUMPOINTS - 1).boxed()
+                .min(comparingDouble(s -> results[s])).get();
+        return delta * minIndex;
     }
 
     /**
@@ -1604,6 +1668,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemHelp;
     private javax.swing.JMenuItem jMenuItemImageOptions;
     private javax.swing.JMenuItem jMenuItemLoadImageText;
+    private javax.swing.JMenuItem jMenuItemLoadSegment;
     private javax.swing.JMenuItem jMenuItemSaveImage;
     private javax.swing.JMenuItem jMenuItemSaveImageText;
     private javax.swing.JMenuItem jMenuItemSaveVideo;
