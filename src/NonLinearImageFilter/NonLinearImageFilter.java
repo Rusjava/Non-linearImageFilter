@@ -88,7 +88,7 @@ import javax.swing.event.ChangeEvent;
 /**
  *
  * @author Ruslan Feshchenko
- * @version 3.0b
+ * @version 3.0
  */
 public class NonLinearImageFilter extends javax.swing.JFrame {
 
@@ -1219,6 +1219,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 jMenuItemSegment.setEnabled(true);
                 maskSlider.setValue(retpos[0]);
                 maskSlider.setEnabled(true);
+                jMenuItemLoadSegment.setEnabled(true);
 
                 //Setting up images
                 updateMaskPanel(retpos[0]);
@@ -1228,7 +1229,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
                     bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
                     bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
-                    bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel, 
+                    bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel,
                     bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
                     bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
 
@@ -1267,32 +1268,84 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
         int ans = fo.showOpenDialog(this);
         if (ans == JFileChooser.APPROVE_OPTION) {
-            //Creating the data array
-            double[][] pixelData = null;
+            maskpanel1.removeAll();
+            maskpanel2.removeAll();
+            //Creating the data arrays
+            double[][] pixelData, data1, data2;
+            //Calculating the maximal pixel value of the current image and image 
+            int maxImageValue = (int) (Math.pow(2, imageParam.bitNumber) - 1);
+            double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp;
+            int counter = 0;
             //Getting selected file
             textRFile = fo.getSelectedFile();
             //Calling the image reading function
             pixelData = readTextImageFile(textRFile, columnNumber, imageParam);
-            //Creating an image from loaded data
-            ImageComponent ic = new ImageComponent(pixelData,
-                    new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
-                            false, true, Transparency.OPAQUE,
-                            ImageComponent.initializeDataBufferType(imageParam.bitNumber)));
-            
-            Object[] message = {
-                    bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
-                    bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
-                    bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
-                    bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel, 
-                    bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
-                    bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
+            //Creating arrays for masked images
+            data1 = new double[pixelData.length][pixelData[0].length];
+            data2 = new double[pixelData.length][pixelData[0].length];
+            int size = pixelData.length * pixelData[0].length;
 
-                int option = JOptionPane.showConfirmDialog(null, message,
-                        bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE);
-                if (option == JOptionPane.OK_OPTION) {
-                    saveImageFile(iImage.getImage(), maskdata);
+            //Implemeting the masking and calculation of statistics
+            for (int i = 0; i < pixelData.length; i++) {
+                for (int j = 0; j < pixelData[0].length; j++) {
+                    tmp = pixelData[i][j];
+                    if (maskdata[i][j] > 0) {
+                        data1[i][j] = pixelData[i][j];
+                        data2[i][j] = maxImageValue;
+                        average1 += tmp;
+                        averagesq1 += tmp * tmp;
+                        counter++;
+                    } else {
+                        data1[i][j] = 0;
+                        data2[i][j] = pixelData[i][j];
+                        average2 += tmp;
+                        averagesq2 += tmp * tmp;
+                    }
                 }
+            }
+
+            average1 /= counter;
+            average2 /= size - counter;
+            averagesq1 /= counter;
+            averagesq2 /= size - counter;
+
+            //Color model
+            ColorModel cm = new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
+                    false, true, Transparency.OPAQUE,
+                    ImageComponent.initializeDataBufferType(imageParam.bitNumber));
+            //Creating and adding three image: mask, intracellular and intercellular
+            JComponent intraImage = new ImageComponent(data1, cm);
+            JComponent interImage = new ImageComponent(data2, cm);
+            intraImage.setPreferredSize(new Dimension(300, 200));
+            interImage.setPreferredSize(new Dimension(300, 200));
+            maskpanel1.add(intraImage);
+            maskpanel2.add(interImage);
+            maskpanel1.revalidate();
+            maskpanel1.repaint();
+            maskpanel2.revalidate();
+            maskpanel2.repaint();
+            maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 "
+                    + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
+            maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
+                    + (int) Math.round(Math.sqrt(averagesq1 - average1 * average1)));
+
+            Object[] message = {
+                bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
+                bundle.getString("NonLinearImageFilter.jMaskPanel1.text"), maskpanel1,
+                bundle.getString("NonLinearImageFilter.jMaskPanel2.text"), maskpanel2,
+                bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
+                bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1
+            };
+
+            //Displaying the option window showing the intracell and intercell images and statistics
+            int option = JOptionPane.showConfirmDialog(null, message,
+                    bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE);
+            if (option == JOptionPane.OK_OPTION) {
+                //Saving intra and intercell images
+                saveImageFile(((ImageComponent) intraImage).getImage(), data1);
+                saveImageFile(((ImageComponent) interImage).getImage(), data2);
+            }
         }
     }//GEN-LAST:event_jMenuItemLoadSegmentActionPerformed
 
@@ -1465,6 +1518,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         jMenuItemSaveImageText.setEnabled(false);
         jMenuItemSaveVideo.setEnabled(false);
         jMenuItemSegment.setEnabled(false);
+        jMenuItemLoadSegment.setEnabled(false);
         jButtonSegment.setEnabled(false);
     }
 
@@ -1495,9 +1549,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 data2 = new double[data0.length][data0[0].length];
         int counter = 0;
 
-        //Calculating the maxal pixel value of the current image
-        int maxImageValue = ((ImageComponent) imageList
-                .get((int) (sliderposition * (imageList.size() - 1) / 100.0))).getMaxValue();
+        //Calculating the maximal pixel value of the current image
+        int maxImageValue = (int) (Math.pow(2, imageParam.bitNumber) - 1);
         int size = data0.length * data0[0].length;
         maskdata = new double[data0.length][data0[0].length];
         for (int i = 0; i < data0.length; i++) {

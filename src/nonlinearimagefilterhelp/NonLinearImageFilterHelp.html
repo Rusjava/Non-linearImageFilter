@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-version: 1.0
+version: 3.0
 -->
 <html lang="en">
    <head> 
@@ -54,14 +54,17 @@ version: 1.0
                     filtering can be continued after adjusting parameters. The sequence of filtered images can be viewed by moving the slider in <em>Controls</em> panel. 
                     The currently visible image can be saved by using either <em>File->Save current image...</em> 
                     or <em>File->Save current image as text...</em> menu items for saving in the graphical or MCA text formats, respectively. 
-                    The full image sequence can be save as AVI or QuickTime uncompressed video by using <em>File->Save as video...</em> menu option.</p>
+                    The full image sequence can be saved as AVI or QuickTime uncompressed video by using <em>File->Save as video...</em> menu option.</p>
                 
-                <h2>Segmentation</h2>
+                <h2>Mask generation and segmentation</h2>
                 <p>Use <b>Segment</b> button or <em>Tools->Segment the current image...</em> menu item to bring the segmentation window
                     that allows one to choose the threshold of segmentation for the current image using a slider. 
                     The initial value of the threshold is suggested based on the minimum standard error. 
                     The three image panels show the resulting mask as well as parts of the image inside and outside the masked areas 
                     (inside and outside cells). Upon pressing the <b>Ok</b> button the mask can be saved into a graphic file.</p>
+                <p>The mask defined before can be used to segment other images loading them from text files. 
+                    This can be done with <em>Tools->Load and segment...</em> menu item. The resulting two images 
+                    can be saved as graphic files upon pressing the <b>Ok</b> button.</p>
 		
 		<h2>Options</h2>
 		<p><em>Options->Test image options..</em> allows one to specify: the test image width and height, the number of bits per pixel, 
@@ -82,7 +85,7 @@ version: 1.0
                 </p>
         </div>
         <div class="footer">
-            &copy; Copyright Ruslan Feshchenko, May 2019
+            &copy; Copyright Ruslan Feshchenko, July 2019
         </div>
     </body>
 </html>
