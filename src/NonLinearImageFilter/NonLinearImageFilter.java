@@ -57,11 +57,13 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 import static java.util.Comparator.comparingDouble;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.ButtonGroup;
@@ -868,7 +870,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldNonlinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearActionPerformed
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "1e4", defaults);
+                "500", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearActionPerformed
 
     private void jTextFieldNStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNStepsActionPerformed
@@ -886,7 +888,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private void jTextFieldNonlinearFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNonlinearFocusLost
         // TODO add your handling code here:
         nonLinearCoef = MyTextUtilities.TestValueWithMemory(1, Math.pow(2, 32) - 1, jTextFieldNonlinear,
-                "1e4", defaults);
+                "500", defaults);
     }//GEN-LAST:event_jTextFieldNonlinearFocusLost
 
     private void jTextFieldNStepsFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTextFieldNStepsFocusLost
@@ -1222,7 +1224,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 jMenuItemLoadSegment.setEnabled(true);
 
                 //Setting up images
-                updateMaskPanel(retpos[0]);
+                List<double[][]> datalist = updateMaskPanel(retpos[0]);
 
                 Object[] message = {
                     bundle.getString("NonLinearImageFilter.jMaskSlider.text"), maskSlider,
@@ -1237,7 +1239,10 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                         bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.INFORMATION_MESSAGE);
                 if (option == JOptionPane.OK_OPTION) {
+                    //Saving mask and the results of the segmentation
                     saveImageFile(iImage.getImage(), maskdata);
+                    saveImageFile(iImage.getImage(), datalist.get(0));
+                    saveImageFile(iImage.getImage(), datalist.get(1));
                 }
                 //Removing change listerner from the mask slider
                 maskSlider.removeChangeListener(maskSlider.getChangeListeners()[0]);
@@ -1537,13 +1542,13 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
      *
      * @param pos
      */
-    private void updateMaskPanel(double pos) {
+    private List<double[][]> updateMaskPanel(double pos) {
         //Setting up images
         maskpanel.removeAll();
         maskpanel1.removeAll();
         maskpanel2.removeAll();
 
-        double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp = 0;
+        double average1 = 0, average2 = 0, averagesq1 = 0, averagesq2 = 0, tmp;
         double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)),
                 data1 = new double[data0.length][data0[0].length],
                 data2 = new double[data0.length][data0[0].length];
@@ -1601,6 +1606,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
         maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
                 + (int) Math.round(Math.sqrt(averagesq1 - average1 * average1)));
+        return Arrays.asList(data1, data2);
     }
 
     /**
