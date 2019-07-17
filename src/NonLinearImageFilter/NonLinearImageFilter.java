@@ -100,7 +100,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private final ImageParam imageParam;
     private ArrayList<JComponent> imageList;
     private ImageComponent iImage = null;
-    private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7;
+    private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7,
+            segxsize=180, segysize=120;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0, iterationCoefficient = 0.5;
     private boolean nonLinearFlag = false, working = false, maskworking = false;
@@ -1321,8 +1322,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             //Creating and adding three image: mask, intracellular and intercellular
             JComponent intraImage = new ImageComponent(data1, cm);
             JComponent interImage = new ImageComponent(data2, cm);
-            intraImage.setPreferredSize(new Dimension(300, 200));
-            interImage.setPreferredSize(new Dimension(300, 200));
+            intraImage.setPreferredSize(new Dimension(segxsize, segysize));
+            interImage.setPreferredSize(new Dimension(segxsize, segysize));
             maskpanel1.add(intraImage);
             maskpanel2.add(interImage);
             maskpanel1.revalidate();
@@ -1589,9 +1590,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         iImage = new ImageComponent(maskdata, cm);
         JComponent intraImage = new ImageComponent(data1, cm);
         JComponent interImage = new ImageComponent(data2, cm);
-        iImage.setPreferredSize(new Dimension(300, 200));
-        intraImage.setPreferredSize(new Dimension(300, 200));
-        interImage.setPreferredSize(new Dimension(300, 200));
+        iImage.setPreferredSize(new Dimension(segxsize, segysize));
+        intraImage.setPreferredSize(new Dimension(segxsize, segysize));
+        interImage.setPreferredSize(new Dimension(segxsize, segysize));
         maskpanel.add(iImage);
         maskpanel1.add(intraImage);
         maskpanel2.add(interImage);
