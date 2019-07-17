@@ -101,7 +101,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
     private ArrayList<JComponent> imageList;
     private ImageComponent iImage = null;
     private int nSteps = 10, threadNumber, sliderposition = 50, columnNumber = 7,
-            segxsize=180, segysize=120;
+            segxsize=240, segysize=160;
     private double precision = 1e-10, diffCoef = 0.01, nonLinearCoef = 10000,
             anisotropy = 0, iterationCoefficient = 0.5;
     private boolean nonLinearFlag = false, working = false, maskworking = false;
