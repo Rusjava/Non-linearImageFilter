@@ -41,7 +41,10 @@ import java.util.function.DoubleFunction;
 
 import javax.imageio.ImageIO;
 import TextUtilities.MyTextUtilities;
+import java.awt.Toolkit;
 import java.awt.Transparency;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import javax.media.MediaLocator;
@@ -1192,7 +1195,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         //Setting up parameters
         maskworking = true;
         int[] retpos = {((ImageComponent) imageList.get((int) (sliderposition * (imageList.size() - 1) / 100.0)))
-                .getMaxValue()};
+            .getMaxValue()};
         double[][] data0 = dataList.get((int) (sliderposition * (imageList.size() - 1) / 100.0));
 
         //Calculating the optimal value in a separate thread
@@ -1233,7 +1236,6 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                     bundle.getString("NonLinearImageFilter.jThresholdLable.text"), thresholdlabel,
                     bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
                     bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1};
-
                 int option = JOptionPane.showConfirmDialog(null, message,
                         bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.INFORMATION_MESSAGE);
@@ -1312,7 +1314,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             average2 /= size - counter;
             averagesq1 /= counter;
             averagesq2 /= size - counter;
-
+            double sq1 = Math.sqrt(averagesq1 - average1 * average1);
+            double sq2 = Math.sqrt(averagesq2 - average2 * average2);
+            
             //Color model
             ColorModel cm = new ImageComponent.Int32ComponentColorModel(CS, new int[]{imageParam.bitNumber},
                     false, true, Transparency.OPAQUE,
@@ -1328,10 +1332,8 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             maskpanel1.repaint();
             maskpanel2.revalidate();
             maskpanel2.repaint();
-            maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 "
-                    + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
-            maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
-                    + (int) Math.round(Math.sqrt(averagesq1 - average1 * average1)));
+            maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 " + (int) Math.round(sq2));
+            maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 " + (int) Math.round(sq1));
 
             Object[] message = {
                 bundle.getString("NonLinearImageFilter.jMaskPanel.text"), maskpanel,
@@ -1345,6 +1347,11 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             int option = JOptionPane.showConfirmDialog(null, message,
                     bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.INFORMATION_MESSAGE);
+            //Copying averages to clipboard
+            StringSelection selection = new StringSelection(average1 + "\t" + sq1 + "\t" + average2 + "\t" + sq2);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+            //Saving images if Ok button is clicked
             if (option == JOptionPane.OK_OPTION) {
                 //Saving intra and intercell images
                 saveImageFile(intraImage.getImage());
@@ -1538,8 +1545,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     /**
      * Updating mask panel
+     *
      * @param pos
-     * @return 
+     * @return
      */
     private List<BufferedImage> updateMaskPanel(double pos) {
         //Setting up images
@@ -1602,10 +1610,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         maskpanel2.revalidate();
         maskpanel2.repaint();
         thresholdlabel.setText(Double.toString(pos));
-        maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 "
-                + (int) Math.round(Math.sqrt(averagesq2 - average2 * average2)));
-        maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 "
-                + (int) Math.round(Math.sqrt(averagesq1 - average1 * average1)));
+        double sq1 = Math.sqrt(averagesq1 - average1 * average1);
+        double sq2 = Math.sqrt(averagesq2 - average2 * average2);
+        maskstatlabel1.setText((int) Math.round(average2) + " \u00B1 " + (int) Math.round(sq2));
+        maskstatlabel2.setText((int) Math.round(average1) + " \u00B1 " + (int) Math.round(sq1));
+
+        //Copying averages to clipboard
+        StringSelection selection = new StringSelection(average1 + "\t" + sq1 + "\t" + average2 + "\t" + sq2);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+        //Returning images
         return Arrays.asList(intraImage.getImage(), interImage.getImage());
     }
 
@@ -1657,8 +1671,9 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
 
     /**
      * Saving the image into a file
+     *
      * @param image
-     * @return 
+     * @return
      */
     private int saveImageFile(BufferedImage image) {
         JFileChooser fo = new JFileChooser(imageWFile);
@@ -1668,7 +1683,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         }
         fo.setAcceptAllFileFilterUsed(false);
         int ans = fo.showSaveDialog(this);
-        
+
         //Writing the image into the selected file
         if (ans == JFileChooser.APPROVE_OPTION) {
             try {
