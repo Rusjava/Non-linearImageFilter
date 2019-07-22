@@ -1344,15 +1344,16 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
                 bundle.getString("NonLinearImageFilter.jMaskStatLabel1.text"), maskstatlabel2,
                 bundle.getString("NonLinearImageFilter.jMaskStatLabel2.text"), maskstatlabel1
             };
-
-            //Displaying the option window showing the intracell and intercell images and statistics
-            int option = JOptionPane.showConfirmDialog(null, message,
-                    bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE);
             //Copying averages to clipboard
             StringSelection selection = new StringSelection(average1 + "\t" + sq1 + "\t" + average2 + "\t" + sq2);
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(selection, selection);
+            
+            //Displaying the option window showing the intracell and intercell images and statistics
+            int option = JOptionPane.showConfirmDialog(null, message,
+                    bundle.getString("NonLinearImageFilter.MaskOptions.title"), JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE);
+            
             //Saving images if Ok button is clicked
             if (option == JOptionPane.OK_OPTION) {
                 //Saving intra and intercell images
@@ -1571,7 +1572,7 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
         for (int i = 0; i < data0.length; i++) {
             for (int j = 0; j < data0[0].length; j++) {
                 tmp = data0[i][j];
-                if (data0[i][j] > pos) {
+                if (tmp > pos) {
                     maskdata[i][j] = maxImageValue;
                     data1[i][j] = tmp;
                     data2[i][j] = maxImageValue;
