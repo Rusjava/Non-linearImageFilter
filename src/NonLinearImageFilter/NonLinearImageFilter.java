@@ -45,6 +45,8 @@ import java.awt.Toolkit;
 import java.awt.Transparency;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.image.DataBuffer;
+import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import javax.media.MediaLocator;
@@ -1689,6 +1691,24 @@ public class NonLinearImageFilter extends javax.swing.JFrame {
             try {
                 imageWFile = fo.getSelectedFile();
                 String type = ((FileNameExtensionFilter) fo.getFileFilter()).getExtensions()[0];
+                if (image.getData().getTransferType() == DataBuffer.TYPE_INT) {
+                    int xsize = image.getWidth(null);
+                    int ysize = image.getHeight(null);
+                    double[] pixels = new double[xsize * ysize];
+                    //Creating a new color model for the float transfer type for TYPE_INT
+                    ColorModel cm = new ImageComponent.Int32ComponentColorModel(image.getColorModel().getColorSpace(),
+                            new int[]{32}, false, true, Transparency.OPAQUE, DataBuffer.TYPE_FLOAT);
+                    /*
+                     * Create an Writableraster from the existing color model and fill it with pixels
+                     */
+                    image.getData().getPixels(0, 0, xsize, ysize, pixels);
+                    WritableRaster raster = cm.createCompatibleWritableRaster(xsize, ysize);
+                    raster.setPixels(0, 0, xsize, ysize, pixels);
+                    /*
+                     * Create a BufferedImage from the raster and color model and return it
+                     */
+                    image = new BufferedImage(cm, raster, true, null);
+                }
                 ImageIO.write(image, type, imageWFile);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,
